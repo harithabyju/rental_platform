@@ -18,10 +18,19 @@ const Layout = () => {
                     <div className="flex items-center space-x-4">
                         {user ? (
                             <>
-                                <Link to="/profile" className="text-gray-700 hover:text-primary">Profile</Link>
                                 {user.role === 'admin' && (
-                                    <Link to="/admin/users" className="text-gray-700 hover:text-primary">Manage Users</Link>
+                                    <>
+                                        <Link to="/admin/users" className="text-gray-700 hover:text-primary">Users</Link>
+                                        <Link to="/admin/shops" className="text-gray-700 hover:text-primary">Shop Approvals</Link>
+                                    </>
                                 )}
+                                
+                                {user.role !== 'admin' && (
+                                     <Link to="/myshop" className="text-gray-700 hover:text-primary">My Shop</Link>
+                                )}
+
+                                <Link to="/profile" className="text-gray-700 hover:text-primary">Profile</Link>
+                                
                                 <button
                                     onClick={handleLogout}
                                     className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
