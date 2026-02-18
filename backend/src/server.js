@@ -25,7 +25,10 @@ app.get('/health', async (req, res) => {
 });
 
 const userRoutes = require('./modules/users/user.routes');
+const bookingRoutes = require('./modules/bookings/booking.routes');
+
 app.use('/', userRoutes); // Mounting at root because routes define their own prefixes
+app.use('/bookings', bookingRoutes); // Mounting booking routes under /bookings prefix
 
 
 

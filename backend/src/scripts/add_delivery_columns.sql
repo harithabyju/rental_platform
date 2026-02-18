@@ -1,0 +1,3 @@
+
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS delivery_method VARCHAR(20) DEFAULT 'pickup';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS delivery_fee DECIMAL(10, 2) DEFAULT 0.00;

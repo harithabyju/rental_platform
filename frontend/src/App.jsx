@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import BookingPage from './pages/BookingPage';
+import MyBookingsPage from './pages/MyBookingsPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
@@ -7,6 +9,7 @@ import Register from './pages/Register';
 import OTP from './pages/OTP';
 import Profile from './pages/Profile';
 import AdminUserManagement from './pages/AdminUserManagement';
+
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -51,6 +54,23 @@ function App() {
                             element={
                                 <ProtectedRoute allowedRoles={['admin']}>
                                     <AdminUserManagement />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="book/:itemId"
+                            element={
+                                <ProtectedRoute allowedRoles={['customer', 'renter']}>
+                                    <BookingPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="my-bookings"
+                            element={
+                                <ProtectedRoute>
+                                    <MyBookingsPage />
                                 </ProtectedRoute>
                             }
                         />
