@@ -1,12 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Layout from './components/Layout';
+import Layout from './components/layout/Layout';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import OTP from './pages/OTP';
 import Profile from './pages/Profile';
-import AdminUserManagement from './pages/AdminUserManagement';
+import AdminUserManagement from './pages/admin/AdminUserManagement';
+import CategoryManagement from './pages/admin/CategoryManagement';
+import ShopOwnerDashboard from './pages/shop-owner/ShopOwnerDashboard';
+import CustomerHome from './pages/customer/CustomerHome';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -51,6 +54,30 @@ function App() {
                             element={
                                 <ProtectedRoute allowedRoles={['admin']}>
                                     <AdminUserManagement />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="admin/categories"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <CategoryManagement />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="shop-owner/dashboard"
+                            element={
+                                <ProtectedRoute allowedRoles={['shop_owner']}>
+                                    <ShopOwnerDashboard />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="customer/home"
+                            element={
+                                <ProtectedRoute allowedRoles={['customer']}>
+                                    <CustomerHome />
                                 </ProtectedRoute>
                             }
                         />

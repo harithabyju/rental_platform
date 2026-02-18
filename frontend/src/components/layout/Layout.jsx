@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Layout = () => {
     const { user, logout } = useAuth();
@@ -20,7 +20,16 @@ const Layout = () => {
                             <>
                                 <Link to="/profile" className="text-gray-700 hover:text-primary">Profile</Link>
                                 {user.role === 'admin' && (
-                                    <Link to="/admin/users" className="text-gray-700 hover:text-primary">Manage Users</Link>
+                                    <>
+                                        <Link to="/admin/users" className="text-gray-700 hover:text-primary">Manage Users</Link>
+                                        <Link to="/admin/categories" className="text-gray-700 hover:text-primary">Categories</Link>
+                                    </>
+                                )}
+                                {user.role === 'shop_owner' && (
+                                    <Link to="/shop-owner/dashboard" className="text-gray-700 hover:text-primary">Dashboard</Link>
+                                )}
+                                {user.role === 'customer' && (
+                                    <Link to="/customer/home" className="text-gray-700 hover:text-primary">Browse</Link>
                                 )}
                                 <button
                                     onClick={handleLogout}

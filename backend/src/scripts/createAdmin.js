@@ -12,8 +12,9 @@ const createAdmin = async () => {
         const user = result.rows[0];
 
         if (user) {
-            console.log('User exists. Updating role to admin...');
-            await db.query('UPDATE users SET role = $1, verified = $2 WHERE email = $3', ['admin', true, email]);
+            console.log('User exists. Updating role and password...');
+            const hashedPassword = await hashPassword(password);
+            await db.query('UPDATE users SET role = $1, verified = $2, password = $3 WHERE email = $4', ['admin', true, hashedPassword, email]);
             console.log(`User ${email} is now an admin.`);
         } else {
             console.log('User does not exist. Creating new admin user...');
