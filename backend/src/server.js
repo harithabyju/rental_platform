@@ -26,9 +26,11 @@ app.get('/health', async (req, res) => {
 
 const userRoutes = require('./modules/users/user.routes');
 const bookingRoutes = require('./modules/bookings/booking.routes');
+const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
 
-app.use('/', userRoutes); // Mounting at root because routes define their own prefixes
-app.use('/bookings', bookingRoutes); // Mounting booking routes under /bookings prefix
+app.use('/', userRoutes);
+app.use('/bookings', bookingRoutes);
+app.use('/', dashboardRoutes); // Dashboard routes: /dashboard/summary, /categories, /items/*, /payments/my, /rentals/active
 
 
 

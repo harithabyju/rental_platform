@@ -9,13 +9,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     const isActive = (path) => location.pathname === path;
 
     const navItems = [
-        { path: '/', label: 'Home', icon: Home },
         ...(user ? [
-            { path: '/my-bookings', label: 'My Bookings', icon: Calendar },
+            { path: '/dashboard', label: 'Dashboard', icon: Grid },
+            { path: '/dashboard/bookings', label: 'My Bookings', icon: Calendar },
             { path: '/profile', label: 'Profile', icon: User },
-        ] : []),
-        ...(user && user.role === 'admin' ? [
-            { path: '/admin/users', label: 'Manage Users', icon: Settings },
         ] : []),
     ];
 
@@ -27,6 +24,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         { id: 4, name: 'Tools' },
     ];
 
+    if (!user) return null; // Only show after login
+
     return (
         <>
             {/* Mobile Overlay */}
@@ -36,11 +35,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             />
 
             {/* Sidebar Container */}
-            <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} animate-fade-in`}>
                 {/* Logo Area */}
                 <div className="flex items-center justify-center h-16 border-b border-gray-100">
-                    <Link to="/" className="text-2xl font-bold text-emerald-600 flex items-center gap-2">
-                        <Grid size={24} />
+                    <Link to="/dashboard" className="text-2xl font-bold text-emerald-600 flex items-center gap-2">
+                        <Grid size={24} className="animate-pulse" />
                         <span>Grab'N'Go</span>
                     </Link>
                 </div>
@@ -48,81 +47,53 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 {/* Navigation Links */}
                 <div className="flex flex-col flex-grow p-4 overflow-y-auto">
                     <nav className="space-y-1">
-                        {navItems.map((item) => (
+                        {navItems.map((item, index) => (
                             <Link
                                 key={item.path}
                                 to={item.path}
                                 onClick={() => window.innerWidth < 1024 && toggleSidebar()} // Close on mobile click
-                                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive(item.path)
-                                        ? 'bg-emerald-50 text-emerald-700'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group animate-slide-up hover-tilt active-press active-pop ${isActive(item.path)
+                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100 scale-[1.02]'
+                                    : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700'
                                     }`}
+                                style={{ animationDelay: `${(index + 1) * 0.1}s` }}
                             >
-                                <item.icon className={`mr-3 h-5 w-5 ${isActive(item.path) ? 'text-emerald-500' : 'text-gray-400'}`} />
+                                <item.icon className={`mr-3 h-5 w-5 transition-transform group-hover:scale-110 ${isActive(item.path) ? 'text-white' : 'text-gray-400 group-hover:text-emerald-500'}`} />
                                 {item.label}
                             </Link>
                         ))}
-                        {user && (
-                            <Link
-                                to="/book/1"
-                                className="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                            >
-                                <BookOpen className="mr-3 h-5 w-5 text-gray-400" />
-                                <span className="flex-1">Book Item (Test)</span>
-                                <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full">New</span>
-                            </Link>
-                        )}
                     </nav>
 
-                    {/* Categories Section (Future Module Placeholder) */}
-                    <div className="mt-8">
-                        <h3 className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                            Browse Categories
-                        </h3>
-                        <div className="mt-2 space-y-1">
-                            {categories.map((cat) => (
-                                <button
-                                    key={cat.id}
-                                    className="w-full flex items-center px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 hover:text-gray-900 group"
-                                >
-                                    <span className="w-2 h-2 mr-3 bg-gray-300 rounded-full group-hover:bg-emerald-400 transition-colors"></span>
-                                    {cat.name}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+
+                    {/* Quick Action */}
+                    <Link
+                        to="/dashboard/browse"
+                        className="mt-4 flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition-all group"
+                    >
+                        <BookOpen className="mr-3 h-5 w-5 text-gray-400 group-hover:text-emerald-500" />
+                        <span className="flex-1">Explore Items</span>
+                    </Link>
                 </div>
 
-                {/* Footer / Logout */}
-                {user ? (
-                    <div className="p-4 border-t border-gray-100">
-                        <div className="flex items-center mb-3 px-2">
-                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold mr-3">
-                                {user.fullname.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">{user.fullname}</p>
-                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                            </div>
+                {/* Footer User Profile */}
+                <div className="p-4 border-t border-gray-100">
+                    <div className="flex items-center mb-3 px-2">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold mr-3 shadow-md">
+                            {user.fullname.charAt(0).toUpperCase()}
                         </div>
-                        <button
-                            onClick={logout}
-                            className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                        >
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Logout
-                        </button>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-gray-900 truncate">{user.fullname}</p>
+                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        </div>
                     </div>
-                ) : (
-                    <div className="p-4 border-t border-gray-100">
-                        <Link to="/login" className="flex items-center justify-center w-full btn-primary mb-2">
-                            Login
-                        </Link>
-                        <Link to="/register" className="flex items-center justify-center w-full btn-secondary">
-                            Register
-                        </Link>
-                    </div>
-                )}
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center justify-center px-4 py-2.5 text-sm font-bold text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-all active:scale-95"
+                    >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                    </button>
+                </div>
             </aside>
         </>
     );
