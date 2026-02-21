@@ -32,3 +32,6 @@ export const getActiveRentals = () =>
 export const getProfileStats = () =>
     api.get('/profile/stats').then(r => r.data);
 
+// Shop item details
+export const getShopItemDetails = (shopItemId) =>
+    api.get(`/shop-items/${shopItemId}`).then(r => r.data);

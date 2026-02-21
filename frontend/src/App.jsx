@@ -50,7 +50,7 @@ const AuthRedirect = ({ children }) => {
 
 function App() {
     return (
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
                 <DashboardProvider>
                     <Routes>
@@ -128,7 +128,7 @@ function App() {
                                 }
                             />
                             <Route
-                                path="book/:itemId"
+                                path="dashboard/booking/:itemId"
                                 element={
                                     <ProtectedRoute allowedRoles={['customer', 'renter']}>
                                         <BookingPage />

@@ -1,14 +1,38 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Shield, ArrowLeft, Star, Heart, Store, History, Package, Trophy } from 'lucide-react';
+import { User, Mail, Shield, ArrowLeft, Star, Heart, Store, History, Package, Trophy, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import * as dashboardService from '../services/dashboardService';
+import authService from '../services/authService';
+import GoogleMapLocationSelector from '../components/GoogleMapLocationSelector';
+import { toast } from 'react-toastify';
 
 const Profile = () => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [savingLocation, setSavingLocation] = useState(false);
+    const [location, setLocation] = useState({
+        lat: user?.latitude || 28.6139,
+        lng: user?.longitude || 77.2090
+    });
+
+    const handleSaveLocation = async () => {
+        setSavingLocation(true);
+        try {
+            const updatedUser = await authService.updateUser({
+                latitude: location.lat,
+                longitude: location.lng
+            });
+            updateUser(updatedUser);
+            toast.success('Primary location updated successfully!');
+        } catch (err) {
+            toast.error('Failed to update location');
+        } finally {
+            setSavingLocation(false);
+        }
+    };
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -169,6 +193,38 @@ const Profile = () => {
                                 </button>
                             </div>
                         )}
+                    </div>
+
+                    {/* Location Specification Card */}
+                    <div className="card p-8 border-none shadow-2xl shadow-emerald-50 bg-white animate-slide-up" style={{ animationDelay: '0.5s' }}>
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-emerald-100 rounded-xl">
+                                    <MapPin className="w-5 h-5 text-emerald-600" />
+                                </div>
+                                <h3 className="font-black text-gray-900 uppercase text-xs tracking-[0.2em]">Base of Operations</h3>
+                            </div>
+                            <button
+                                onClick={handleSaveLocation}
+                                disabled={savingLocation || (location.lat === user.latitude && location.lng === user.longitude)}
+                                className="px-6 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-emerald-700 disabled:opacity-50 disabled:grayscale transition-all active-press"
+                            >
+                                {savingLocation ? 'Updating...' : 'Save Location'}
+                            </button>
+                        </div>
+
+                        <div className="rounded-[2rem] overflow-hidden border-2 border-emerald-50">
+                            <GoogleMapLocationSelector
+                                lat={location.lat}
+                                lng={location.lng}
+                                radius={5} // Default radius for profile view
+                                onLocationChange={(lat, lng) => setLocation({ lat, lng })}
+                            />
+                        </div>
+                        <p className="mt-4 text-[10px] items-center gap-1.5 font-bold text-gray-400 uppercase tracking-widest flex">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            This location will be used to prioritize nearby rentals and estimate delivery costs.
+                        </p>
                     </div>
 
                     {/* Support Box */}

@@ -260,3 +260,7 @@ function formatItem(i) {
         },
     };
 }
+
+exports.getShopItemDetails = async (shopItemId) => {
+    return await query.getShopItemDetails(shopItemId);
+};

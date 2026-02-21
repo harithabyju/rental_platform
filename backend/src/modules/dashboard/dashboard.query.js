@@ -351,3 +351,39 @@ exports.getUserProfileStats = async (userId) => {
     };
 };
 
+// ─── Shop Item Details ────────────────────────────────────────────────────────
+exports.getShopItemDetails = async (shopItemId) => {
+    const result = await db.query(
+        `SELECT 
+            si.id AS shop_item_id,
+            si.item_id,
+            si.shop_id,
+            si.price_per_day_inr,
+            si.quantity_available,
+            si.is_available,
+            si.delivery_available,
+            si.pickup_available,
+            si.delivery_fee_inr,
+            i.name AS item_name,
+            i.description AS item_description,
+            i.image_url,
+            i.avg_rating,
+            i.total_reviews AS item_reviews,
+            s.name AS shop_name,
+            s.rating AS shop_rating,
+            s.total_reviews AS shop_reviews,
+            s.address,
+            s.city,
+            s.state,
+            s.pincode,
+            s.latitude,
+            s.longitude,
+            s.phone
+        FROM shop_items si
+        JOIN items i ON si.item_id = i.id
+        JOIN shops s ON si.shop_id = s.id
+        WHERE si.id = $1`,
+        [shopItemId]
+    );
+    return result.rows[0];
+};

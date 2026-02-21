@@ -28,4 +28,7 @@ router.get('/rentals/active', controller.getActiveRentals);
 router.get('/profile/stats', controller.getProfileStats);
 
 
+// Shop Items
+router.get('/shop-items/:itemId', validateItemId, controller.getShopItemDetails);
+
 module.exports = router;

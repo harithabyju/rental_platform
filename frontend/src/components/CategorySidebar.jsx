@@ -18,7 +18,7 @@ const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
     };
 
     return (
-        <aside className="w-full bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sticky top-24 animate-fade-in">
+        <aside className="w-full glass-morphic rounded-[2.5rem] p-8 md:p-10 sticky top-24 animate-scale-up border-white/40">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">

@@ -5,7 +5,17 @@ exports.createBooking = `
 `;
 
 exports.getUserBookings = `
-    SELECT * FROM bookings WHERE user_id = $1 ORDER BY created_at DESC;
+    SELECT 
+        b.*,
+        i.name as item_name,
+        i.image_url as item_image,
+        s.name as shop_name
+    FROM bookings b
+    JOIN items i ON b.item_id = i.id
+    JOIN shop_items si ON i.id = si.item_id
+    JOIN shops s ON si.shop_id = s.id
+    WHERE b.user_id = $1 
+    ORDER BY b.created_at DESC;
 `;
 
 exports.getBookingById = `

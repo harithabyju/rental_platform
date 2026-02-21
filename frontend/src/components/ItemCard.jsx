@@ -1,72 +1,82 @@
-import { MapPin, Truck, Package, ArrowRight } from 'lucide-react';
-import RatingDisplay from './RatingDisplay';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaStar, FaMapMarkerAlt, FaCalendarCheck } from 'react-icons/fa';
 
 const ItemCard = ({ item }) => {
     const navigate = useNavigate();
+    const {
+        id, // This is the shop_item id from the search query
+        name,
+        shop_name,
+        price,
+        avg_rating,
+        item_rating, // Fallback if avg_rating is missing
+        distance,
+        image_url,
+        isAvailable
+    } = item;
+
+    const rating = avg_rating || item_rating || 0;
+
+    const handleBookNow = () => {
+        navigate(`/dashboard/booking/${id}`);
+    };
 
     return (
-        <div className="card overflow-hidden group cursor-pointer animate-slide-up"
-            onClick={() => navigate(`/dashboard/item/${item.id}/shops`)}>
-            {/* Image */}
-            <div className="relative overflow-hidden h-48">
+        <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col h-full group">
+            <div className="relative h-48 overflow-hidden">
                 <img
-                    src={item.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'}
-                    alt={item.name}
+                    src={image_url || 'https://placehold.co/400x300?text=No+Image'}
+                    alt={name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=No+Image'; }}
                 />
-                {/* Availability Badge */}
-                <div className={`absolute top-3 right-3 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-lg ${item.isAvailable
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-red-500 text-white'
-                    }`}>
-                    {item.isAvailable ? 'Available' : 'Unavailable'}
+                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm text-sm font-semibold text-gray-800">
+                    <FaStar className="text-yellow-400" />
+                    {parseFloat(rating).toFixed(1)}
                 </div>
-                {/* Category Badge */}
-                <div className="absolute top-3 left-3 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-black/60 text-white backdrop-blur-md">
-                    {item.category?.name}
-                </div>
+                {distance !== undefined && (
+                    <div className="absolute bottom-3 left-3 bg-blue-600/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm text-xs font-medium text-white">
+                        <FaMapMarkerAlt />
+                        {parseFloat(distance).toFixed(1)} km
+                    </div>
+                )}
             </div>
 
-            {/* Content */}
-            <div className="p-5">
-                <h3 className="font-bold text-gray-900 text-lg mb-1 line-clamp-1 group-hover:text-emerald-600 transition-colors">
-                    {item.name}
-                </h3>
-                <p className="text-sm text-gray-500 line-clamp-2 mb-4 h-10 font-medium">{item.description}</p>
-
-                {/* Rating */}
-                <div className="mb-4">
-                    <RatingDisplay rating={item.avgRating} totalReviews={item.totalReviews} />
+            <div className="p-4 flex flex-col flex-grow">
+                <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg text-gray-900 line-clamp-1">{name}</h3>
                 </div>
 
-                {/* Delivery / Pickup */}
-                <div className="flex items-center gap-2 mb-4">
-                    {item.deliveryAvailable && (
-                        <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
-                            <Truck className="w-3 h-3" /> Delivery
-                        </span>
-                    )}
-                    {item.pickupAvailable && (
-                        <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
-                            <Package className="w-3 h-3" /> Pickup
-                        </span>
-                    )}
-                </div>
+                <p className="text-sm text-gray-500 mb-4 flex items-center gap-1">
+                    <span>from</span>
+                    <span className="font-medium text-gray-700">{shop_name}</span>
+                </p>
 
-                {/* Price + CTA */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div>
-                        <span className="text-2xl font-bold text-gray-900">{item.minPriceFormatted?.replace('$', '₹')}</span>
-                        <span className="text-xs text-gray-400 font-bold uppercase ml-1">/{item.priceUnit}</span>
+                <div className="mt-auto">
+                    <div className="flex items-baseline gap-1 mb-4">
+                        <span className="text-xl font-bold text-blue-600">₹{price}</span>
+                        <span className="text-xs text-gray-500 font-medium">/ day</span>
                     </div>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/item/${item.id}/shops`); }}
-                        className="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-100"
-                    >
-                        <ArrowRight size={18} />
-                    </button>
+
+                    <div className="flex items-center justify-between gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${isAvailable
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-red-100 text-red-700'
+                            }`}>
+                            {isAvailable ? 'Available' : 'Booked'}
+                        </span>
+
+                        <button
+                            onClick={handleBookNow}
+                            disabled={!isAvailable}
+                            className={`flex-grow py-2 rounded-lg font-bold text-sm transition-all duration-200 ${isAvailable
+                                ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-md hover:shadow-lg'
+                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                }`}
+                        >
+                            Book Now
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

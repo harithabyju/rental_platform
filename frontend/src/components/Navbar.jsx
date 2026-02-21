@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Bell, LogOut, User, LayoutDashboard, Calendar, CreditCard, Package, Search } from 'lucide-react';
+import { Bell, LogOut, User, LayoutDashboard, Calendar, CreditCard, Package, Search, Map as MapIcon } from 'lucide-react';
 import { useState } from 'react';
 
 const Navbar = () => {
@@ -13,10 +13,10 @@ const Navbar = () => {
 
     const navLinks = [
         { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+        { path: '/dashboard', label: 'Explorer', icon: MapIcon, state: { autoOpenExplorer: true } },
         { path: '/dashboard/browse', label: 'Browse', icon: Search },
         { path: '/dashboard/bookings', label: 'My Bookings', icon: Calendar },
         { path: '/dashboard/payments', label: 'Payments', icon: CreditCard },
-        { path: '/dashboard/rentals', label: 'Active Rentals', icon: Package },
     ];
 
     const handleLogout = () => {
@@ -50,8 +50,8 @@ const Navbar = () => {
                                     key={link.path}
                                     to={link.path}
                                     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${isLinkActive
-                                            ? 'bg-violet-100 text-violet-700'
-                                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                        ? 'bg-violet-100 text-violet-700'
+                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                                         }`}
                                 >
                                     <link.icon className="w-4 h-4" />
@@ -123,8 +123,8 @@ const Navbar = () => {
                                 key={link.path}
                                 to={link.path}
                                 className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-colors ${isLinkActive
-                                        ? 'bg-violet-100 text-violet-700'
-                                        : 'text-gray-600 hover:bg-gray-100'
+                                    ? 'bg-violet-100 text-violet-700'
+                                    : 'text-gray-600 hover:bg-gray-100'
                                     }`}
                             >
                                 <link.icon className="w-3.5 h-3.5" />

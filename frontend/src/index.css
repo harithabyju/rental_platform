@@ -116,6 +116,14 @@ body {
   *:hover>svg.lucide {
     @apply scale-110;
   }
+
+  .glass-morphic {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+
+  .glass-card {
+    @apply bg-white/40 backdrop-blur-md border border-white/30 shadow-2xl;
+  }
 }
 
 @keyframes slide-up {

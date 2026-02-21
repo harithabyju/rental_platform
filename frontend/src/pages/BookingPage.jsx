@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createBooking } from '../services/bookingService';
-import { MapPin, Truck, Box, Star } from 'lucide-react';
+import { getShopItemDetails } from '../services/dashboardService';
+import paymentService from '../services/paymentService';
+import { MapPin, Truck, Box, Star, Loader2, CheckCircle, CreditCard } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const BookingPage = () => {
     const { itemId } = useParams();
     const navigate = useNavigate();
+
+    // Data State
+    const [product, setProduct] = useState(null);
+    const [pageLoading, setPageLoading] = useState(true);
 
     // Booking State
     const [startDate, setStartDate] = useState('');
@@ -14,32 +21,40 @@ const BookingPage = () => {
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-
-    // Mock Item Details (Product Detail View)
-    const product = {
-        id: itemId,
-        title: "Professional DSLR Camera Kit",
-        image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-        description: "Canon EOS 5D Mark IV with 24-70mm f/2.8L II USM Lens. Perfect for professional photography and videography. Includes 2 batteries, charger, and carrying case.",
-        rating: 4.8,
-        reviews: 124,
-        owner: {
-            name: "John Pro",
-            rating: 4.9,
-            image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-        },
-        ratePerDay: 50,
-        currency: "₹"
-    };
+    const [showSuccess, setShowSuccess] = useState(false);
 
     // Constants
     const serviceFeeRate = 0.10;
     const taxRate = 0.05;
-    const deliveryRatePerKm = 10; // 10 Rupees per km
-    const mockDistanceKm = 5; // Mocking 5km distance for now
 
-    const calculateBreakdown = () => {
-        if (!startDate || !endDate) return null;
+    useEffect(() => {
+        const fetchDetails = async () => {
+            try {
+                const res = await getShopItemDetails(itemId);
+                setProduct(res.data);
+            } catch (err) {
+                toast.error('Failed to load item details');
+                navigate('/dashboard');
+            } finally {
+                setPageLoading(false);
+            }
+        };
+        fetchDetails();
+    }, [itemId, navigate]);
+
+    // Load Razorpay Script
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
+    const calculateBreakdown = useCallback(() => {
+        if (!startDate || !endDate || !product) return null;
         const start = new Date(startDate);
         const end = new Date(endDate);
         const timeDiff = end - start;
@@ -47,21 +62,108 @@ const BookingPage = () => {
 
         if (days <= 0) return { error: 'End date must be after start date' };
 
-        const subtotal = days * product.ratePerDay;
+        const subtotal = days * parseFloat(product.price_per_day_inr);
         const serviceFee = subtotal * serviceFeeRate;
         const tax = subtotal * taxRate;
 
         let deliveryFee = 0;
         if (deliveryMethod === 'delivery') {
-            deliveryFee = mockDistanceKm * deliveryRatePerKm;
+            deliveryFee = parseFloat(product.delivery_fee_inr || 0);
         }
 
         const total = subtotal + serviceFee + tax + deliveryFee;
 
         return { days, subtotal, serviceFee, tax, deliveryFee, total };
-    };
+    }, [startDate, endDate, product, deliveryMethod]);
 
     const breakdown = calculateBreakdown();
+
+    const handlePayment = async (bookingId, amount) => {
+        const res = await loadRazorpayScript();
+
+        if (!res) {
+            toast.error('Razorpay SDK failed to load. Are you online?');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            // 1. Create Order on Backend
+            const orderData = await paymentService.createOrder(bookingId, amount);
+
+            // DEMO MODE BYPASS: If order is a mock, simulate success
+            if (orderData.id.startsWith('order_mock_')) {
+                toast.info('DEMO MODE: Simulating payment success...', { autoClose: 2000 });
+                setTimeout(async () => {
+                    try {
+                        await paymentService.verifyPayment({
+                            razorpay_order_id: orderData.id,
+                            razorpay_payment_id: 'pay_mock_' + Date.now(),
+                            razorpay_signature: 'mock_sig',
+                            bookingId,
+                            amount
+                        });
+                        setShowSuccess(true);
+                        setTimeout(() => navigate('/dashboard/bookings'), 4000);
+                    } catch (err) {
+                        toast.error(err.message || 'Demo verification failed');
+                    } finally {
+                        setLoading(false);
+                    }
+                }, 1500);
+                return;
+            }
+
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key_id',
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: 'Rental Platform',
+                description: `Booking for ${product.item_name}`,
+                order_id: orderData.id,
+                handler: async function (response) {
+                    try {
+                        setLoading(true);
+                        // 2. Verify Payment on Backend
+                        await paymentService.verifyPayment({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            bookingId,
+                            amount
+                        });
+                        setShowSuccess(true);
+                        setTimeout(() => navigate('/dashboard/bookings'), 4000);
+                    } catch (err) {
+                        toast.error(err.message || 'Payment verification failed');
+                    } finally {
+                        setLoading(false);
+                    }
+                },
+                prefill: {
+                    name: '', // Optional: Fill from user profile
+                    email: '',
+                    contact: ''
+                },
+                theme: {
+                    color: '#059669' // emerald-600
+                },
+                modal: {
+                    ondismiss: function () {
+                        setLoading(false);
+                        toast.info('Payment cancelled. Your booking is still saved as pending.');
+                        navigate('/dashboard/bookings');
+                    }
+                }
+            };
+
+            const paymentObject = new window.Razorpay(options);
+            paymentObject.open();
+        } catch (err) {
+            setLoading(false);
+            toast.error(err.message || 'Failed to initiate payment');
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -81,23 +183,63 @@ const BookingPage = () => {
         }
 
         try {
-            await createBooking({
-                itemId,
+            // 1. Create Pending Booking
+            const booking = await createBooking({
+                itemId, // This is si.id
                 startDate,
                 endDate,
                 totalAmount: breakdown.total,
                 deliveryMethod,
-                deliveryFee: breakdown.deliveryFee
+                deliveryFee: breakdown.deliveryFee,
+                address: deliveryMethod === 'delivery' ? address : null
             });
-            // Using a simple alert for now, but in a real app would use a toast
-            alert('Booking created successfully!');
-            navigate('/dashboard/bookings');
+
+            // 2. Start Razorpay Flow
+            await handlePayment(booking.booking_id, breakdown.total);
+
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to create booking');
-        } finally {
+            setError(err.response?.data?.message || err.message || 'Failed to create booking');
             setLoading(false);
         }
     };
+
+    if (pageLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
+                <p className="text-gray-500 font-bold animate-pulse">Loading item details...</p>
+            </div>
+        );
+    }
+
+    if (showSuccess) {
+        return (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-600 text-white overflow-hidden">
+                <div className="absolute inset-0 opacity-20">
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white rounded-full blur-[150px] animate-float" />
+                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-400 rounded-full blur-[150px] animate-float" style={{ animationDelay: '1s' }} />
+                </div>
+
+                <div className="relative text-center space-y-8 p-6 animate-scale-up">
+                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto shadow-2xl animate-pulse">
+                        <CheckCircle className="w-12 h-12 text-emerald-600" />
+                    </div>
+                    <div className="space-y-4">
+                        <h2 className="text-5xl font-black tracking-tight animate-slide-up">Booking Confirmed!</h2>
+                        <p className="text-emerald-50 text-xl font-medium max-w-md mx-auto animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                            Your rental for <span className="font-bold border-b-2 border-emerald-400">{product.item_name}</span> has been successfully processed.
+                        </p>
+                    </div>
+                    <div className="pt-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                        <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-md rounded-2xl text-sm font-bold border border-white/30">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Redirecting to your rentals...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-6xl mx-auto py-12 animate-fade-in px-4">
@@ -111,28 +253,28 @@ const BookingPage = () => {
                 <div className="lg:col-span-1 space-y-8 animate-slide-up">
                     <div className="card overflow-hidden group shadow-2xl shadow-gray-100">
                         <div className="relative h-72 overflow-hidden">
-                            <img src={product.image} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <img src={product.image_url || 'https://placehold.co/800x600?text=Premium+Item'} alt={product.item_name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                             <div className="absolute top-4 right-4 flex items-center bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl text-emerald-700 text-xs font-black shadow-lg">
                                 <Star size={14} className="mr-1 fill-emerald-600 text-emerald-600" />
-                                {product.rating} (124)
+                                {product.avg_rating || '5.0'}
                             </div>
                         </div>
                         <div className="p-8">
-                            <h2 className="text-2xl font-black text-gray-900 mb-2 leading-tight">{product.title}</h2>
-                            <p className="text-gray-500 text-sm mb-6 font-medium leading-relaxed">{product.description}</p>
+                            <h2 className="text-2xl font-black text-gray-900 mb-2 leading-tight">{product.item_name}</h2>
+                            <p className="text-gray-500 text-sm mb-6 font-medium leading-relaxed">{product.item_description}</p>
 
                             <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-emerald-100 p-0.5">
-                                        <img src={product.owner.image} alt={product.owner.name} className="w-full h-full object-cover rounded-[0.8rem]" />
-                                    </div>
                                     <div>
                                         <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Offered by</p>
-                                        <p className="text-sm font-black text-gray-900">{product.owner.name}</p>
+                                        <p className="text-sm font-black text-gray-900">{product.shop_name}</p>
+                                        <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
+                                            <Star size={10} className="fill-emerald-600" /> {product.shop_rating} Shop Rating
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xl font-black text-emerald-600">₹{product.ratePerDay}</p>
+                                    <p className="text-xl font-black text-emerald-600">₹{product.price_per_day_inr}</p>
                                     <p className="text-[10px] text-gray-400 font-black uppercase">per day</p>
                                 </div>
                             </div>
@@ -208,8 +350,9 @@ const BookingPage = () => {
                                     </button>
                                     <button
                                         type="button"
+                                        disabled={!product.delivery_available}
                                         onClick={() => setDeliveryMethod('delivery')}
-                                        className={`p-6 rounded-[2rem] border-4 flex flex-col items-center gap-3 transition-all duration-300 ${deliveryMethod === 'delivery'
+                                        className={`p-6 rounded-[2rem] border-4 flex flex-col items-center gap-3 transition-all duration-300 ${!product.delivery_available ? 'opacity-50 cursor-not-allowed grayscale' : ''} ${deliveryMethod === 'delivery'
                                             ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-2xl shadow-emerald-100 scale-105'
                                             : 'border-gray-50 hover:border-emerald-100 text-gray-400'
                                             }`}
@@ -218,11 +361,25 @@ const BookingPage = () => {
                                             <Truck size={28} />
                                         </div>
                                         <span className="font-black text-lg">Doorstep Delivery</span>
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Fast & Secured</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">{product.delivery_available ? `₹${product.delivery_fee_inr} Fee` : 'Not Supported'}</span>
                                     </button>
                                 </div>
 
-                                {deliveryMethod === 'delivery' && (
+                                {!product.delivery_available && (
+                                    <div className="bg-orange-50/50 border border-orange-100 p-6 rounded-3xl flex items-start gap-4 animate-slide-up">
+                                        <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0 text-orange-600">
+                                            <Truck size={20} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="font-black text-orange-900 text-sm">Delivery is not available for this item</p>
+                                            <p className="text-orange-700 text-xs font-medium leading-relaxed">
+                                                This shop ({product.shop_name}) currently only offers "Self Pickup" for this specific item. You can find their address below in the item details.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {deliveryMethod === 'delivery' && product.delivery_available && (
                                     <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-8 rounded-[2rem] border-2 border-emerald-100/50 animate-scale-up space-y-4">
                                         <div>
                                             <label className="text-[10px] font-black text-emerald-800 uppercase tracking-widest ml-1">Your Delivery Address</label>
@@ -239,7 +396,7 @@ const BookingPage = () => {
                                         </div>
                                         <div className="flex items-center gap-2 text-emerald-700 font-black text-xs uppercase tracking-tight">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            Approx. {mockDistanceKm}km away from fulfillment center
+                                            Select address for delivery from {product.shop_name}
                                         </div>
                                     </div>
                                 )}
@@ -294,10 +451,11 @@ const BookingPage = () => {
                                 <button
                                     type="submit"
                                     disabled={loading || !breakdown || breakdown.error}
-                                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 rounded-[2rem] text-xl font-black shadow-2xl shadow-emerald-200 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed group"
+                                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 rounded-[2rem] text-xl font-black shadow-2xl shadow-emerald-200 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed group flex items-center justify-center gap-3"
                                 >
+                                    {loading && <Loader2 className="w-6 h-6 animate-spin" />}
                                     <span className="group-hover:tracking-widest transition-all duration-300">
-                                        {loading ? 'Processing Transaction...' : `Confirm Payment • ₹${breakdown?.total?.toFixed(2) || '0.00'}`}
+                                        {loading ? 'Processing Transaction...' : `Confirm & Pay • ₹${breakdown?.total?.toFixed(2) || '0.00'}`}
                                     </span>
                                 </button>
                                 <p className="text-center text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mt-6">

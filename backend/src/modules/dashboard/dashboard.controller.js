@@ -97,3 +97,17 @@ exports.getProfileStats = async (req, res) => {
     }
 };
 
+
+// GET /shop-items/:itemId
+exports.getShopItemDetails = async (req, res) => {
+    try {
+        const { itemId } = req.params;
+        const details = await service.getShopItemDetails(itemId);
+        if (!details) {
+            return res.status(404).json({ success: false, message: 'Shop item not found' });
+        }
+        res.json({ success: true, data: details });
+    } catch (err) {
+        handleError(res, err, 'getShopItemDetails');
+    }
+};

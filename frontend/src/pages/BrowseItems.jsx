@@ -138,29 +138,31 @@ const BrowseItems = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
-                            {items.map(item => (
-                                <ItemCard key={item.id} item={item} />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-10">
+                            {items.map((item, index) => (
+                                <div key={item.id} className="animate-slide-up" style={{ animationDelay: `${index * 0.05}s` }}>
+                                    <ItemCard item={item} />
+                                </div>
                             ))}
                         </div>
 
                         {/* Pagination */}
                         {pagination.totalPages > 1 && (
-                            <div className="mt-16 flex justify-center items-center gap-3">
+                            <div className="mt-20 flex justify-center items-center gap-4 bg-white/30 backdrop-blur-md p-4 rounded-[2.5rem] w-fit mx-auto border border-white/50 shadow-xl">
                                 <button
                                     disabled={pagination.page === 1}
                                     onClick={() => handleFilterChange({ page: pagination.page - 1 })}
-                                    className="px-6 py-2.5 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all"
+                                    className="px-8 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-black text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all active:scale-95"
                                 >
                                     Prev
                                 </button>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                     {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(p => (
                                         <button
                                             key={p}
                                             onClick={() => handleFilterChange({ page: p })}
-                                            className={`w-12 h-12 rounded-2xl text-sm font-black transition-all ${pagination.page === p
-                                                ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-100 scale-110'
+                                            className={`w-14 h-14 rounded-2xl text-sm font-black transition-all active-pop ${pagination.page === p
+                                                ? 'bg-emerald-600 text-white shadow-2xl shadow-emerald-200 scale-110'
                                                 : 'bg-white border border-gray-100 text-gray-400 hover:bg-emerald-50 hover:text-emerald-700'
                                                 }`}
                                         >
@@ -171,7 +173,7 @@ const BrowseItems = () => {
                                 <button
                                     disabled={pagination.page === pagination.totalPages}
                                     onClick={() => handleFilterChange({ page: pagination.page + 1 })}
-                                    className="px-6 py-2.5 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all"
+                                    className="px-8 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-black text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all active:scale-95"
                                 >
                                     Next
                                 </button>

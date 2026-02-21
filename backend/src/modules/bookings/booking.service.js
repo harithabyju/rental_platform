@@ -26,7 +26,7 @@ exports.createBooking = async (userId, data) => {
 
     // Create Booking
     const result = await db.query(bookingQueries.createBooking, [
-        itemId, userId, startDate, endDate, 'confirmed', totalAmount,
+        itemId, userId, startDate, endDate, 'pending', totalAmount,
         deliveryMethod || 'pickup', deliveryFee || 0
     ]);
     return result.rows[0];

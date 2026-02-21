@@ -27,10 +27,14 @@ app.get('/health', async (req, res) => {
 const userRoutes = require('./modules/users/user.routes');
 const bookingRoutes = require('./modules/bookings/booking.routes');
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
+const searchRoutes = require('./modules/search/search.routes');
+const paymentRoutes = require('./modules/payments/payment.routes');
 
 app.use('/', userRoutes);
 app.use('/bookings', bookingRoutes);
-app.use('/', dashboardRoutes); // Dashboard routes: /dashboard/summary, /categories, /items/*, /payments/my, /rentals/active
+app.use('/', dashboardRoutes);
+app.use('/search', searchRoutes);
+app.use('/payments', paymentRoutes);
 
 
 
