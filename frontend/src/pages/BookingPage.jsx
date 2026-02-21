@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { createBooking } from '../services/bookingService';
 import { getShopItemDetails } from '../services/dashboardService';
 import paymentService from '../services/paymentService';
-import { MapPin, Truck, Box, Star, Loader2, CheckCircle, CreditCard } from 'lucide-react';
+import { MapPin, Truck, Box, Star, Loader2, CheckCircle, CreditCard, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const BookingPage = () => {
@@ -185,7 +185,8 @@ const BookingPage = () => {
         try {
             // 1. Create Pending Booking
             const booking = await createBooking({
-                itemId, // This is si.id
+                itemId, // This is si.item_id or si.id depending on what si is
+                shopId: product.shop_id,
                 startDate,
                 endDate,
                 totalAmount: breakdown.total,
@@ -214,27 +215,39 @@ const BookingPage = () => {
 
     if (showSuccess) {
         return (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-600 text-white overflow-hidden">
-                <div className="absolute inset-0 opacity-20">
-                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white rounded-full blur-[150px] animate-float" />
-                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-400 rounded-full blur-[150px] animate-float" style={{ animationDelay: '1s' }} />
-                </div>
+            <div className="max-w-4xl mx-auto py-20 px-4 animate-fade-in">
+                <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-emerald-100 flex flex-col items-center text-center p-12 sm:p-20 relative">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-teal-500" />
 
-                <div className="relative text-center space-y-8 p-6 animate-scale-up">
-                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto shadow-2xl animate-pulse">
-                        <CheckCircle className="w-12 h-12 text-emerald-600" />
+                    <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-10 shadow-inner group">
+                        <CheckCircle className="w-12 h-12 text-emerald-600 group-hover:scale-110 transition-transform duration-500" />
                     </div>
-                    <div className="space-y-4">
-                        <h2 className="text-5xl font-black tracking-tight animate-slide-up">Booking Confirmed!</h2>
-                        <p className="text-emerald-50 text-xl font-medium max-w-md mx-auto animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                            Your rental for <span className="font-bold border-b-2 border-emerald-400">{product.item_name}</span> has been successfully processed.
+
+                    <div className="space-y-6 max-w-2xl">
+                        <h2 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">Booking Confirmed!</h2>
+                        <p className="text-gray-500 text-lg sm:text-xl font-medium leading-relaxed">
+                            Excellent choice! Your rental for <span className="text-emerald-600 font-black border-b-2 border-emerald-200 pb-0.5">{product.item_name}</span> has been successfully processed and confirmed.
                         </p>
                     </div>
-                    <div className="pt-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                        <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-md rounded-2xl text-sm font-bold border border-white/30">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Redirecting to your rentals...
+
+                    <div className="mt-12 w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-gray-50 p-6 rounded-3xl text-left border border-gray-100">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Status</p>
+                            <p className="text-emerald-700 font-black">Payment Verified</p>
                         </div>
+                        <div className="bg-gray-50 p-6 rounded-3xl text-left border border-gray-100">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Next Step</p>
+                            <p className="text-gray-900 font-black">Pickup/Delivery Setup</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-16 pt-8 border-t border-gray-50 w-full flex flex-col items-center gap-6">
+                        <div className="inline-flex items-center gap-3 px-6 py-3 bg-emerald-600 text-white rounded-2xl text-sm font-black shadow-xl shadow-emerald-200 hover:bg-emerald-700 transition-colors active:scale-95 cursor-pointer" onClick={() => navigate('/dashboard/bookings')}>
+                            View My Bookings <ArrowRight size={18} />
+                        </div>
+                        <p className="text-xs text-gray-400 font-bold flex items-center gap-2">
+                            <Loader2 className="w-3 h-3 animate-spin" /> Redirecting to your rentals in a few seconds...
+                        </p>
                     </div>
                 </div>
             </div>

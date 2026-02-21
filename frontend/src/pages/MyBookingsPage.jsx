@@ -28,16 +28,27 @@ const MyBookingsPage = () => {
     }, []);
 
     const filteredBookings = bookings.filter(booking => {
-        if (activeTab === 'Active') return booking.status === 'confirmed' || booking.status === 'active';
-        if (activeTab === 'Completed') return booking.status === 'completed';
-        if (activeTab === 'Cancelled') return booking.status === 'cancelled';
+        const status = booking.status?.toLowerCase();
+        if (activeTab === 'Active') return status === 'confirmed' || status === 'active';
+        if (activeTab === 'Completed') return status === 'completed' || status === 'returned';
+        if (activeTab === 'Cancelled') return status === 'cancelled';
         return true;
     });
 
+    const getCount = (tab) => {
+        return bookings.filter(b => {
+            const s = b.status?.toLowerCase();
+            if (tab === 'Active') return s === 'confirmed' || s === 'active';
+            if (tab === 'Completed') return s === 'completed' || s === 'returned';
+            if (tab === 'Cancelled') return s === 'cancelled';
+            return false;
+        }).length;
+    };
+
     const counts = {
-        Active: bookings.filter(b => b.status === 'confirmed' || b.status === 'active').length,
-        Completed: bookings.filter(b => b.status === 'completed').length,
-        Cancelled: bookings.filter(b => b.status === 'cancelled').length,
+        Active: getCount('Active'),
+        Completed: getCount('Completed'),
+        Cancelled: getCount('Cancelled'),
     };
 
     if (loading) {
@@ -45,7 +56,7 @@ const MyBookingsPage = () => {
             <div className="space-y-4 max-w-4xl mx-auto">
                 <div className="h-8 bg-gray-100 w-48 rounded-lg animate-pulse" />
                 <div className="h-12 bg-gray-100 rounded-2xl animate-pulse" />
-                {[1, 2].map(i => (
+                {[201, 202].map(i => (
                     <div key={i} className="h-40 bg-gray-100 rounded-3xl animate-pulse" />
                 ))}
             </div>
@@ -107,7 +118,7 @@ const MyBookingsPage = () => {
                 <div className="grid gap-6">
                     {filteredBookings.map((booking, index) => (
                         <BookingCard
-                            key={booking.booking_id}
+                            key={`bk-${booking.booking_id}-${index}`}
                             booking={booking}
                             onUpdate={fetchBookings}
                             animationDelay={`${index * 0.1}s`}

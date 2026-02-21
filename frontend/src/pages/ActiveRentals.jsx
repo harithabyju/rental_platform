@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as dashboardService from '../services/dashboardService';
+import { ShieldAlert, Package, PhoneCall } from 'lucide-react';
 import RentalStatusCard from '../components/RentalStatusCard';
-import { Package, Clock, ShieldAlert, PhoneCall } from 'lucide-react';
 
 const ActiveRentals = () => {
+    const navigate = useNavigate();
     const [rentals, setRentals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -72,17 +74,20 @@ const ActiveRentals = () => {
                             <p className="text-gray-400 font-medium">Our concierge support is available 24/7 to help you.</p>
                         </div>
                     </div>
-                    <button className="w-full md:w-auto px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-95">
+                    <a
+                        href="mailto:help@grabngo.in"
+                        className="w-full md:w-auto px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-95 text-center"
+                    >
                         Get Priority Support
-                    </button>
+                    </a>
                 </div>
             </div>
 
             {/* Rentals List */}
             {loading ? (
                 <div className="grid grid-cols-1 gap-6">
-                    {[1, 2].map(i => (
-                        <div key={i} className="h-48 bg-white border border-gray-100 rounded-[2rem] animate-pulse" />
+                    {[101, 102].map(i => (
+                        <div key={i} className="h-40 bg-gray-100 rounded-3xl animate-pulse" />
                     ))}
                 </div>
             ) : error ? (

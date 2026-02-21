@@ -13,8 +13,10 @@ const ItemCard = ({ item }) => {
         item_rating, // Fallback if avg_rating is missing
         distance,
         image_url,
-        isAvailable
+        is_available
     } = item;
+
+    const isAvailable = item.is_available !== false; // Handle potential undefined/null as available if flag is missing, but backend sends true/false
 
     const rating = avg_rating || item_rating || 0;
 

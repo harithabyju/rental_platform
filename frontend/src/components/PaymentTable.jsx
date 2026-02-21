@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, AlertCircle, Package } from 'lucide-react';
 
 const statusConfig = {
     completed: { label: 'Settled', icon: CheckCircle, bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-100' },
@@ -60,7 +60,7 @@ const PaymentTable = ({ payments, loading }) => {
                                                 />
                                             ) : (
                                                 <div className="w-full h-full bg-emerald-50 flex items-center justify-center text-emerald-600">
-                                                    <Box size={20} />
+                                                    <Package size={20} />
                                                 </div>
                                             )}
                                         </div>
@@ -74,7 +74,7 @@ const PaymentTable = ({ payments, loading }) => {
                                 </td>
                                 <td className="bg-white py-5 px-4 border-y border-gray-100 group-hover:bg-gray-50 transition-colors">
                                     <span className="text-xs text-gray-500 font-black tracking-tighter">
-                                        {payment.invoiceNumber || `#TXN-${payment.paymentId.substring(0, 8)}`}
+                                        {payment.invoiceNumber || `#TXN-${String(payment.paymentId).substring(0, 8)}`}
                                     </span>
                                 </td>
                                 <td className="bg-white py-5 px-4 border-y border-gray-100 group-hover:bg-gray-50 transition-colors">

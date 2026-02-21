@@ -83,8 +83,8 @@ exports.getShopsForItem = async (itemId) => {
             s.state,
             s.pincode,
             s.phone,
-            s.latitude,
-            s.longitude,
+            s.latitude::float,
+            s.longitude::float,
             s.rating AS shop_rating,
             s.total_reviews AS shop_reviews,
             si.price_per_day_inr,
@@ -111,7 +111,7 @@ exports.getShopsForItem = async (itemId) => {
 };
 
 // ─── Search Items ─────────────────────────────────────────────────────────────
-exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, availableOnly, limit, offset }) => {
+exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, availableOnly, startDate, endDate, limit, offset }) => {
     const params = [];
     let paramIdx = 1;
 
@@ -136,7 +136,16 @@ exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, 
         JOIN shop_items si ON si.item_id = i.id AND si.is_available = true
         JOIN shops s ON s.id = si.shop_id AND s.is_active = true
         WHERE i.is_active = true
+          AND NOT EXISTS (
+              SELECT 1 FROM bookings b
+              WHERE b.item_id = i.id
+              AND b.status IN ('confirmed', 'active')
+              AND (b.start_date, b.end_date) OVERLAPS ($${paramIdx}, $${paramIdx + 1})
+          )
     `;
+    params.push(startDate, endDate);
+    paramIdx += 2;
+
 
     if (q && q.trim()) {
         query += ` AND (i.name ILIKE $${paramIdx} OR i.description ILIKE $${paramIdx})`;
@@ -179,7 +188,7 @@ exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, 
     return result.rows;
 };
 
-exports.countSearchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly }) => {
+exports.countSearchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, startDate, endDate }) => {
     const params = [];
     let paramIdx = 1;
 
@@ -190,7 +199,16 @@ exports.countSearchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryO
         JOIN shop_items si ON si.item_id = i.id AND si.is_available = true
         JOIN shops s ON s.id = si.shop_id AND s.is_active = true
         WHERE i.is_active = true
+          AND NOT EXISTS (
+              SELECT 1 FROM bookings b
+              WHERE b.item_id = i.id
+              AND b.status IN ('confirmed', 'active')
+              AND (b.start_date, b.end_date) OVERLAPS ($${paramIdx}, $${paramIdx + 1})
+          )
     `;
+    params.push(startDate, endDate);
+    paramIdx += 2;
+
 
     if (q && q.trim()) {
         query += ` AND (i.name ILIKE $${paramIdx} OR i.description ILIKE $${paramIdx})`;
@@ -293,6 +311,23 @@ exports.getActiveRentalsByUser = async (userId) => {
     return result.rows;
 };
 
+// ─── Nearby Shops ───────────────────────────────────────────────────────────
+exports.getNearbyShops = async (lat, lng, radiusKm = 10) => {
+    const result = await db.query(
+        `SELECT
+            id, name, description, address, city, state, pincode,
+            phone, image_url, rating, total_reviews,
+            (6371 * acos(LEAST(GREATEST(cos(radians($1)) * cos(radians(latitude::float)) * cos(radians(longitude::float) - radians($2)) + sin(radians($1)) * sin(radians(latitude::float)), -1), 1))) AS distance
+         FROM shops
+         WHERE is_active = true
+         AND (6371 * acos(LEAST(GREATEST(cos(radians($1)) * cos(radians(latitude::float)) * cos(radians(longitude::float) - radians($2)) + sin(radians($1)) * sin(radians(latitude::float)), -1), 1))) <= $3
+         ORDER BY distance ASC
+         LIMIT 6`,
+        [lat, lng, radiusKm]
+    );
+    return result.rows;
+};
+
 // ─── Item Detail ──────────────────────────────────────────────────────────────
 exports.getItemById = async (itemId) => {
     const result = await db.query(
@@ -376,8 +411,8 @@ exports.getShopItemDetails = async (shopItemId) => {
             s.city,
             s.state,
             s.pincode,
-            s.latitude,
-            s.longitude,
+            s.latitude::float,
+            s.longitude::float,
             s.phone
         FROM shop_items si
         JOIN items i ON si.item_id = i.id

@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 async function checkSchema() {
     try {
-        const tables = ['bookings', 'delivery', 'payments', 'rentals'];
+        const tables = ['users', 'shops', 'shop_items', 'bookings', 'delivery', 'payments', 'rentals'];
         for (const table of tables) {
             console.log(`\n--- Table: ${table} ---`);
             const res = await pool.query(

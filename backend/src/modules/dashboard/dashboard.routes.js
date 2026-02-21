@@ -4,31 +4,32 @@ const controller = require('./dashboard.controller');
 const { protect } = require('../../middlewares/authMiddleware');
 const { validateSearch, validateCategoryId, validateItemId } = require('./dashboard.validation');
 
-// All routes require authentication
-router.use(protect);
+// Initial router setup (no global protect here as it conflicts with other /api routes)
 
 // Dashboard summary
-router.get('/dashboard/summary', controller.getSummary);
+router.get('/dashboard/summary', protect, controller.getSummary);
 
-// Categories
+// Categories (Public)
 router.get('/categories', controller.getCategories);
 
 // Items - search must come BEFORE /:itemId/shops to avoid route conflict
-router.get('/items/search', validateSearch, controller.searchItems);
-router.get('/items/category/:categoryId', validateCategoryId, validateSearch, controller.getItemsByCategory);
-router.get('/items/:itemId/shops', validateItemId, controller.getShopsForItem);
+router.get('/items/search', controller.searchItems);
+router.get('/items/category/:categoryId', controller.getItemsByCategory);
+router.get('/items/:itemId/shops', controller.getShopsForItem);
 
-// Payments
-router.get('/payments/my', validateSearch, controller.getMyPayments);
+// Payments (Protected)
+router.get('/payments/my', protect, validateSearch, controller.getMyPayments);
 
-// Rentals
-router.get('/rentals/active', controller.getActiveRentals);
+// Rentals (Protected)
+router.get('/rentals/active', protect, controller.getActiveRentals);
 
-// Profile Stats
-router.get('/profile/stats', controller.getProfileStats);
+// Profile Stats (Protected)
+router.get('/profile/stats', protect, controller.getProfileStats);
 
-
-// Shop Items
+// Shop Items (Public)
 router.get('/shop-items/:itemId', validateItemId, controller.getShopItemDetails);
+
+// Nearby Shops (Public)
+router.get('/shops/nearby', controller.getNearbyShops);
 
 module.exports = router;

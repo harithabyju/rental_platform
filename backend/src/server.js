@@ -1,9 +1,7 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const db = require('./config/db');
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,12 +27,16 @@ const categoryRoutes = require('./modules/categories/category.routes');
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
 const adminDashboardRoutes = require('./modules/admin/dashboard/adminDashboard.routes');
 const bookingRoutes = require('./modules/bookings/booking.routes');
+const paymentRoutes = require('./modules/payments/payment.routes');
+const searchRoutes = require('./modules/search/search.routes');
 
 // Use Routes
 app.use('/api', userRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', dashboardRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/search', searchRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
 
 

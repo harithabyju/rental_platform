@@ -2,7 +2,12 @@ const service = require('./dashboard.service');
 
 const handleError = (res, err, context = '') => {
     console.error(`[Dashboard Controller] ${context}:`, err.message || err);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        details: err.message,
+        context
+    });
 };
 
 // GET /dashboard/summary
@@ -51,13 +56,15 @@ exports.getShopsForItem = async (req, res) => {
 // GET /items/search?q=&categoryId=&minPrice=&maxPrice=&deliveryOnly=&page=&pageSize=
 exports.searchItems = async (req, res) => {
     try {
-        const { q, categoryId, minPrice, maxPrice, deliveryOnly, page = 1, pageSize = 12 } = req.query;
+        const { q, categoryId, minPrice, maxPrice, deliveryOnly, startDate, endDate, page = 1, pageSize = 12 } = req.query;
         const filters = {
             q,
             categoryId: categoryId ? parseInt(categoryId, 10) : null,
             minPrice: minPrice !== undefined ? parseFloat(minPrice) : null,
             maxPrice: maxPrice !== undefined ? parseFloat(maxPrice) : null,
             deliveryOnly: deliveryOnly === 'true',
+            startDate,
+            endDate
         };
         const result = await service.searchItems(filters, page, pageSize);
         res.json({ success: true, ...result });
@@ -109,5 +116,27 @@ exports.getShopItemDetails = async (req, res) => {
         res.json({ success: true, data: details });
     } catch (err) {
         handleError(res, err, 'getShopItemDetails');
+    }
+};
+
+exports.getNearbyShops = async (req, res) => {
+    try {
+        const { lat, lng, radius = 10 } = req.query;
+        if (!lat || !lng) {
+            return res.status(400).json({ success: false, message: 'Latitude and Longitude are required' });
+        }
+
+        const latitude = parseFloat(lat);
+        const longitude = parseFloat(lng);
+        const rad = parseFloat(radius);
+
+        if (isNaN(latitude) || isNaN(longitude)) {
+            return res.status(400).json({ success: false, message: 'Invalid coordinates' });
+        }
+
+        const shops = await service.getNearbyShops(latitude, longitude, rad);
+        res.json({ success: true, data: shops });
+    } catch (err) {
+        handleError(res, err, 'getNearbyShops');
     }
 };

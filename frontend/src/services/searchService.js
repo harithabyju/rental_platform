@@ -1,11 +1,9 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import api from './api';
 
 const searchService = {
     searchItems: async (params) => {
         try {
-            const response = await axios.get(`${API_URL}/search/items`, { params });
+            const response = await api.get('/search/items', { params });
             return response.data;
         } catch (error) {
             console.error('Error searching items:', error);
@@ -15,7 +13,7 @@ const searchService = {
 
     getCategories: async () => {
         try {
-            const response = await axios.get(`${API_URL}/categories`);
+            const response = await api.get('/categories');
             return response.data;
         } catch (error) {
             console.error('Error fetching categories:', error);

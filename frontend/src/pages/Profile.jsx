@@ -91,7 +91,7 @@ const Profile = () => {
                             </div>
                             <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
                                 <History size={16} className="text-gray-400" />
-                                <span>Member since 2024</span>
+                                <span>Member since {user?.created_at ? new Date(user.created_at).getFullYear() : '2026'}</span>
                             </div>
                         </div>
                     </div>

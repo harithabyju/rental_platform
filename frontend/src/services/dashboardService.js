@@ -35,3 +35,7 @@ export const getProfileStats = () =>
 // Shop item details
 export const getShopItemDetails = (shopItemId) =>
     api.get(`/shop-items/${shopItemId}`).then(r => r.data);
+
+// Nearby shops
+export const getNearbyShops = (params) =>
+    api.get('/shops/nearby', { params }).then(r => r.data);

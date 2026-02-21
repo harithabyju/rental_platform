@@ -264,3 +264,7 @@ function formatItem(i) {
 exports.getShopItemDetails = async (shopItemId) => {
     return await query.getShopItemDetails(shopItemId);
 };
+
+exports.getNearbyShops = async (lat, lng, radius) => {
+    return await query.getNearbyShops(lat, lng, radius);
+};

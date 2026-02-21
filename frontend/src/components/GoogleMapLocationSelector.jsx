@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Circle, StandaloneSearchBox } from '@react-google-maps/api';
 import { FaCrosshairs, FaSearch } from 'react-icons/fa';
+import { MapPin } from 'lucide-react';
 
 const libraries = ['places'];
 
@@ -88,18 +89,15 @@ const GoogleMapLocationSelector = ({ lat, lng, radius, onLocationChange }) => {
 
     if (loadError || isPlaceholderKey) {
         return (
-            <div className="h-[400px] bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-8 text-center space-y-4">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
-                    <FaCrosshairs size={24} />
+            <div className="h-[400px] bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-8 text-center space-y-4 animate-fade-in">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm">
+                    <MapPin size={24} />
                 </div>
                 <div className="space-y-1">
-                    <h3 className="font-bold text-slate-900">Map Interface Disabled</h3>
+                    <h3 className="font-bold text-slate-900">Map Preview Unavailable</h3>
                     <p className="text-sm text-slate-500 max-w-xs">
-                        Google Maps API key is missing or invalid. Please add a valid key to your <code>.env</code> file to enable the interactive map and address search.
+                        The interactive map is currently in view-only mode. Search results will still be filtered by your location.
                     </p>
-                </div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white px-3 py-1 rounded-full border border-slate-100 shadow-sm">
-                    Demo Mode Fallback
                 </div>
             </div>
         );

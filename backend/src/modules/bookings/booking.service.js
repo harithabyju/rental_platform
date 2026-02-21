@@ -14,21 +14,23 @@ const checkOverlap = async (itemId, startDate, endDate, excludeBookingId = null)
 };
 
 exports.createBooking = async (userId, data) => {
-    const { itemId, startDate, endDate, totalAmount, deliveryMethod, deliveryFee } = data;
+    const { itemId, shopId, startDate, endDate, totalAmount, deliveryMethod, deliveryFee } = data;
 
-    // Overlap Check
+    // Overlap Check (Simplified - should ideally check specifically for the quantity at the shop)
     const isOverlapping = await checkOverlap(itemId, startDate, endDate);
     if (isOverlapping) {
         const error = new Error(OVERLAP_ERROR);
-        error.statusCode = 400; // Bad Request
+        error.statusCode = 400;
         throw error;
     }
 
     // Create Booking
-    const result = await db.query(bookingQueries.createBooking, [
-        itemId, userId, startDate, endDate, 'pending', totalAmount,
-        deliveryMethod || 'pickup', deliveryFee || 0
-    ]);
+    const result = await db.query(
+        `INSERT INTO bookings (item_id, shop_id, user_id, start_date, end_date, status, total_amount, delivery_method, delivery_fee)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING *`,
+        [itemId, shopId, userId, startDate, endDate, 'pending', totalAmount, deliveryMethod || 'pickup', deliveryFee || 0]
+    );
     return result.rows[0];
 };
 
@@ -38,7 +40,6 @@ exports.getUserBookings = async (userId) => {
 };
 
 exports.cancelBooking = async (userId, bookingId) => {
-    // Check ownership and status
     const bookingResult = await db.query(bookingQueries.getBookingById, [bookingId]);
     if (bookingResult.rows.length === 0) throw new Error('Booking not found');
     const booking = bookingResult.rows[0];
@@ -48,8 +49,27 @@ exports.cancelBooking = async (userId, bookingId) => {
         throw new Error('Cannot cancel completed or already cancelled booking');
     }
 
+    // Refund Logic: 
+    // If cancelled before start_date: 100% refund
+    // If cancelled after start_date: 50% refund on remaining days
+    const now = new Date();
+    const start = new Date(booking.start_date);
+    const end = new Date(booking.end_date);
+    let refundAmount = booking.total_amount;
+
+    if (now > start) {
+        const totalDuration = end - start;
+        const usedDuration = now - start;
+        const remainingRatio = Math.max(0, (totalDuration - usedDuration) / totalDuration);
+        refundAmount = (booking.total_amount * remainingRatio * 0.5).toFixed(2);
+    }
+
     const result = await db.query(bookingQueries.updateStatus, ['cancelled', bookingId]);
-    return result.rows[0];
+    return {
+        ...result.rows[0],
+        refundAmount,
+        message: `Booking cancelled. Refund of ₹${refundAmount} calculated.`
+    };
 };
 
 exports.extendBooking = async (userId, bookingId, newEndDate) => {
@@ -58,25 +78,36 @@ exports.extendBooking = async (userId, bookingId, newEndDate) => {
     const booking = bookingResult.rows[0];
 
     if (booking.user_id !== userId) throw new Error('Unauthorized');
-    if (booking.status !== 'confirmed') throw new Error('Can only extend active bookings');
+    if (booking.status !== 'confirmed' && booking.status !== 'active') throw new Error('Cannot extend this booking');
 
-    // Overlap Check for extension
-    // We check overlap from original end_date to newEndDate?? 
-    // Actually, simpler to check overlap for the WHOLE new range, excluding the current booking itself.
+    // Get item price for the CORRECT shop
+    const shopItemResult = await db.query(
+        'SELECT price_per_day_inr FROM shop_items WHERE item_id = $1 AND shop_id = $2',
+        [booking.item_id, booking.shop_id]
+    );
+    const pricePerDay = shopItemResult.rows[0]?.price_per_day_inr;
 
+    if (!pricePerDay) throw new Error('Could not determine item price at the shop');
+
+    // Overlap Check
     const isOverlapping = await checkOverlap(booking.item_id, booking.start_date, newEndDate, bookingId);
     if (isOverlapping) {
-        const error = new Error(OVERLAP_ERROR);
-        error.statusCode = 400;
-        throw error;
+        throw new Error(OVERLAP_ERROR);
     }
 
-    // Update End Date
-    // Note: total_amount should probably be updated too, but simplifying for now or handling in frontend calculation passed?
-    // The prompt says "features: extensions", doesn't explicitly ask for price recalc logic in backend right now, but good to note.
-    // I'll assume price update isn't passed for now or handled separately.
+    const oldEndDate = new Date(booking.end_date);
+    const addedDate = new Date(newEndDate);
+    const diffDays = Math.ceil((addedDate - oldEndDate) / (1000 * 60 * 60 * 24));
 
-    const result = await db.query(bookingQueries.updateEndDate, [newEndDate, bookingId]);
+    if (diffDays <= 0) throw new Error('New end date must be after current end date');
+
+    const additionalAmount = diffDays * pricePerDay;
+    const newTotalAmount = parseFloat(booking.total_amount) + additionalAmount;
+
+    const result = await db.query(
+        'UPDATE bookings SET end_date = $1, total_amount = $2 WHERE booking_id = $3 RETURNING *',
+        [newEndDate, newTotalAmount, bookingId]
+    );
     return result.rows[0];
 };
 

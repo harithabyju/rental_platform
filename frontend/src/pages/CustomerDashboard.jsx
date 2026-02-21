@@ -6,13 +6,11 @@ import * as dashboardService from '../services/dashboardService';
 import searchService from '../services/searchService';
 import CategoryDropdown from '../components/CategoryDropdown';
 import DateRangePicker from '../components/DateRangePicker';
-import GoogleMapLocationSelector from '../components/GoogleMapLocationSelector';
 import RadiusSlider from '../components/RadiusSlider';
 import SearchResultsGrid from '../components/SearchResultsGrid';
 import SortDropdown from '../components/SortDropdown';
 import RentalStatusCard from '../components/RentalStatusCard';
-import TechnicalInsights from '../components/TechnicalInsights';
-import { Search, Map as MapIcon, Grid, SlidersHorizontal, MapPin, Package, CheckCircle, Wallet, ArrowRight, ChevronRight, Info } from 'lucide-react';
+import { Search, Map as MapIcon, Grid, SlidersHorizontal, MapPin, Package, CheckCircle, Wallet, ArrowRight, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const CustomerDashboard = () => {
@@ -20,7 +18,9 @@ const CustomerDashboard = () => {
     const navigate = useNavigate();
     const { categories, fetchCategories, summary, fetchSummary } = useDashboard();
     const [activeRentals, setActiveRentals] = useState([]);
+    const [nearbyShops, setNearbyShops] = useState([]);
     const [rentalsLoading, setRentalsLoading] = useState(false);
+    const [shopsLoading, setShopsLoading] = useState(false);
 
     // Search State
     const [searchParams, setSearchParams] = useState({
@@ -40,15 +40,15 @@ const CustomerDashboard = () => {
     const [pagination, setPagination] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showExplorer, setShowExplorer] = useState(false);
-    const [showInsights, setShowInsights] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
 
     useEffect(() => {
         fetchCategories();
         fetchSummary();
         loadActiveRentals();
+        // handleSearch no longer runs automatically to enforce strict search terms
 
-        if (navigator.geolocation) {
+        if (navigator.geolocation && !user?.latitude) {
             navigator.geolocation.getCurrentPosition((position) => {
                 setSearchParams(prev => ({
                     ...prev,
@@ -71,27 +71,42 @@ const CustomerDashboard = () => {
         }
     };
 
+
+
     const handleSearch = async (e) => {
-        if (e) e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
+
+        // If searching from the Welcome Board main bar (not in Explorer mode), 
+        // we might want to navigate to the Browse page if it's a new searching action
+        if (!showExplorer && e) {
+            navigate(`/dashboard/browse?q=${encodeURIComponent(searchParams.q)}`);
+            return;
+        }
+
+        if (!searchParams.category) {
+            toast.warning('Please select a category and specify your rental dates.');
+            return;
+        }
+
         setLoading(true);
-        setHasSearched(true);
+        if (e) setHasSearched(true);
         try {
-            const data = showExplorer
-                ? await searchService.searchItems(searchParams)
-                : await dashboardService.searchItems({
-                    q: searchParams.q,
-                    categoryId: searchParams.category,
-                    page: searchParams.page,
-                    pageSize: searchParams.limit
-                });
+            if (!searchParams.lat || !searchParams.lng) {
+                toast.error('Location coordinates are required. Please allow location access or set it in your profile.');
+                setLoading(false);
+                return;
+            }
+            const data = await searchService.searchItems(searchParams);
 
             setResults(data.items);
             setPagination(data.pagination);
 
-            // Scroll to results
-            const resultsSection = document.getElementById('search-results');
-            if (resultsSection) {
-                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            // Scroll to results only if user explicitly searched
+            if (e) {
+                const resultsSection = document.getElementById('search-results');
+                if (resultsSection) {
+                    resultsSection.scrollIntoView({ behavior: 'smooth' });
+                }
             }
         } catch (error) {
             toast.error(error.message || 'Failed to fetch results');
@@ -158,7 +173,16 @@ const CustomerDashboard = () => {
                         </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-4 max-w-4xl animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            if (searchParams.q.trim()) {
+                                navigate(`/dashboard/browse?q=${encodeURIComponent(searchParams.q)}`);
+                            }
+                        }}
+                        className="flex flex-col sm:flex-row gap-4 max-w-4xl animate-slide-up"
+                        style={{ animationDelay: '0.2s' }}
+                    >
                         <div className="relative flex-grow group">
                             <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-600 transition-colors group-focus-within:text-emerald-500" size={24} />
                             <input
@@ -171,7 +195,16 @@ const CustomerDashboard = () => {
                         </div>
                         <div className="relative">
                             <button
-                                onClick={() => setShowExplorer(!showExplorer)}
+                                type="button"
+                                onClick={() => {
+                                    setShowExplorer(!showExplorer);
+                                    if (!showExplorer) {
+                                        // Scroll to explorer section
+                                        setTimeout(() => {
+                                            document.getElementById('explorer-section')?.scrollIntoView({ behavior: 'smooth' });
+                                        }, 100);
+                                    }
+                                }}
                                 className={`h-16 px-8 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl active-press hover-tilt relative ${showExplorer
                                     ? 'bg-emerald-300 text-emerald-900 ring-4 ring-emerald-300/30'
                                     : 'bg-emerald-50 text-emerald-900 border-2 border-transparent hover:bg-white'
@@ -187,7 +220,7 @@ const CustomerDashboard = () => {
                                 )}
                             </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
 
                 <div className="absolute top-0 right-0 w-full h-full pointer-events-none opacity-20">
@@ -229,6 +262,27 @@ const CustomerDashboard = () => {
                 </div>
             </div>
 
+            {/* Popular Categories */}
+            <div className="space-y-6">
+                <h3 className="text-2xl font-black text-gray-900 px-2">Popular Categories</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+                    {categories.map((cat) => (
+                        <button
+                            key={cat.id}
+                            onClick={() => navigate(`/dashboard/browse?categoryId=${cat.id}`)}
+                            className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all group flex flex-col items-center gap-3 active-press hover-tilt"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-2xl group-hover:bg-emerald-600 group-hover:scale-110 transition-all">
+                                {getCategoryIcon(cat.slug)}
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 group-hover:text-emerald-700 transition-colors text-center">
+                                {cat.name}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             {/* Quick Actions */}
             <div className="space-y-6">
                 <h3 className="text-2xl font-black text-gray-900 px-2">Quick Actions</h3>
@@ -266,31 +320,16 @@ const CustomerDashboard = () => {
                 </div>
             </div>
 
-            {/* Browse by Category */}
-            <div className="space-y-6">
-                <div className="flex items-center justify-between px-2">
-                    <h3 className="text-2xl font-black text-gray-900">Browse by Category</h3>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                    {categories.slice(0, 4).map((cat, i) => (
-                        <button
-                            key={cat.id}
-                            onClick={() => navigate(`/dashboard/browse?category=${cat.id}`)}
-                            className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all text-center group active-press hover-tilt animate-slide-up"
-                            style={{ animationDelay: `${0.1 * (i + 1)}s` }}
-                        >
-                            <div className="text-4xl mb-4 group-hover:scale-125 transition-transform duration-300">{getCategoryIcon(cat.slug)}</div>
-                            <span className="font-bold text-gray-700 block text-sm">{cat.name}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+
 
             {/* Active Bookings Section */}
             {activeRentals.length > 0 && (
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-2">
-                        <h3 className="text-2xl font-black text-gray-900">Active Bookings</h3>
+                        <div className="space-y-1">
+                            <h3 className="text-2xl font-black text-gray-900">Active Rentals</h3>
+                            <p className="text-gray-500 text-sm font-medium">Currently ongoing rentals that you are using.</p>
+                        </div>
                         <button onClick={() => navigate('/dashboard/rentals')} className="text-blue-600 text-sm font-black flex items-center gap-1 hover:gap-2 transition-all">
                             View All <ChevronRight size={18} />
                         </button>
@@ -308,63 +347,47 @@ const CustomerDashboard = () => {
                 <div id="explorer-section" className="bg-white rounded-[2.5rem] shadow-2xl border border-emerald-100 p-8 sm:p-12 animate-slide-up space-y-10">
                     <div className="flex items-center justify-between">
                         <div className="space-y-2">
-                            <div className="flex items-center gap-4">
-                                <h2 className="text-3xl font-black text-emerald-900 flex items-center gap-3">
-                                    <MapPin className="text-emerald-500" size={32} /> Location-Based Explorer
-                                </h2>
-                                <button
-                                    onClick={() => setShowInsights(!showInsights)}
-                                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95 ${showInsights
-                                        ? 'bg-emerald-600 text-white shadow-lg'
-                                        : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                        }`}
-                                >
-                                    <Info size={14} /> {showInsights ? 'Hide Logic' : 'How it works?'}
-                                </button>
-                            </div>
+                            <h2 className="text-3xl font-black text-emerald-900 flex items-center gap-3">
+                                <MapPin className="text-emerald-500" size={32} /> Location-Based Explorer
+                            </h2>
                             <p className="text-gray-500 font-medium text-lg">Find precisely what's available near you right now.</p>
                         </div>
                         <button onClick={() => setShowExplorer(false)} className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-900 transition-all font-black">&times;</button>
                     </div>
 
-                    {showInsights && (
-                        <TechnicalInsights onClose={() => setShowInsights(false)} />
-                    )}
 
-                    <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-end">
+
+                    <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-10 items-end">
                         <CategoryDropdown
                             categories={categories}
                             value={searchParams.category}
                             onChange={(val) => setSearchParams(prev => ({ ...prev, category: val }))}
                         />
-                        <DateRangePicker
-                            startDate={searchParams.start_date}
-                            endDate={searchParams.end_date}
-                            onStartChange={(val) => setSearchParams(prev => ({ ...prev, start_date: val }))}
-                            onEndChange={(val) => setSearchParams(prev => ({ ...prev, end_date: val }))}
-                        />
+                        <div className="lg:col-span-2">
+                            <DateRangePicker
+                                startDate={searchParams.start_date}
+                                endDate={searchParams.end_date}
+                                onStartChange={(val) => setSearchParams(prev => ({ ...prev, start_date: val }))}
+                                onEndChange={(val) => setSearchParams(prev => ({ ...prev, end_date: val }))}
+                            />
+                        </div>
                         <RadiusSlider
                             value={searchParams.radius}
                             onChange={(val) => setSearchParams(prev => ({ ...prev, radius: val }))}
                         />
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="h-14 bg-emerald-600 text-white rounded-2xl font-black text-lg hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50 active-press hover-tilt"
-                        >
-                            {loading ? <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div> : <Search size={22} />}
-                            Find Items
-                        </button>
+                        <div className="lg:col-span-4 flex justify-end">
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="h-16 px-12 bg-emerald-600 text-white rounded-2xl font-black text-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-emerald-200 disabled:opacity-50 active-press hover-tilt"
+                            >
+                                {loading ? <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div> : <Search size={24} />}
+                                Find Items Now
+                            </button>
+                        </div>
                     </form>
 
-                    <div className="rounded-3xl overflow-hidden border-4 border-emerald-50 shadow-inner">
-                        <GoogleMapLocationSelector
-                            lat={searchParams.lat}
-                            lng={searchParams.lng}
-                            radius={searchParams.radius}
-                            onLocationChange={handleLocationChange}
-                        />
-                    </div>
+
                 </div>
             )}
 
@@ -373,9 +396,11 @@ const CustomerDashboard = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
                     <div className="space-y-1">
                         <h2 className="text-3xl font-black text-gray-900 tracking-tight">
-                            {hasSearched ? `Search Results (${pagination?.total || 0})` : 'Popular Rentals Nearby'}
+                            {hasSearched ? `Items Found (${pagination?.total || 0})` : 'Search Results'}
                         </h2>
-                        <p className="text-gray-500 font-medium">Hand-picked rentals just for you.</p>
+                        <p className="text-gray-500 font-medium">
+                            {hasSearched ? 'Available items matching your criteria.' : 'Select a category in the Explorer to find available rentals.'}
+                        </p>
                     </div>
 
                     <div className="flex items-center gap-4 bg-gray-50 p-1.5 rounded-2xl">
@@ -384,7 +409,19 @@ const CustomerDashboard = () => {
                 </div>
 
                 <div className="min-h-[400px]">
-                    <SearchResultsGrid items={results} loading={loading} />
+                    {hasSearched ? (
+                        <SearchResultsGrid items={results} loading={loading} />
+                    ) : (
+                        <div className="h-[400px] rounded-[2.5rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50">
+                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm mb-4">
+                                <Search size={24} />
+                            </div>
+                            <h4 className="font-bold text-gray-900 mb-2">Ready to find some gear?</h4>
+                            <p className="text-sm text-gray-500 max-w-xs">
+                                Use the Location-Based Explorer above to find precisely what's available near you.
+                            </p>
+                        </div>
+                    )}
 
                     {pagination && pagination.pages > 1 && (
                         <div className="mt-16 flex justify-center gap-3">

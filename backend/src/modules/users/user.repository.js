@@ -69,13 +69,13 @@ const getShopsAnalytics = async () => {
             u.fullname as owner_name,
             u.email as owner_email,
             COUNT(DISTINCT si.item_id) as total_items,
-            COUNT(DISTINCT b.id) as total_rentals,
+            COUNT(DISTINCT r.id) as total_rentals,
             COALESCE(SUM(p.amount_inr), 0) as total_revenue
         FROM shops s
         JOIN users u ON s.owner_id = u.id
         LEFT JOIN shop_items si ON s.id = si.shop_id
-        LEFT JOIN bookings b ON si.id = b.shop_item_id
-        LEFT JOIN payments p ON b.id = p.booking_id AND p.status = 'paid'
+        LEFT JOIN rentals r ON s.id = r.shop_id
+        LEFT JOIN payments p ON r.booking_id = p.booking_id AND p.status = 'paid'
         WHERE s.status = 'approved'
         GROUP BY s.id, s.name, s.city, s.state, s.status, s.approved_at, u.fullname, u.email
         ORDER BY total_revenue DESC
