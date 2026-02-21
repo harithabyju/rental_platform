@@ -25,7 +25,10 @@ app.get('/health', async (req, res) => {
 });
 
 const userRoutes = require('./modules/users/user.routes');
-app.use('/', userRoutes); // Mounting at root because routes define their own prefixes
+const adminDashboardRoutes = require('./modules/admin/dashboard/adminDashboard.routes');
+
+app.use('/', userRoutes);
+app.use('/api/admin/dashboard', adminDashboardRoutes);
 
 
 

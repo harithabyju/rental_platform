@@ -6,7 +6,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import OTP from './pages/OTP';
 import Profile from './pages/Profile';
-import AdminUserManagement from './pages/AdminUserManagement';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUserManagement from './pages/admin/AdminUserManagement';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -42,6 +43,15 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <Profile />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="admin/dashboard"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <AdminDashboard />
                                 </ProtectedRoute>
                             }
                         />
