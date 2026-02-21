@@ -10,6 +10,14 @@ import Register from './pages/Register';
 import OTP from './pages/OTP';
 import Profile from './pages/Profile';
 import AdminUserManagement from './pages/AdminUserManagement';
+
+// New Dashboard Pages
+import CustomerDashboard from './pages/CustomerDashboard';
+import BrowseItems from './pages/BrowseItems';
+import ItemShops from './pages/ItemShops';
+import MyPayments from './pages/MyPayments';
+import ActiveRentals from './pages/ActiveRentals';
+
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -111,16 +119,25 @@ function App() {
                                 }
                             />
 
-                        <Route
-                            path="admin/users"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <AdminUserManagement />
-                                </ProtectedRoute>
-                            }
-                        />
-                    </Route>
-                </Routes>
+                            <Route
+                                path="admin/users"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminUserManagement />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="dashboard/booking/:itemId"
+                                element={
+                                    <ProtectedRoute allowedRoles={['customer', 'renter']}>
+                                        <BookingPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                        </Route>
+                    </Routes>
+                </DashboardProvider>
                 <ToastContainer />
             </AuthProvider>
         </Router>

@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
@@ -10,7 +10,7 @@ import { Menu } from 'lucide-react';
 const SIDEBAR_ROUTES = ['/', '/login', '/register', '/otp'];
 
 const Layout = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     if (!user) {
@@ -37,7 +37,7 @@ const Layout = () => {
                                     <Link to="/admin/users" className="text-gray-700 hover:text-primary">Manage Users</Link>
                                 )}
                                 <button
-                                    onClick={handleLogout}
+                                    onClick={logout}
                                     className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
                                 >
                                     Logout
@@ -55,12 +55,12 @@ const Layout = () => {
                             </>
                         )}
                     </div>
-                </header>
+                </nav>
+            </header>
 
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 animate-slide-up">
-                    <Outlet />
-                </main>
-            </div>
+            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 animate-slide-up">
+                <Outlet />
+            </main>
         </div>
     );
 };
