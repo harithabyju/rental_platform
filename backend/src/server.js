@@ -26,9 +26,15 @@ app.get('/health', async (req, res) => {
 
 const userRoutes = require('./modules/users/user.routes');
 const categoryRoutes = require('./modules/categories/category.routes');
+const shopRoutes = require('./modules/shops/shop.routes');
+const bookingRoutes = require('./modules/bookings/booking.routes');
+const complianceRoutes = require('./modules/compliance/compliance.routes');
 
 app.use('/', userRoutes);
 app.use('/', categoryRoutes);
+app.use('/', shopRoutes);
+app.use('/', bookingRoutes);
+app.use('/', complianceRoutes);
 
 
 

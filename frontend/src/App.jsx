@@ -10,6 +10,7 @@ import AdminUserManagement from './pages/admin/AdminUserManagement';
 import CategoryManagement from './pages/admin/CategoryManagement';
 import ShopOwnerDashboard from './pages/shop-owner/ShopOwnerDashboard';
 import CustomerHome from './pages/customer/CustomerHome';
+import ComplianceAdminDashboard from './pages/admin/ComplianceDashboard';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -62,6 +63,14 @@ function App() {
                             element={
                                 <ProtectedRoute allowedRoles={['admin']}>
                                     <CategoryManagement />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="admin/compliance"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <ComplianceAdminDashboard />
                                 </ProtectedRoute>
                             }
                         />
