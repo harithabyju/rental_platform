@@ -39,6 +39,14 @@ const blockUser = async (userId) => {
     return response.data;
 }
 
+const updateUser = async (userData) => {
+    const response = await api.put('/users/me', userData);
+    if (response.data) {
+        localStorage.setItem('user', JSON.stringify(response.data));
+    }
+    return response.data;
+};
+
 const authService = {
     register,
     verifyOtp,
@@ -46,7 +54,8 @@ const authService = {
     logout,
     getMe,
     getAllUsers,
-    blockUser
+    blockUser,
+    updateUser
 };
 
 export default authService;

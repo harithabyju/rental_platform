@@ -15,7 +15,7 @@ const findUserByEmail = async (email) => {
 };
 
 const findUserById = async (id) => {
-    const result = await db.query('SELECT id, fullname, email, role, verified, created_at, blocked FROM users WHERE id = $1', [id]);
+    const result = await db.query('SELECT id, fullname, email, role, verified, created_at, blocked, latitude, longitude FROM users WHERE id = $1', [id]);
     return result.rows[0];
 };
 
@@ -33,10 +33,10 @@ const getAllUsers = async () => {
 }
 
 const updateUserProfile = async (id, data) => {
-    const { fullname } = data;
+    const { fullname, latitude, longitude } = data;
     const result = await db.query(
-        'UPDATE users SET fullname = $1 WHERE id = $2 RETURNING id, fullname, email, role, verified',
-        [fullname, id]
+        'UPDATE users SET fullname = COALESCE($1, fullname), latitude = COALESCE($2, latitude), longitude = COALESCE($3, longitude), updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING id, fullname, email, role, verified, latitude, longitude',
+        [fullname, latitude, longitude, id]
     );
     return result.rows[0];
 }

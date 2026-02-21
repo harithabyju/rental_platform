@@ -2,7 +2,244 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-primary: #10B981;
+  /* Emerald 500 */
+  --color-primary-dark: #059669;
+  /* Emerald 600 */
+  --color-secondary: #3B82F6;
+  /* Blue 500 */
+  --color-accent: #F59E0B;
+  /* Amber 500 */
+  --color-background: #F3F4F6;
+  /* Gray 100 */
+  --color-surface: #FFFFFF;
+  --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
 body {
-  background-color: #F3F4F6;
-  font-family: 'Inter', sans-serif;
+  background-color: var(--color-background);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #1F2937;
+  /* Gray 800 */
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-emerald-100;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-2 bg-white border-2 border-emerald-600 text-emerald-600 font-bold rounded-lg hover:bg-emerald-50 transition-all;
+  }
+
+  .btn-danger {
+    @apply bg-red-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-600 transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all;
+  }
+}
+
+@layer utilities {
+  .animate-slide-up {
+    animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out both;
+  }
+
+  .animate-scale-up {
+    animation: scale-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-subtle {
+    animation: pulse-subtle 3s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Animation Delays */
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+
+  .hover-tilt {
+    @apply transition-transform duration-300;
+  }
+
+  .hover-tilt:hover {
+    transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
+  }
+
+  .active-press:active {
+    @apply transform scale-[0.97] translate-y-[2px];
+    transition-duration: 100ms;
+  }
+
+  /* Global icon pop */
+  svg.lucide {
+    @apply transition-transform duration-300;
+  }
+
+  *:hover>svg.lucide {
+    @apply scale-110;
+  }
+
+  .glass-morphic {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+
+  .glass-card {
+    @apply bg-white/40 backdrop-blur-md border border-white/30 shadow-2xl;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-up {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(2deg);
+  }
+}
+
+@keyframes pulse-subtle {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+.animate-typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 4px solid;
+  animation: typewriter 2s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes blink-caret {
+
+  from,
+  to {
+    border-color: transparent;
+  }
+
+  50% {
+    border-color: currentColor;
+  }
+}
+
+@keyframes pop {
+
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.active-pop:active {
+  animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }

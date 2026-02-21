@@ -30,13 +30,17 @@ export const AuthProvider = ({ children }) => {
         return await authService.verifyOtp({ email, otp });
     }
 
+    const updateUser = (updatedUser) => {
+        setUser(updatedUser);
+    };
+
     const logout = () => {
         authService.logout();
         setUser(null);
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, verifyOtp, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, verifyOtp, logout, updateUser, loading }}>
             {!loading && children}
         </AuthContext.Provider>
     );

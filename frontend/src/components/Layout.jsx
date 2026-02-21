@@ -1,14 +1,28 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Navbar from './Navbar';
+import Sidebar from './Sidebar';
+import CursorParticles from './CursorParticles';
+import { useState } from 'react';
+import { Menu } from 'lucide-react';
+
+// Routes where we show the old sidebar layout (pre-login)
+const SIDEBAR_ROUTES = ['/', '/login', '/register', '/otp'];
 
 const Layout = () => {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
+    const { user } = useAuth();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
+    if (!user) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <CursorParticles />
+                <main className="animate-fade-in">
+                    <Outlet />
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -18,19 +32,10 @@ const Layout = () => {
                     <div className="flex items-center space-x-4">
                         {user ? (
                             <>
-                                {user.role === 'admin' && (
-                                    <>
-                                        <Link to="/admin/users" className="text-gray-700 hover:text-primary">Users</Link>
-                                        <Link to="/admin/shops" className="text-gray-700 hover:text-primary">Shop Approvals</Link>
-                                    </>
-                                )}
-                                
-                                {user.role !== 'admin' && (
-                                     <Link to="/myshop" className="text-gray-700 hover:text-primary">My Shop</Link>
-                                )}
-
                                 <Link to="/profile" className="text-gray-700 hover:text-primary">Profile</Link>
-                                
+                                {user.role === 'admin' && (
+                                    <Link to="/admin/users" className="text-gray-700 hover:text-primary">Manage Users</Link>
+                                )}
                                 <button
                                     onClick={handleLogout}
                                     className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
@@ -50,14 +55,12 @@ const Layout = () => {
                             </>
                         )}
                     </div>
-                </nav>
-            </header>
-            <main className="flex-grow bg-gray-50">
-                <Outlet />
-            </main>
-            <footer className="bg-gray-800 text-white py-6 text-center">
-                <p>&copy; 2024 Grab'N'Go. All rights reserved.</p>
-            </footer>
+                </header>
+
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 animate-slide-up">
+                    <Outlet />
+                </main>
+            </div>
         </div>
     );
 };
