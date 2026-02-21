@@ -34,7 +34,10 @@ const Layout = () => {
                             <>
                                 <Link to="/profile" className="text-gray-700 hover:text-primary">Profile</Link>
                                 {user.role === 'admin' && (
-                                    <Link to="/admin/users" className="text-gray-700 hover:text-primary">Manage Users</Link>
+                                    <>
+                                        <Link to="/admin/dashboard" className="text-gray-700 hover:text-primary">Dashboard</Link>
+                                        <Link to="/admin/users" className="text-gray-700 hover:text-primary">Users</Link>
+                                    </>
                                 )}
                                 <button
                                     onClick={logout}

@@ -13,14 +13,6 @@ import AdminUserManagement from './pages/admin/AdminUserManagement';
 import CategoryManagement from './pages/admin/CategoryManagement';
 import ShopOwnerDashboard from './pages/shop-owner/ShopOwnerDashboard';
 import CustomerHome from './pages/customer/CustomerHome';
-
-// New Dashboard Pages
-import CustomerDashboard from './pages/CustomerDashboard';
-import BrowseItems from './pages/BrowseItems';
-import ItemShops from './pages/ItemShops';
-import MyPayments from './pages/MyPayments';
-import ActiveRentals from './pages/ActiveRentals';
-
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -113,14 +105,14 @@ function App() {
                                 }
                             />
 
-                            <Route
-                                path="profile"
-                                element={
-                                    <ProtectedRoute>
-                                        <Profile />
-                                    </ProtectedRoute>
-                                }
-                            />
+                        <Route
+                            path="profile"
+                            element={
+                                <ProtectedRoute>
+                                    <Profile />
+                                </ProtectedRoute>
+                            }
+                        />
 
                             <Route
                                 path="admin/users"

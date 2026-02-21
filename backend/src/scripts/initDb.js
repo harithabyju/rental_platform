@@ -1,7 +1,14 @@
 const db = require('../config/db');
 
-const createUsersTable = `
-  CREATE TYPE user_role AS ENUM ('customer', 'shop_owner', 'admin');
+const createTables = `
+  DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+      CREATE TYPE user_role AS ENUM ('customer', 'shop_owner', 'admin');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'booking_status') THEN
+      CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'active', 'completed', 'cancelled');
+    END IF;
+  END $$;
 
   CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -14,23 +21,72 @@ const createUsersTable = `
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     blocked BOOLEAN DEFAULT FALSE
   );
+
+  CREATE TABLE IF NOT EXISTS categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS shops (
+    id SERIAL PRIMARY KEY,
+    owner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    description TEXT,
+    rating DECIMAL(2,1) DEFAULT 0.0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS items (
+    id SERIAL PRIMARY KEY,
+    shop_id INTEGER REFERENCES shops(id) ON DELETE CASCADE,
+    category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price_per_day DECIMAL(10,2) NOT NULL,
+    status VARCHAR(50) DEFAULT 'available',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS bookings (
+    id SERIAL PRIMARY KEY,
+    customer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    item_id INTEGER REFERENCES items(id) ON DELETE CASCADE,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    total_price DECIMAL(10,2) NOT NULL,
+    status booking_status DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS payments (
+    id SERIAL PRIMARY KEY,
+    booking_id INTEGER REFERENCES bookings(id) ON DELETE CASCADE,
+    amount DECIMAL(10,2) NOT NULL,
+    payment_method VARCHAR(50) DEFAULT 'razorpay',
+    status VARCHAR(50) DEFAULT 'pending',
+    transaction_id VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS fines (
+    id SERIAL PRIMARY KEY,
+    booking_id INTEGER REFERENCES bookings(id) ON DELETE CASCADE,
+    amount DECIMAL(10,2) NOT NULL,
+    reason TEXT,
+    status VARCHAR(50) DEFAULT 'unpaid',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
 `;
 
 const initDb = async () => {
   try {
-    await db.query(createUsersTable);
-    console.log('Users table created successfully');
+    await db.query(createTables);
+    console.log('Database tables initialized successfully');
     process.exit(0);
   } catch (err) {
-    if (err.code === '42710') {
-      // duplicate object error (enum might already exist)
-      console.log('Enum already exists, skipping...');
-      // Try creating table again if enum existed but table didn't? 
-      // Simpler to just ignore or handle gracefully.
-      // For now, let's assume if enum exists, we might need to handle it.
-      // But 'CREATE TYPE' doesn't have IF NOT EXISTS in older logic, 
-      // actually Postgres supports it in blocks or we catch error.
-    }
     console.error('Error initializing database:', err);
     process.exit(1);
   }

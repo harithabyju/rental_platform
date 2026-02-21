@@ -25,6 +25,10 @@ app.get('/health', async (req, res) => {
 });
 
 const userRoutes = require('./modules/users/user.routes');
+const adminDashboardRoutes = require('./modules/admin/dashboard/adminDashboard.routes');
+
+app.use('/', userRoutes);
+app.use('/api/admin/dashboard', adminDashboardRoutes);
 const categoryRoutes = require('./modules/categories/category.routes');
 
 app.use('/', userRoutes);
