@@ -57,7 +57,11 @@ const Profile = () => {
     return (
         <div className="max-w-4xl mx-auto py-12 px-4 animate-fade-in">
             <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => {
+                    if (user.role === 'admin') navigate('/admin/dashboard');
+                    else if (user.role === 'shop_owner') navigate('/shop-owner/dashboard');
+                    else navigate('/dashboard');
+                }}
                 className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 mb-8 font-black transition-all group hover-tilt active-press active-pop"
             >
                 <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
@@ -221,10 +225,10 @@ const Profile = () => {
                                 onLocationChange={(lat, lng) => setLocation({ lat, lng })}
                             />
                         </div>
-                        <p className="mt-4 text-[10px] items-center gap-1.5 font-bold text-gray-400 uppercase tracking-widest flex">
+                        <div className="mt-4 text-[10px] items-center gap-1.5 font-bold text-gray-400 uppercase tracking-widest flex">
                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                             This location will be used to prioritize nearby rentals and estimate delivery costs.
-                        </p>
+                        </div>
                     </div>
 
                     {/* Support Box */}

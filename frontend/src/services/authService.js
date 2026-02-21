@@ -55,6 +55,14 @@ const authService = {
     getMe,
     getAllUsers,
     blockUser,
+    unblockUser: async (userId) => {
+        const response = await api.patch('/admin/unblock-user', { userId });
+        return response.data;
+    },
+    getShopsAnalytics: async () => {
+        const response = await api.get('/admin/shops');
+        return response.data;
+    },
     updateUser
 };
 

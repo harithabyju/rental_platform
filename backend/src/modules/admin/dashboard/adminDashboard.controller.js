@@ -9,6 +9,7 @@ const getDashboardData = async (req, res, next) => {
         });
     } catch (error) {
         console.error('Error in getDashboardData:', error);
+        console.error('Stack trace:', error.stack);
         next(error);
     }
 };

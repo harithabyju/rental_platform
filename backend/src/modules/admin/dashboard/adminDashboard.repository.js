@@ -5,15 +5,15 @@ const getDashboardStats = async () => {
         SELECT
             (SELECT COUNT(*) FROM users WHERE role = 'customer') as total_customers,
             (SELECT COUNT(*) FROM users WHERE role = 'shop_owner') as total_shops,
-            (SELECT SUM(amount) FROM payments WHERE status = 'completed') as total_revenue,
-            (SELECT COUNT(*) FROM bookings WHERE status = 'active') as active_rentals
+            (SELECT SUM(amount_inr) FROM payments WHERE status = 'completed') as total_revenue,
+            (SELECT COUNT(*) FROM rentals WHERE status = 'active') as active_rentals
     `);
     return stats.rows[0];
 };
 
 const getBookingsByCategory = async () => {
     const result = await db.query(`
-        SELECT c.name as category, COUNT(b.id) as booking_count
+        SELECT c.name as category, COUNT(b.booking_id) as booking_count
         FROM categories c
         LEFT JOIN items i ON c.id = i.category_id
         LEFT JOIN bookings b ON i.id = b.item_id
@@ -26,7 +26,7 @@ const getRevenueTrend = async () => {
     const result = await db.query(`
         SELECT 
             TO_CHAR(created_at, 'Mon YYYY') as month,
-            SUM(amount) as revenue,
+            SUM(amount_inr) as revenue,
             MIN(created_at) as month_start
         FROM payments
         WHERE status = 'completed'
@@ -50,16 +50,16 @@ const getTopPerformingShops = async () => {
     const result = await db.query(`
         SELECT 
             s.name as shop_name,
-            s.location,
-            COUNT(DISTINCT i.id) as total_items,
-            COUNT(DISTINCT b.id) as total_rentals,
-            COALESCE(SUM(p.amount), 0) as earnings,
+            s.city as location,
+            COUNT(DISTINCT si.item_id) as total_items,
+            COUNT(DISTINCT b.booking_id) as total_rentals,
+            COALESCE(SUM(p.amount_inr), 0) as earnings,
             s.rating
         FROM shops s
-        LEFT JOIN items i ON s.id = i.shop_id
-        LEFT JOIN bookings b ON i.id = b.item_id
-        LEFT JOIN payments p ON b.id = p.booking_id AND p.status = 'completed'
-        GROUP BY s.id
+        LEFT JOIN shop_items si ON s.id = si.shop_id
+        LEFT JOIN bookings b ON si.item_id = b.item_id
+        LEFT JOIN payments p ON b.booking_id = p.booking_id AND p.status = 'completed'
+        GROUP BY s.id, s.name, s.city, s.rating
         ORDER BY earnings DESC
         LIMIT 5
     `);

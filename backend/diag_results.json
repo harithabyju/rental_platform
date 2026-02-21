@@ -1,0 +1,12 @@
+{
+  "Users Table": "OK",
+  "Payments Table": "OK",
+  "Bookings Table": "OK",
+  "Categories Table": "OK",
+  "Items Table": "OK",
+  "Shops Table": "OK",
+  "Payments.status Column": "OK",
+  "Bookings.status Column": "OK",
+  "Items.category_id Column": "OK",
+  "Shops.rating Column": "OK"
+}

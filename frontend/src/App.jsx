@@ -10,9 +10,16 @@ import Register from './pages/Register';
 import OTP from './pages/OTP';
 import Profile from './pages/Profile';
 import AdminUserManagement from './pages/admin/AdminUserManagement';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminShops from './pages/admin/AdminShops';
 import CategoryManagement from './pages/admin/CategoryManagement';
 import ShopOwnerDashboard from './pages/shop-owner/ShopOwnerDashboard';
 import CustomerHome from './pages/customer/CustomerHome';
+import CustomerDashboard from './pages/CustomerDashboard';
+import BrowseItems from './pages/BrowseItems';
+import ItemShops from './pages/ItemShops';
+import MyPayments from './pages/MyPayments';
+import ActiveRentals from './pages/ActiveRentals';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -39,7 +46,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 const AuthRedirect = ({ children }) => {
     const { user, loading } = useAuth();
     if (loading) return null;
-    if (user) return <Navigate to="/dashboard" />;
+    if (user) {
+        if (user.role === 'admin') return <Navigate to="/admin/dashboard" />;
+        if (user.role === 'shop_owner') return <Navigate to="/shop-owner/dashboard" />;
+        return <Navigate to="/dashboard" />;
+    }
     return children;
 };
 
@@ -114,19 +125,35 @@ function App() {
                             }
                         />
 
-                            <Route
-                                path="admin/users"
-                                element={
-                                    <ProtectedRoute allowedRoles={['admin']}>
-                                        <AdminUserManagement />
-                                    </ProtectedRoute>
-                                }
-                            />
+                        <Route
+                            path="admin/dashboard"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <AdminDashboard />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="admin/users"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <AdminUserManagement />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route
                             path="admin/categories"
                             element={
                                 <ProtectedRoute allowedRoles={['admin']}>
                                     <CategoryManagement />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="admin/shops"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <AdminShops />
                                 </ProtectedRoute>
                             }
                         />

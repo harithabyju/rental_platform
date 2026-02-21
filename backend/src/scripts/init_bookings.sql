@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     start_date TIMESTAMP NOT NULL,
     end_date TIMESTAMP NOT NULL,
     status VARCHAR(20) DEFAULT 'confirmed', -- confirmed, cancelled, completed
+    delivery_method VARCHAR(50) DEFAULT 'pickup', -- pickup, delivery
     total_amount DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -1,7 +1,7 @@
 import api from './api';
 
 const getDashboardData = async () => {
-    const response = await api.get('/api/admin/dashboard/stats');
+    const response = await api.get('/admin/dashboard/stats');
     return response.data;
 };
 

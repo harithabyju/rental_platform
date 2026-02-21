@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { Bell, LogOut, User, LayoutDashboard, Calendar, CreditCard, Package, Search, Map as MapIcon } from 'lucide-react';
 import { useState } from 'react';
 

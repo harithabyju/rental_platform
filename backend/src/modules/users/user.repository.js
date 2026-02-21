@@ -28,7 +28,7 @@ const verifyUser = async (email) => {
 };
 
 const getAllUsers = async () => {
-    const result = await db.query("SELECT id, fullname, email, role, verified, created_at, blocked FROM users WHERE role IN ('customer', 'shop_owner')");
+    const result = await db.query("SELECT id, fullname, email, role, verified, created_at, blocked FROM users WHERE role = 'customer' ORDER BY created_at DESC");
     return result.rows;
 }
 
@@ -42,12 +42,45 @@ const updateUserProfile = async (id, data) => {
 }
 
 const blockUser = async (id) => {
-    // Assuming 'blocked' column exists. If not, this query will fail until schema is updated.
     const result = await db.query(
         'UPDATE users SET blocked = TRUE WHERE id = $1 RETURNING id, email, blocked',
         [id]
     );
     return result.rows[0];
+}
+
+const unblockUser = async (id) => {
+    const result = await db.query(
+        'UPDATE users SET blocked = FALSE WHERE id = $1 RETURNING id, email, blocked',
+        [id]
+    );
+    return result.rows[0];
+}
+
+const getShopsAnalytics = async () => {
+    const result = await db.query(`
+        SELECT 
+            s.id,
+            s.name,
+            s.city,
+            s.state,
+            s.status,
+            s.approved_at,
+            u.fullname as owner_name,
+            u.email as owner_email,
+            COUNT(DISTINCT si.item_id) as total_items,
+            COUNT(DISTINCT b.id) as total_rentals,
+            COALESCE(SUM(p.amount_inr), 0) as total_revenue
+        FROM shops s
+        JOIN users u ON s.owner_id = u.id
+        LEFT JOIN shop_items si ON s.id = si.shop_id
+        LEFT JOIN bookings b ON si.id = b.shop_item_id
+        LEFT JOIN payments p ON b.id = p.booking_id AND p.status = 'paid'
+        WHERE s.status = 'approved'
+        GROUP BY s.id, s.name, s.city, s.state, s.status, s.approved_at, u.fullname, u.email
+        ORDER BY total_revenue DESC
+    `);
+    return result.rows;
 }
 
 module.exports = {
@@ -57,5 +90,7 @@ module.exports = {
     verifyUser,
     getAllUsers,
     updateUserProfile,
-    blockUser
+    blockUser,
+    unblockUser,
+    getShopsAnalytics
 };

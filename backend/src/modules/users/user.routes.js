@@ -16,5 +16,7 @@ router.put('/users/me', protect, userController.updateMe);
 // Admin Routes
 router.get('/admin/users', protect, authorize('admin'), userController.getAllUsers);
 router.patch('/admin/block-user', protect, authorize('admin'), userController.blockUser);
+router.patch('/admin/unblock-user', protect, authorize('admin'), userController.unblockUser);
+router.get('/admin/shops', protect, authorize('admin'), userController.getShopsAnalytics);
 
 module.exports = router;

@@ -15,8 +15,10 @@ const CategoryManagement = () => {
 
     const fetchCategories = async () => {
         try {
-            const data = await categoryService.getAllCategories();
-            setCategories(data);
+            const response = await categoryService.getAllCategories();
+            // Backend returns { success: true, data: [...] }
+            const data = response?.data || response;
+            setCategories(Array.isArray(data) ? data : []);
         } catch (err) {
             setError('Failed to fetch categories');
         } finally {

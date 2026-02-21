@@ -80,6 +80,14 @@ const blockUser = async (id) => {
     return await userRepository.blockUser(id);
 }
 
+const unblockUser = async (id) => {
+    return await userRepository.unblockUser(id);
+}
+
+const getShopsAnalytics = async () => {
+    return await userRepository.getShopsAnalytics();
+}
+
 module.exports = {
     register,
     verifyOtp,
@@ -87,5 +95,7 @@ module.exports = {
     getUserProfile,
     getAllUsers,
     updateUserProfile,
-    blockUser
+    blockUser,
+    unblockUser,
+    getShopsAnalytics
 };

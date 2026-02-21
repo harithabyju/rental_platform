@@ -23,17 +23,18 @@ export const DashboardProvider = ({ children }) => {
     }, []);
 
     const fetchCategories = useCallback(async () => {
-        if (categories.length > 0) return; // Cache
+        if (categories?.length > 0) return; // Cache
         setCategoriesLoading(true);
         try {
             const res = await dashboardService.getCategories();
-            setCategories(res.data);
+            setCategories(res.data || []);
         } catch (err) {
             setError('Failed to load categories');
+            setCategories([]);
         } finally {
             setCategoriesLoading(false);
         }
-    }, [categories.length]);
+    }, [categories?.length]);
 
     return (
         <DashboardContext.Provider value={{

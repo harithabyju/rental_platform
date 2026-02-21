@@ -129,7 +129,7 @@ const AdminDashboard = () => {
                 {/* Revenue Trend Line Chart */}
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <h3 className="text-lg font-semibold mb-6">Revenue Trend (Monthly)</h3>
-                    <div className="h-[300px]">
+                    <div className="h-[300px] min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={data.charts.revenueTrend}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -147,7 +147,7 @@ const AdminDashboard = () => {
                 {/* Bookings by Category Bar Chart */}
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <h3 className="text-lg font-semibold mb-6">Bookings by Category</h3>
-                    <div className="h-[300px]">
+                    <div className="h-[300px] min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data.charts.bookingsByCategory}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
                 {/* Category Distribution Pie Chart */}
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                     <h3 className="text-lg font-semibold mb-6">Inventory Category Distribution</h3>
-                    <div className="h-[300px]">
+                    <div className="h-[300px] min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
