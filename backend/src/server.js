@@ -25,20 +25,10 @@ app.get('/health', async (req, res) => {
 });
 
 const userRoutes = require('./modules/users/user.routes');
-const shopRoutes = require('./modules/shops/shop.routes');
-const itemRoutes = require('./modules/items/item.routes');
-const bookingRoutes = require('./modules/bookings/booking.routes');
-const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
-const searchRoutes = require('./modules/search/search.routes');
-const paymentRoutes = require('./modules/payments/payment.routes');
+const categoryRoutes = require('./modules/categories/category.routes');
 
 app.use('/', userRoutes);
-app.use('/', shopRoutes);
-app.use('/', itemRoutes);
-app.use('/bookings', bookingRoutes);
-app.use('/', dashboardRoutes);
-app.use('/search', searchRoutes);
-app.use('/payments', paymentRoutes);
+app.use('/', categoryRoutes);
 
 
 

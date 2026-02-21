@@ -3,13 +3,16 @@ import BookingPage from './pages/BookingPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DashboardProvider } from './context/DashboardContext';
-import Layout from './components/Layout';
+import Layout from './components/layout/Layout';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import OTP from './pages/OTP';
 import Profile from './pages/Profile';
-import AdminUserManagement from './pages/AdminUserManagement';
+import AdminUserManagement from './pages/admin/AdminUserManagement';
+import CategoryManagement from './pages/admin/CategoryManagement';
+import ShopOwnerDashboard from './pages/shop-owner/ShopOwnerDashboard';
+import CustomerHome from './pages/customer/CustomerHome';
 
 // New Dashboard Pages
 import CustomerDashboard from './pages/CustomerDashboard';
@@ -127,6 +130,30 @@ function App() {
                                     </ProtectedRoute>
                                 }
                             />
+                        <Route
+                            path="admin/categories"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <CategoryManagement />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="shop-owner/dashboard"
+                            element={
+                                <ProtectedRoute allowedRoles={['shop_owner']}>
+                                    <ShopOwnerDashboard />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="customer/home"
+                            element={
+                                <ProtectedRoute allowedRoles={['customer']}>
+                                    <CustomerHome />
+                                </ProtectedRoute>
+                            }
+                        />
                             <Route
                                 path="dashboard/booking/:itemId"
                                 element={
