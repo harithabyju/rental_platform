@@ -57,7 +57,7 @@ const AdminDashboard = () => {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
             </div>
         );
     }
@@ -71,7 +71,7 @@ const AdminDashboard = () => {
         );
     }
 
-    const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+    const COLORS = ['#10b981', '#34d399', '#f59e0b', '#ef4444', '#8b5cf6'];
 
     return (
         <div className="space-y-8 animate-fade-in p-6">
@@ -117,7 +117,7 @@ const AdminDashboard = () => {
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                 <h2 className="text-xl font-semibold mb-6">Quick Management</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <ActionButton icon={<Layers />} label="Categories" onClick={() => navigate('/admin/categories')} color="text-indigo-600 bg-indigo-50" />
+                    <ActionButton icon={<Layers />} label="Categories" onClick={() => navigate('/admin/categories')} color="text-emerald-600 bg-emerald-50" />
                     <ActionButton icon={<ShieldAlert />} label="Fine Management" onClick={() => navigate('/admin/fines')} color="text-red-600 bg-red-50" />
                     <ActionButton icon={<Users />} label="Users" onClick={() => navigate('/admin/users')} color="text-blue-600 bg-blue-50" />
                     <ActionButton icon={<Store />} label="Shops" onClick={() => navigate('/admin/shops')} color="text-emerald-600 bg-emerald-50" />
@@ -138,7 +138,7 @@ const AdminDashboard = () => {
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                 />
-                                <Line type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
@@ -157,7 +157,7 @@ const AdminDashboard = () => {
                                     cursor={{ fill: '#f9fafb' }}
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                 />
-                                <Bar dataKey="booking_count" fill="#4f46e5" radius={[6, 6, 0, 0]} />
+                                <Bar dataKey="booking_count" fill="#10b981" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -215,7 +215,7 @@ const AdminDashboard = () => {
                                         </td>
                                         <td className="px-4 py-4 text-center text-sm">{shop.totalItems}</td>
                                         <td className="px-4 py-4 text-center text-sm">{shop.totalRentals}</td>
-                                        <td className="px-4 py-4 text-right text-sm font-semibold text-indigo-600">
+                                        <td className="px-4 py-4 text-right text-sm font-semibold text-emerald-600">
                                             ₹{shop.earnings.toLocaleString()}
                                         </td>
                                     </tr>

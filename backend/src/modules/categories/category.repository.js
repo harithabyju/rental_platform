@@ -1,10 +1,11 @@
 const db = require('../../config/db');
 
 const createCategory = async (category) => {
-    const { name, description } = category;
+    const { name, description, icon_url, is_active } = category;
+    const slug = category.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const result = await db.query(
-        'INSERT INTO categories (name, description) VALUES ($1, $2) RETURNING *',
-        [name, description]
+        'INSERT INTO categories (name, description, icon_url, slug, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [name, description, icon_url, slug, is_active !== undefined ? is_active : true]
     );
     return result.rows[0];
 };
@@ -20,10 +21,11 @@ const getCategoryById = async (id) => {
 };
 
 const updateCategory = async (id, category) => {
-    const { name, description } = category;
+    const { name, description, icon_url, is_active, slug } = category;
+    const finalSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const result = await db.query(
-        'UPDATE categories SET name = $1, description = $2 WHERE id = $3 RETURNING *',
-        [name, description, id]
+        'UPDATE categories SET name = $1, description = $2, icon_url = $3, is_active = $4, slug = $5 WHERE id = $6 RETURNING *',
+        [name, description, icon_url, is_active !== undefined ? is_active : true, finalSlug, id]
     );
     return result.rows[0];
 };
