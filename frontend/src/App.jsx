@@ -8,6 +8,11 @@ import OTP from './pages/OTP';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUserManagement from './pages/admin/AdminUserManagement';
+import AdminFineDashboard from './pages/admin/AdminFineDashboard';
+import AdminDisputePanel from './pages/admin/AdminDisputePanel';
+import ReportDamage from './pages/owner/ReportDamage';
+import MyFines from './pages/customer/MyFines';
+import RaiseDispute from './pages/customer/RaiseDispute';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -61,6 +66,51 @@ function App() {
                             element={
                                 <ProtectedRoute allowedRoles={['admin']}>
                                     <AdminUserManagement />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="owner/report-damage/:bookingId"
+                            element={
+                                <ProtectedRoute allowedRoles={['shop_owner']}>
+                                    <ReportDamage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="fines"
+                            element={
+                                <ProtectedRoute allowedRoles={['customer']}>
+                                    <MyFines />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="dispute/:fineId"
+                            element={
+                                <ProtectedRoute allowedRoles={['customer']}>
+                                    <RaiseDispute />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="admin/fines"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <AdminFineDashboard />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="admin/disputes"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <AdminDisputePanel />
                                 </ProtectedRoute>
                             }
                         />

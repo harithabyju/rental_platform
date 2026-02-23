@@ -74,9 +74,31 @@ const createTables = `
   CREATE TABLE IF NOT EXISTS fines (
     id SERIAL PRIMARY KEY,
     booking_id INTEGER REFERENCES bookings(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    fine_type VARCHAR(50) DEFAULT 'late', -- late, damage
     amount DECIMAL(10,2) NOT NULL,
-    reason TEXT,
-    status VARCHAR(50) DEFAULT 'unpaid',
+    description TEXT,
+    status VARCHAR(50) DEFAULT 'pending', -- pending, paid, disputed, resolved
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS damage_reports (
+    id SERIAL PRIMARY KEY,
+    booking_id INTEGER REFERENCES bookings(id) ON DELETE CASCADE,
+    reported_by INTEGER REFERENCES users(id) ON DELETE CASCADE, -- owner_id
+    description TEXT NOT NULL,
+    images TEXT[], -- Array of image URLs
+    status VARCHAR(50) DEFAULT 'pending', -- pending, approved, rejected
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS disputes (
+    id SERIAL PRIMARY KEY,
+    fine_id INTEGER REFERENCES fines(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'open', -- open, resolved, rejected
+    admin_response TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `;
