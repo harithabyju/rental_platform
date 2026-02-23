@@ -1,61 +1,66 @@
 const itemRepository = require('./item.repository');
 const shopRepository = require('../shops/shop.repository');
 
-const addItem = async (userId, itemData) => {
-    // Check if user owns the shop
-    const shop = await shopRepository.findShopByOwnerId(userId);
-    if (!shop) {
-        throw new Error('You need to register a shop first');
-    }
-    if (shop.status !== 'approved') {
-        throw new Error('Your shop is not approved yet');
-    }
-
-    return await itemRepository.createItem({ ...itemData, shop_id: shop.shop_id });
-};
-
-const updateItem = async (userId, itemId, itemData) => {
-    const item = await itemRepository.findItemById(itemId);
-    if (!item) {
-        throw new Error('Item not found');
-    }
-
-    // Check ownership
-    const shop = await shopRepository.findShopByOwnerId(userId);
-    if (!shop || shop.shop_id !== item.shop_id) {
-        throw new Error('Unauthorized');
-    }
-
-    return await itemRepository.updateItem(itemId, itemData);
-};
-
-const deleteItem = async (userId, itemId) => {
-    const item = await itemRepository.findItemById(itemId);
-    if (!item) {
-        throw new Error('Item not found');
-    }
-
-    // Check ownership
-    const shop = await shopRepository.findShopByOwnerId(userId);
-    if (!shop || shop.shop_id !== item.shop_id) {
-        throw new Error('Unauthorized');
-    }
-
-    return await itemRepository.deleteItem(itemId);
+const getAllItems = async () => {
+    return itemRepository.findAllItems();
 };
 
 const getItemsByShop = async (shopId) => {
-    return await itemRepository.findItemsByShopId(shopId);
+    return itemRepository.findItemsByShopId(shopId);
 };
 
-const getItemById = async (itemId) => {
-    return await itemRepository.findItemById(itemId);
+const addItem = async (ownerId, itemData) => {
+    // Find owner's shop
+    const shop = await shopRepository.findShopByOwnerId(ownerId);
+    if (!shop) throw new Error('No shop found for this owner');
+    if (shop.status !== 'approved') throw new Error('Your shop is not yet approved');
+
+    const shopId = shop.id || shop.shop_id;
+
+    // Validate category is permitted
+    if (itemData.category_id) {
+        const permitted = await shopRepository.getPermittedCategories(shopId);
+        if (permitted.length > 0) {
+            const permittedIds = permitted.map(c => c.id);
+            if (!permittedIds.includes(parseInt(itemData.category_id))) {
+                throw new Error('This category is not permitted for your shop');
+            }
+        }
+    }
+
+    return itemRepository.createItem({ ...itemData, shop_id: shopId });
+};
+
+const updateItem = async (ownerId, itemId, itemData) => {
+    const shop = await shopRepository.findShopByOwnerId(ownerId);
+    if (!shop) throw new Error('No shop found for this owner');
+
+    const existing = await itemRepository.findItemById(itemId);
+    if (!existing) throw new Error('Item not found');
+
+    const shopId = shop.id || shop.shop_id;
+    if (existing.shop_id !== shopId) throw new Error('Item does not belong to your shop');
+
+    return itemRepository.updateItem(itemId, itemData);
+};
+
+const deleteItem = async (ownerId, itemId) => {
+    const shop = await shopRepository.findShopByOwnerId(ownerId);
+    if (!shop) throw new Error('No shop found for this owner');
+
+    const existing = await itemRepository.findItemById(itemId);
+    if (!existing) throw new Error('Item not found');
+
+    const shopId = shop.id || shop.shop_id;
+    if (existing.shop_id !== shopId) throw new Error('Item does not belong to your shop');
+
+    await itemRepository.deleteItem(itemId);
 };
 
 module.exports = {
+    getAllItems,
+    getItemsByShop,
     addItem,
     updateItem,
     deleteItem,
-    getItemsByShop,
-    getItemById
 };

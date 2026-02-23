@@ -13,6 +13,7 @@ import AdminUserManagement from './pages/admin/AdminUserManagement';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminShops from './pages/admin/AdminShops';
 import CategoryManagement from './pages/admin/CategoryManagement';
+import ShopApprovals from './pages/admin/ShopApprovals';
 import ShopOwnerDashboard from './pages/shop-owner/ShopOwnerDashboard';
 import CustomerHome from './pages/customer/CustomerHome';
 import CustomerDashboard from './pages/CustomerDashboard';
@@ -154,6 +155,14 @@ function App() {
                             element={
                                 <ProtectedRoute allowedRoles={['admin']}>
                                     <AdminShops />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="admin/approvals"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <ShopApprovals />
                                 </ProtectedRoute>
                             }
                         />

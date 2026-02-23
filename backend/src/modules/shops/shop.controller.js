@@ -3,8 +3,7 @@ const shopService = require('./shop.service');
 const registerShop = async (req, res) => {
     try {
         const { shop_name, description, location } = req.body;
-        const shop = await shopService.registerShop({
-            owner_id: req.user.id,
+        const shop = await shopService.registerShop(req.user.id, {
             shop_name,
             description,
             location
@@ -20,7 +19,8 @@ const getMyShop = async (req, res) => {
         const shop = await shopService.getMyShop(req.user.id);
         res.status(200).json(shop);
     } catch (error) {
-        res.status(404).json({ message: error.message });
+        // Return a structured 'not found' instead of 404 error so UI can distinguish
+        res.status(200).json(null);
     }
 };
 
@@ -35,7 +35,8 @@ const getShopById = async (req, res) => {
 
 const approveShop = async (req, res) => {
     try {
-        const shop = await shopService.approveShop(req.params.id);
+        const categoryIds = req.body.category_ids || [];
+        const shop = await shopService.approveShop(req.params.id, categoryIds);
         res.status(200).json({ message: 'Shop approved', shop });
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -61,11 +62,21 @@ const getAllShops = async (req, res) => {
     }
 };
 
+const getPermittedCategories = async (req, res) => {
+    try {
+        const categories = await shopService.getPermittedCategories(req.user.id);
+        res.status(200).json(categories);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     registerShop,
     getMyShop,
     getShopById,
     approveShop,
     rejectShop,
-    getAllShops
+    getAllShops,
+    getPermittedCategories,
 };

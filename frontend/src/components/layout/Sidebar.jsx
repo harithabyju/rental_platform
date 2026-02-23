@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Calendar, User, LogOut, Grid, BookOpen, Settings, BarChart2, Users, Tag, Store, Package, DollarSign } from 'lucide-react';
+import { Home, Calendar, User, LogOut, Grid, BookOpen, Settings, BarChart2, Users, Tag, Store, Package, DollarSign, ClipboardCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -15,7 +15,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             { path: '/admin/dashboard', label: 'Dashboard', icon: BarChart2 },
             { path: '/admin/categories', label: 'Categories', icon: Tag },
             { path: '/admin/users', label: 'User Management', icon: Users },
-            { path: '/admin/shops', label: 'Shops', icon: Store },
+            { path: '/admin/approvals', label: 'Shop Approvals', icon: ClipboardCheck },
+            { path: '/admin/shops', label: 'Shop Analytics', icon: Store },
         ],
         shop_owner: [
             { path: '/shop-owner/dashboard', label: 'My Shop', icon: Store },

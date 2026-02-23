@@ -1,12 +1,17 @@
 import api from './api';
 
-const addItem = async (itemData) => {
-    const response = await api.post('/items', itemData);
+const addItem = async (formData) => {
+    // formData is a FormData object (supports image file upload)
+    const response = await api.post('/items', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
 };
 
-const updateItem = async (id, itemData) => {
-    const response = await api.put(`/items/${id}`, itemData);
+const updateItem = async (id, formData) => {
+    const response = await api.put(`/items/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
 };
 
@@ -25,12 +30,18 @@ const getItemById = async (id) => {
     return response.data;
 };
 
+const getAllItems = async (params = {}) => {
+    const response = await api.get('/items', { params });
+    return response.data;
+};
+
 const itemService = {
     addItem,
     updateItem,
     deleteItem,
     getItemsByShop,
-    getItemById
+    getItemById,
+    getAllItems,
 };
 
 export default itemService;

@@ -1,0 +1,52 @@
+ERROR: ❌ ../modules/shops/shop.repository: Cannot find module '../../../config/db'
+Require stack:
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.repository.js
+- C:\Users\harit\rental_platform\backend\src\scripts\diagnose_modules.js
+ERROR: ❌ ../modules/shops/shop.service: Cannot find module '../../../config/db'
+Require stack:
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.repository.js
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.service.js
+- C:\Users\harit\rental_platform\backend\src\scripts\diagnose_modules.js
+ERROR: ❌ ../modules/shops/shop.controller: Cannot find module '../../../config/db'
+Require stack:
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.repository.js
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.service.js
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.controller.js
+- C:\Users\harit\rental_platform\backend\src\scripts\diagnose_modules.js
+ERROR: ❌ ../modules/shops/shop.routes: Cannot find module '../../../config/db'
+Require stack:
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.repository.js
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.service.js
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.controller.js
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.routes.js
+- C:\Users\harit\rental_platform\backend\src\scripts\diagnose_modules.js
+ERROR: ❌ ../modules/items/item.repository: Cannot find module '../../../config/db'
+Require stack:
+- C:\Users\harit\rental_platform\backend\src\modules\items\item.repository.js
+- C:\Users\harit\rental_platform\backend\src\scripts\diagnose_modules.js
+ERROR: ❌ ../modules/items/item.service: Cannot find module '../../../config/db'
+Require stack:
+- C:\Users\harit\rental_platform\backend\src\modules\items\item.repository.js
+- C:\Users\harit\rental_platform\backend\src\modules\items\item.service.js
+- C:\Users\harit\rental_platform\backend\src\scripts\diagnose_modules.js
+ERROR: ❌ ../modules/items/item.controller: Cannot find module '../../../config/db'
+Require stack:
+- C:\Users\harit\rental_platform\backend\src\modules\items\item.repository.js
+- C:\Users\harit\rental_platform\backend\src\modules\items\item.service.js
+- C:\Users\harit\rental_platform\backend\src\modules\items\item.controller.js
+- C:\Users\harit\rental_platform\backend\src\scripts\diagnose_modules.js
+ERROR: ❌ ../modules/items/item.routes: Cannot find module '../../../config/db'
+Require stack:
+- C:\Users\harit\rental_platform\backend\src\modules\items\item.repository.js
+- C:\Users\harit\rental_platform\backend\src\modules\items\item.service.js
+- C:\Users\harit\rental_platform\backend\src\modules\items\item.controller.js
+- C:\Users\harit\rental_platform\backend\src\modules\items\item.routes.js
+- C:\Users\harit\rental_platform\backend\src\scripts\diagnose_modules.js
+ERROR: ❌ ../server: Cannot find module '../../../config/db'
+Require stack:
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.repository.js
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.service.js
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.controller.js
+- C:\Users\harit\rental_platform\backend\src\modules\shops\shop.routes.js
+- C:\Users\harit\rental_platform\backend\src\server.js
+- C:\Users\harit\rental_platform\backend\src\scripts\diagnose_modules.js

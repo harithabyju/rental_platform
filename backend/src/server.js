@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const db = require('./config/db');
 
 const app = express();
@@ -10,6 +11,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded images as static files
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Test DB Connection
 app.get('/health', async (req, res) => {
@@ -24,6 +28,8 @@ app.get('/health', async (req, res) => {
 
 const userRoutes = require('./modules/users/user.routes');
 const categoryRoutes = require('./modules/categories/category.routes');
+const shopRoutes = require('./modules/shops/shop.routes');
+const itemRoutes = require('./modules/items/item.routes');
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
 const adminDashboardRoutes = require('./modules/admin/dashboard/adminDashboard.routes');
 const bookingRoutes = require('./modules/bookings/booking.routes');
@@ -33,13 +39,13 @@ const searchRoutes = require('./modules/search/search.routes');
 // Use Routes
 app.use('/api', userRoutes);
 app.use('/api', categoryRoutes);
+app.use('/api', shopRoutes);
+app.use('/api', itemRoutes);
 app.use('/api', dashboardRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
-
-
 
 // Global Error Handler
 app.use((err, req, res, next) => {
