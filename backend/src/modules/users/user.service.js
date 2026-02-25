@@ -4,10 +4,19 @@ const { generateToken } = require('../../utils/jwt');
 const { sendEmail, generateOTP } = require('../../utils/email');
 
 const register = async (userData) => {
-    const { fullname, email, password, role } = userData;
+    let { fullname, email, password, role } = userData;
+    email = email.toLowerCase();
 
     const existingUser = await userRepository.findUserByEmail(email);
     if (existingUser) {
+        if (!existingUser.verified) {
+            // Allow unverified users to re-register/resend OTP
+            const otp = generateOTP();
+            const hashedPassword = await hashPassword(password);
+            await userRepository.updateUserOtp(email, otp, hashedPassword);
+            await sendEmail(email, 'Verify your email', `Your OTP is ${otp}`);
+            return { ...existingUser, otp };
+        }
         throw new Error('User already exists');
     }
 
@@ -28,6 +37,7 @@ const register = async (userData) => {
 };
 
 const verifyOtp = async (email, otp) => {
+    email = email.toLowerCase();
     const user = await userRepository.findUserByEmail(email);
     if (!user) {
         throw new Error('User not found');
@@ -41,6 +51,7 @@ const verifyOtp = async (email, otp) => {
 };
 
 const login = async (email, password) => {
+    email = email.toLowerCase();
     const user = await userRepository.findUserByEmail(email);
 
     if (!user) {
@@ -61,7 +72,7 @@ const login = async (email, password) => {
     }
 
     const token = generateToken(user.id, user.role);
-    return { user: { id: user.id, fullname: user.fullname, email: user.email, role: user.role }, token };
+    return { user: { id: user.id, fullname: user.fullname, email: user.email, role: user.role, latitude: user.latitude, longitude: user.longitude, created_at: user.created_at }, token };
 };
 
 const getUserProfile = async (id) => {

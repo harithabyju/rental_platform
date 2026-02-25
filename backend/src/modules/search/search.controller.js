@@ -3,7 +3,7 @@ const { searchSchema } = require('./search.validation');
 
 const getSearchResults = async (req, res, next) => {
     try {
-        const { error, value } = searchSchema.validate(req.query);
+        const { error, value } = searchSchema.validate(req.query, { allowUnknown: true, stripUnknown: true });
         if (error) {
             console.error('[Search Controller] Validation Error:', error.details[0].message);
             return res.status(400).json({

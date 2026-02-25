@@ -10,23 +10,28 @@ const getMyShop = async () => {
     return response.data;
 };
 
+const updateMyShop = async (shopData) => {
+    const response = await api.put('/shops/my', shopData);
+    return response.data;
+};
+
 const getShopById = async (id) => {
     const response = await api.get(`/shops/${id}`);
     return response.data;
 };
 
 const approveShopWithCategories = async (id, categoryIds = []) => {
-    const response = await api.patch(`/admin/shops/approve/${id}`, { category_ids: categoryIds });
+    const response = await api.patch(`/shops/admin/approve/${id}`, { category_ids: categoryIds });
     return response.data;
 };
 
 const rejectShop = async (id) => {
-    const response = await api.patch(`/admin/shops/reject/${id}`);
+    const response = await api.patch(`/shops/admin/reject/${id}`);
     return response.data;
 };
 
 const getAllShops = async (status) => {
-    const response = await api.get('/admin/shops', { params: status ? { status } : {} });
+    const response = await api.get('/shops/admin', { params: status ? { status } : {} });
     return response.data;
 };
 
@@ -38,6 +43,7 @@ const getPermittedCategories = async () => {
 const shopService = {
     registerShop,
     getMyShop,
+    updateMyShop,
     getShopById,
     approveShopWithCategories,
     rejectShop,

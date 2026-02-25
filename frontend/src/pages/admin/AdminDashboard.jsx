@@ -94,21 +94,22 @@ const AdminDashboard = () => {
                     color="bg-blue-500"
                 />
                 <StatCard
-                    title="Total Shops"
+                    title="Approved Shops"
                     value={data.stats.totalShops}
                     icon={<Store className="w-6 h-6" />}
                     color="bg-green-500"
                 />
                 <StatCard
+                    title="Pending Approvals"
+                    value={data.stats.pendingShops}
+                    icon={<Clock className="w-6 h-6" />}
+                    color={data.stats.pendingShops > 0 ? "bg-amber-500 animate-pulse" : "bg-gray-400"}
+                    onClick={() => navigate('/admin/shops')}
+                />
+                <StatCard
                     title="Platform Revenue"
                     value={`₹${data.stats.totalRevenue.toLocaleString()}`}
                     icon={<TrendingUp className="w-6 h-6" />}
-                    color="bg-amber-500"
-                />
-                <StatCard
-                    title="Active Rentals"
-                    value={data.stats.activeRentals}
-                    icon={<Clock className="w-6 h-6" />}
                     color="bg-purple-500"
                 />
             </div>

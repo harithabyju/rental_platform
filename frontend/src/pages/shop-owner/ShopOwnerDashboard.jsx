@@ -32,14 +32,40 @@ const StatusBanner = ({ status }) => {
 };
 
 const ShopRegisterForm = ({ onRegistered }) => {
-    const [form, setForm] = useState({ shop_name: '', description: '', location: '' });
+    const [form, setForm] = useState({
+        shop_name: '',
+        description: '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: '',
+        phone: '',
+        email: '',
+        latitude: '',
+        longitude: ''
+    });
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const shop = await shopService.registerShop(form);
+            // Re-structure to match backend service expectations
+            const payload = {
+                name: form.shop_name,
+                description: form.description,
+                location: {
+                    address: form.address,
+                    city: form.city,
+                    state: form.state,
+                    zip: form.pincode,
+                    phone: form.phone,
+                    email: form.email,
+                    latitude: parseFloat(form.latitude) || 0,
+                    longitude: parseFloat(form.longitude) || 0
+                }
+            };
+            const shop = await shopService.registerShop(payload);
             toast.success('Shop registered! Awaiting admin approval.');
             onRegistered(shop);
         } catch (err) {
@@ -61,33 +87,100 @@ const ShopRegisterForm = ({ onRegistered }) => {
                 </div>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1.5">Shop Name *</label>
-                    <input
-                        type="text" required
-                        value={form.shop_name}
-                        onChange={e => setForm(f => ({ ...f, shop_name: e.target.value }))}
-                        placeholder="e.g. Kochi Camera Rentals"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">Shop Name *</label>
+                        <input
+                            type="text" required
+                            value={form.shop_name}
+                            onChange={e => setForm(f => ({ ...f, shop_name: e.target.value }))}
+                            placeholder="e.g. Kochi Camera Rentals"
+                            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">Phone *</label>
+                        <input
+                            type="text" required
+                            value={form.phone}
+                            onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                            placeholder="e.g. +91 9876543210"
+                            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                    </div>
                 </div>
                 <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1.5">Description</label>
                     <textarea
-                        rows={3} value={form.description}
+                        rows={2} value={form.description}
                         onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                         placeholder="Tell customers about your shop..."
                         className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1.5">Location</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">Address *</label>
                     <input
-                        type="text" value={form.location}
-                        onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
-                        placeholder="e.g. Ernakulam, Kerala"
+                        type="text" required
+                        value={form.address}
+                        onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+                        placeholder="Street address, locality..."
                         className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">City *</label>
+                        <input
+                            type="text" required
+                            value={form.city}
+                            onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+                            placeholder="e.g. Kochi"
+                            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">State *</label>
+                        <input
+                            type="text" required
+                            value={form.state}
+                            onChange={e => setForm(f => ({ ...f, state: e.target.value }))}
+                            placeholder="e.g. Kerala"
+                            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                    </div>
+                    <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">Pincode *</label>
+                        <input
+                            type="text" required
+                            value={form.pincode}
+                            onChange={e => setForm(f => ({ ...f, pincode: e.target.value }))}
+                            placeholder="682001"
+                            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">Latitude *</label>
+                        <input
+                            type="number" step="any" required
+                            value={form.latitude}
+                            onChange={e => setForm(f => ({ ...f, latitude: e.target.value }))}
+                            placeholder="e.g. 9.9312"
+                            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">Longitude *</label>
+                        <input
+                            type="number" step="any" required
+                            value={form.longitude}
+                            onChange={e => setForm(f => ({ ...f, longitude: e.target.value }))}
+                            placeholder="e.g. 76.2673"
+                            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                    </div>
                 </div>
                 <button
                     type="submit" disabled={submitting}
@@ -127,7 +220,10 @@ const ItemCard = ({ item, onDelete, onEdit }) => {
             <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                     <h3 className="text-sm font-bold text-gray-900 leading-tight">{item.item_name}</h3>
-                    <span className="text-sm font-black text-emerald-600 shrink-0">₹{item.price_per_day}/day</span>
+                    <div className="text-right shrink-0">
+                        <p className="text-sm font-black text-emerald-600">₹{item.price_per_day}/day</p>
+                        <p className="text-[10px] font-bold text-gray-400 mt-0.5">Qty: {item.quantity_available || 1}</p>
+                    </div>
                 </div>
                 {item.category_name && (
                     <span className="inline-flex items-center gap-1 mt-2 px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-full">
@@ -150,6 +246,7 @@ const ItemFormModal = ({ categories, editItem, shopId, onClose, onSaved }) => {
         description: editItem?.description || '',
         price_per_day: editItem?.price_per_day || '',
         category_id: editItem?.category_id || '',
+        quantity: editItem?.quantity_available || 1,
     });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(
@@ -175,6 +272,7 @@ const ItemFormModal = ({ categories, editItem, shopId, onClose, onSaved }) => {
             fd.append('description', form.description);
             fd.append('price_per_day', form.price_per_day);
             fd.append('category_id', form.category_id);
+            fd.append('quantity', form.quantity);
             if (imageFile) fd.append('image', imageFile);
 
             if (isEdit) {
@@ -245,17 +343,29 @@ const ItemFormModal = ({ categories, editItem, shopId, onClose, onSaved }) => {
                         />
                     </div>
 
-                    {/* Price */}
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1.5">Price Per Day (₹) *</label>
-                        <div className="relative">
-                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    {/* Price & Quantity */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-1.5">Price Per Day (₹) *</label>
+                            <div className="relative">
+                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type="number" required min="1"
+                                    value={form.price_per_day}
+                                    onChange={e => setForm(f => ({ ...f, price_per_day: e.target.value }))}
+                                    placeholder="e.g. 500"
+                                    className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-1.5">Total Quantity *</label>
                             <input
                                 type="number" required min="1"
-                                value={form.price_per_day}
-                                onChange={e => setForm(f => ({ ...f, price_per_day: e.target.value }))}
-                                placeholder="e.g. 500"
-                                className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                value={form.quantity}
+                                onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))}
+                                placeholder="e.g. 1"
+                                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             />
                         </div>
                     </div>
@@ -408,11 +518,10 @@ const ShopOwnerDashboard = () => {
                             <h2 className="text-lg font-black text-gray-900">{shop.shop_name}</h2>
                             {shop.location && <p className="text-sm text-gray-500">{typeof shop.location === 'object' ? shop.location.city : shop.location}</p>}
                         </div>
-                        <span className={`px-3 py-1.5 rounded-full text-xs font-black capitalize ${
-                            shop.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                            shop.status === 'pending'  ? 'bg-amber-100 text-amber-700' :
-                            'bg-red-100 text-red-700'
-                        }`}>
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-black capitalize ${shop.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                            shop.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                'bg-red-100 text-red-700'
+                            }`}>
                             {shop.status === 'approved' && <CheckCircle className="inline w-3 h-3 mr-1" />}
                             {shop.status}
                         </span>

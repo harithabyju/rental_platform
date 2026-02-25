@@ -1,6 +1,7 @@
 const SEARCH_ITEMS = `
     SELECT 
-        i.id,
+        si.id,
+        i.id as item_id,
         i.name,
         i.description,
         i.image_url,
@@ -18,28 +19,40 @@ const SEARCH_ITEMS = `
                 sin(radians($1)) * sin(radians(s.latitude::float))
             , -1), 1))
         ) AS distance,
-        si.is_available
+        si.quantity_available,
+        si.is_available,
+        c.name as category_name,
+        c.slug as category_slug
     FROM items i
     JOIN shop_items si ON i.id = si.item_id
     JOIN shops s ON si.shop_id = s.id
     JOIN categories c ON i.category_id = c.id
     WHERE i.is_active = true
     AND s.is_active = true
+    AND s.status = 'approved'
     AND si.is_available = true
-    AND ($3::text IS NULL OR $3 = '' OR c.slug = $3 OR c.name = $3)
+    AND ($3::text IS NULL OR $3 = '' OR c.slug = $3 OR c.name = $3 OR c.id::text = $3)
+    AND ($7::text IS NULL OR $7 = '' OR i.name ILIKE $8 OR i.description ILIKE $8)
     AND (
-        6371 * acos(LEAST(GREATEST(
-            cos(radians($1)) * cos(radians(s.latitude::float)) * 
-            cos(radians(s.longitude::float) - radians($2)) + 
-            sin(radians($1)) * sin(radians(s.latitude::float))
-        , -1), 1))
-    ) <= $4
-    AND NOT EXISTS (
-        SELECT 1 FROM bookings b
-        WHERE b.item_id = i.id
-        AND b.status IN ('confirmed', 'active')
-        AND (b.start_date, b.end_date) OVERLAPS ($5, $6)
+        ($1::float IS NULL OR $2::float IS NULL) OR
+        (
+            6371 * acos(LEAST(GREATEST(
+                cos(radians($1)) * cos(radians(s.latitude::float)) * 
+                cos(radians(s.longitude::float) - radians($2)) + 
+                sin(radians($1)) * sin(radians(s.latitude::float))
+            , -1), 1))
+        ) <= $4
     )
+    AND (
+        si.quantity_available - (
+            SELECT COALESCE(COUNT(*), 0)
+            FROM bookings b
+            WHERE b.item_id = i.id
+            AND b.shop_id = s.id
+            AND b.status IN ('confirmed', 'active')
+            AND (b.start_date, b.end_date) OVERLAPS ($5, $6)
+        )
+    ) > 0
 `;
 
 module.exports = {

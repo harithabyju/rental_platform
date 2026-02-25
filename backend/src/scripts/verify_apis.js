@@ -18,7 +18,7 @@ async function testApi() {
     const baseUrl = 'http://localhost:5000';
     try {
         console.log('Testing Registration...');
-        const regRes = await fetch(`${baseUrl}/auth/register`, {
+        const regRes = await fetch(`${baseUrl}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -43,7 +43,7 @@ async function testApi() {
         }
 
         console.log('Testing Login...');
-        const loginRes = await fetch(`${baseUrl}/auth/login`, {
+        const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -67,17 +67,17 @@ async function testApi() {
         };
 
         console.log('Testing GET /dashboard/summary...');
-        const summaryRes = await fetch(`${baseUrl}/dashboard/summary`, { headers });
+        const summaryRes = await fetch(`${baseUrl}/api/dashboard/summary`, { headers });
         const summaryData = await summaryRes.json();
         console.log('✅ Summary API Response:', JSON.stringify(summaryData, null, 2));
 
         console.log('Testing GET /categories...');
-        const catRes = await fetch(`${baseUrl}/categories`, { headers });
+        const catRes = await fetch(`${baseUrl}/api/categories`, { headers });
         const catData = await catRes.json();
         console.log(`✅ Categories API: Found ${catData.length} categories`);
 
         console.log('Testing search API...');
-        const searchRes = await fetch(`${baseUrl}/items/search?q=Camry`, { headers });
+        const searchRes = await fetch(`${baseUrl}/api/items/search?q=Camry`, { headers });
         const searchData = await searchRes.json();
         console.log(`✅ Search API: Found ${searchData.items.length} items`);
 

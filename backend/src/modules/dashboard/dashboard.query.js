@@ -48,6 +48,7 @@ exports.getItemsByCategory = async (categoryId, limit, offset) => {
         FROM items i
         JOIN categories c ON i.category_id = c.id
         JOIN shop_items si ON si.item_id = i.id AND si.is_available = true
+        JOIN shops s ON s.id = si.shop_id AND s.status = 'approved'
         WHERE i.category_id = $1
           AND i.is_active = true
         GROUP BY i.id, i.name, i.description, i.image_url, i.price_unit,
@@ -65,6 +66,7 @@ exports.countItemsByCategory = async (categoryId) => {
         `SELECT COUNT(DISTINCT i.id) AS total
          FROM items i
          JOIN shop_items si ON si.item_id = i.id AND si.is_available = true
+         JOIN shops s ON s.id = si.shop_id AND s.status = 'approved'
          WHERE i.category_id = $1 AND i.is_active = true`,
         [categoryId]
     );
@@ -100,7 +102,7 @@ exports.getShopsForItem = async (itemId) => {
             i.avg_rating AS item_rating,
             i.total_reviews AS item_reviews
         FROM shop_items si
-        JOIN shops s ON s.id = si.shop_id AND s.is_active = true
+        JOIN shops s ON s.id = si.shop_id AND s.is_active = true AND s.status = 'approved'
         JOIN items i ON i.id = si.item_id AND i.is_active = true
         WHERE si.item_id = $1
           AND si.is_available = true
@@ -134,7 +136,7 @@ exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, 
         FROM items i
         JOIN categories c ON i.category_id = c.id AND c.is_active = true
         JOIN shop_items si ON si.item_id = i.id AND si.is_available = true
-        JOIN shops s ON s.id = si.shop_id AND s.is_active = true
+        JOIN shops s ON s.id = si.shop_id AND s.is_active = true AND s.status = 'approved'
         WHERE i.is_active = true
           AND NOT EXISTS (
               SELECT 1 FROM bookings b
@@ -197,7 +199,7 @@ exports.countSearchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryO
         FROM items i
         JOIN categories c ON i.category_id = c.id AND c.is_active = true
         JOIN shop_items si ON si.item_id = i.id AND si.is_available = true
-        JOIN shops s ON s.id = si.shop_id AND s.is_active = true
+        JOIN shops s ON s.id = si.shop_id AND s.is_active = true AND s.status = 'approved'
         WHERE i.is_active = true
           AND NOT EXISTS (
               SELECT 1 FROM bookings b
@@ -281,10 +283,10 @@ exports.getActiveRentalsByUser = async (userId) => {
     const result = await db.query(
         `SELECT
             r.id AS rental_id,
-            r.booking_id,
-            r.start_date,
-            r.end_date,
-            r.status AS rental_status,
+            b.booking_id,
+            COALESCE(r.start_date, b.start_date) as start_date,
+            COALESCE(r.end_date, b.end_date) as end_date,
+            COALESCE(r.status, b.status) AS rental_status,
             r.late_fine_per_day_inr,
             r.total_late_fine_inr,
             b.total_amount,
@@ -298,14 +300,16 @@ exports.getActiveRentalsByUser = async (userId) => {
             s.phone AS shop_phone,
             s.city AS shop_city,
             s.address AS shop_address,
-            EXTRACT(EPOCH FROM (r.end_date - NOW())) / 86400 AS days_remaining
-        FROM rentals r
-        JOIN bookings b ON b.booking_id = r.booking_id
-        JOIN items i ON i.id = r.item_id
-        LEFT JOIN shops s ON s.id = r.shop_id
-        WHERE r.user_id = $1
-          AND r.status IN ('active', 'overdue')
-        ORDER BY r.end_date ASC`,
+            EXTRACT(EPOCH FROM (COALESCE(r.end_date, b.end_date) - NOW())) / 86400 AS days_remaining,
+            EXTRACT(EPOCH FROM (COALESCE(r.start_date, b.start_date) - NOW())) / 86400 AS days_until_start
+        FROM bookings b
+        LEFT JOIN rentals r ON b.booking_id = r.booking_id
+        JOIN items i ON i.id = b.item_id
+        JOIN shops s ON s.id = b.shop_id
+        WHERE b.user_id = $1
+          AND b.status IN ('confirmed', 'active')
+          AND b.end_date >= NOW()
+        ORDER BY b.end_date ASC`,
         [userId]
     );
     return result.rows;

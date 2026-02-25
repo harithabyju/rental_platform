@@ -46,15 +46,39 @@ const CustomerDashboard = () => {
         fetchCategories();
         fetchSummary();
         loadActiveRentals();
-        // handleSearch no longer runs automatically to enforce strict search terms
+
+        // Auto-load items with broader discovery if location is available
+        const autoSearch = async () => {
+            const defaultParams = {
+                ...searchParams,
+                radius: 100, // Broaden initial discovery
+                category: '' // Show all categories
+            };
+            try {
+                const data = await searchService.searchItems(defaultParams);
+                setResults(data.items.slice(0, 8)); // Show a teaser of 8 items
+                setPagination(data.pagination);
+                setHasSearched(true);
+            } catch (err) {
+                console.error('Initial search failed:', err);
+            }
+        };
+
+        autoSearch();
 
         if (navigator.geolocation && !user?.latitude) {
             navigator.geolocation.getCurrentPosition((position) => {
-                setSearchParams(prev => ({
-                    ...prev,
+                const coords = {
                     lat: position.coords.latitude,
                     lng: position.coords.longitude
+                };
+                setSearchParams(prev => ({
+                    ...prev,
+                    ...coords
                 }));
+                // Re-trigger search with new coordinates
+                searchService.searchItems({ ...searchParams, ...coords, radius: 100 })
+                    .then(data => setResults(data.items.slice(0, 8)));
             });
         }
     }, [fetchCategories, fetchSummary]);
@@ -71,8 +95,6 @@ const CustomerDashboard = () => {
         }
     };
 
-
-
     const handleSearch = async (e) => {
         if (e && e.preventDefault) e.preventDefault();
 
@@ -83,19 +105,9 @@ const CustomerDashboard = () => {
             return;
         }
 
-        if (!searchParams.category) {
-            toast.warning('Please select a category and specify your rental dates.');
-            return;
-        }
-
         setLoading(true);
         if (e) setHasSearched(true);
         try {
-            if (!searchParams.lat || !searchParams.lng) {
-                toast.error('Location coordinates are required. Please allow location access or set it in your profile.');
-                setLoading(false);
-                return;
-            }
             const data = await searchService.searchItems(searchParams);
 
             setResults(data.items);
@@ -137,7 +149,9 @@ const CustomerDashboard = () => {
     };
 
     useEffect(() => {
-        if (hasSearched) handleSearch();
+        if (hasSearched && (searchParams.sort || searchParams.page)) {
+            handleSearch();
+        }
     }, [searchParams.sort, searchParams.page]);
 
     useEffect(() => {
@@ -396,30 +410,42 @@ const CustomerDashboard = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
                     <div className="space-y-1">
                         <h2 className="text-3xl font-black text-gray-900 tracking-tight">
-                            {hasSearched ? `Items Found (${pagination?.total || 0})` : 'Search Results'}
+                            Explore Catalog
                         </h2>
                         <p className="text-gray-500 font-medium">
-                            {hasSearched ? 'Available items matching your criteria.' : 'Select a category in the Explorer to find available rentals.'}
+                            {hasSearched ? 'Latest items from verified neighborhood shops.' : 'Discovering items near you...'}
                         </p>
                     </div>
 
                     <div className="flex items-center gap-4 bg-gray-50 p-1.5 rounded-2xl">
                         <SortDropdown value={searchParams.sort} onChange={handleSortChange} />
+                        <button
+                            onClick={() => navigate('/dashboard/browse')}
+                            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-100"
+                        >
+                            Browse All
+                        </button>
                     </div>
                 </div>
 
                 <div className="min-h-[400px]">
-                    {hasSearched ? (
-                        <SearchResultsGrid items={results} loading={loading} />
-                    ) : (
+                    <SearchResultsGrid items={results} loading={loading} />
+
+                    {!loading && results.length === 0 && (
                         <div className="h-[400px] rounded-[2.5rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50">
                             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm mb-4">
                                 <Search size={24} />
                             </div>
-                            <h4 className="font-bold text-gray-900 mb-2">Ready to find some gear?</h4>
-                            <p className="text-sm text-gray-500 max-w-xs">
-                                Use the Location-Based Explorer above to find precisely what's available near you.
+                            <h4 className="font-bold text-gray-900 mb-2">No items found yet</h4>
+                            <p className="text-sm text-gray-500 max-w-xs mb-4">
+                                We couldn't find anything matching your exact location. Try broadening your radius in the Explorer.
                             </p>
+                            <button
+                                onClick={() => setShowExplorer(true)}
+                                className="text-emerald-600 font-black text-xs uppercase tracking-widest hover:underline"
+                            >
+                                Open Explorer
+                            </button>
                         </div>
                     )}
 

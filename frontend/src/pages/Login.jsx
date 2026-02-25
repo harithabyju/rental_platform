@@ -27,7 +27,16 @@ const Login = () => {
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
             <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-                {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+                {error && (
+                    <div className="bg-red-100 text-red-700 p-3 rounded mb-4">
+                        {error}
+                        {error.includes('verify') && (
+                            <div className="mt-2 text-sm">
+                                <Link to="/otp" state={{ email }} className="underline font-bold">Go to verification page</Link>
+                            </div>
+                        )}
+                    </div>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-gray-700">Email</label>

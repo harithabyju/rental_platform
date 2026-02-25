@@ -4,7 +4,8 @@ const getDashboardStats = async () => {
     const stats = await db.query(`
         SELECT
             (SELECT COUNT(*) FROM users WHERE role = 'customer') as total_customers,
-            (SELECT COUNT(*) FROM users WHERE role = 'shop_owner') as total_shops,
+            (SELECT COUNT(*) FROM shops WHERE status = 'approved') as total_shops,
+            (SELECT COUNT(*) FROM shops WHERE status = 'pending') as pending_shops,
             (SELECT SUM(amount_inr) FROM payments WHERE status = 'completed') as total_revenue,
             (SELECT COUNT(*) FROM rentals WHERE status = 'active') as active_rentals
     `);

@@ -11,6 +11,7 @@ const getFullDashboardData = async () => {
         stats: {
             totalCustomers: parseInt(stats.total_customers || 0),
             totalShops: parseInt(stats.total_shops || 0),
+            pendingShops: parseInt(stats.pending_shops || 0),
             totalRevenue: parseFloat(stats.total_revenue || 0),
             activeRentals: parseInt(stats.active_rentals || 0)
         },

@@ -2,14 +2,16 @@ const shopService = require('./shop.service');
 
 const registerShop = async (req, res) => {
     try {
-        const { shop_name, description, location } = req.body;
+        const { shop_name, name, description, location } = req.body;
         const shop = await shopService.registerShop(req.user.id, {
             shop_name,
+            name,
             description,
             location
         });
         res.status(201).json({ message: 'Shop registered successfully', shop });
     } catch (error) {
+        console.error('ERROR in registerShop:', error);
         res.status(400).json({ message: error.message });
     }
 };
@@ -71,10 +73,20 @@ const getPermittedCategories = async (req, res) => {
     }
 };
 
+const updateMyShop = async (req, res) => {
+    try {
+        const shop = await shopService.updateMyShop(req.user.id, req.body);
+        res.status(200).json({ message: 'Shop updated successfully', shop });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     registerShop,
     getMyShop,
     getShopById,
+    updateMyShop,
     approveShop,
     rejectShop,
     getAllShops,

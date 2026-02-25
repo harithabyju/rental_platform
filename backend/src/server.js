@@ -37,15 +37,15 @@ const paymentRoutes = require('./modules/payments/payment.routes');
 const searchRoutes = require('./modules/search/search.routes');
 
 // Use Routes
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/admin/dashboard', adminDashboardRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/shops', shopRoutes);
+app.use('/api/items', itemRoutes);
 app.use('/api', userRoutes);
-app.use('/api', categoryRoutes);
-app.use('/api', shopRoutes);
-app.use('/api', itemRoutes);
-app.use('/api', dashboardRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/search', searchRoutes);
-app.use('/api/admin/dashboard', adminDashboardRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -13,10 +13,14 @@ const protect = async (req, res, next) => {
 
             const decoded = verifyToken(token);
 
-            const result = await db.query('SELECT id, fullname, email, role, verified FROM users WHERE id = $1', [decoded.id]);
+            const result = await db.query('SELECT id, fullname, email, role, verified, blocked FROM users WHERE id = $1', [decoded.id]);
 
             if (result.rows.length === 0) {
                 return res.status(401).json({ message: 'Not authorized, user not found' });
+            }
+
+            if (result.rows[0].blocked) {
+                return res.status(401).json({ message: 'User is blocked. Please contact support.' });
             }
 
             req.user = result.rows[0];

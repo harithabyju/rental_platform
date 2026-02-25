@@ -75,12 +75,20 @@ const getShopsAnalytics = async () => {
         JOIN users u ON s.owner_id = u.id
         LEFT JOIN shop_items si ON s.id = si.shop_id
         LEFT JOIN rentals r ON s.id = r.shop_id
-        LEFT JOIN payments p ON r.booking_id = p.booking_id AND p.status = 'paid'
+        LEFT JOIN payments p ON r.booking_id = p.booking_id AND p.status = 'completed'
         WHERE s.status = 'approved'
         GROUP BY s.id, s.name, s.city, s.state, s.status, s.approved_at, u.fullname, u.email
         ORDER BY total_revenue DESC
     `);
     return result.rows;
+}
+
+const updateUserOtp = async (email, otp, hashedPassword) => {
+    const result = await db.query(
+        'UPDATE users SET otp = $1, password = COALESCE($2, password), updated_at = CURRENT_TIMESTAMP WHERE email = $3 RETURNING *',
+        [otp, hashedPassword, email]
+    );
+    return result.rows[0];
 }
 
 module.exports = {
@@ -92,5 +100,6 @@ module.exports = {
     updateUserProfile,
     blockUser,
     unblockUser,
-    getShopsAnalytics
+    getShopsAnalytics,
+    updateUserOtp
 };
