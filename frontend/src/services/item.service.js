@@ -35,6 +35,16 @@ const getAllItems = async (params = {}) => {
     return response.data;
 };
 
+const getAllItemsAdmin = async () => {
+    const response = await api.get('/items/admin/all');
+    return response.data;
+};
+
+const toggleItemStatus = async (id, isActive, adminNote = null) => {
+    const response = await api.patch(`/items/admin/toggle-status/${id}`, { is_active: isActive, admin_note: adminNote });
+    return response.data;
+};
+
 const itemService = {
     addItem,
     updateItem,
@@ -42,6 +52,8 @@ const itemService = {
     getItemsByShop,
     getItemById,
     getAllItems,
+    getAllItemsAdmin,
+    toggleItemStatus,
 };
 
 export default itemService;

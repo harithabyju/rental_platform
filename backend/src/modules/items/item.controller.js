@@ -81,6 +81,25 @@ const getAllItems = async (req, res) => {
     }
 };
 
+const getAllItemsAdmin = async (req, res) => {
+    try {
+        const items = await itemService.getAllItemsAdmin();
+        res.status(200).json(items);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const toggleItemStatus = async (req, res) => {
+    try {
+        const { is_active, admin_note } = req.body;
+        const item = await itemService.toggleItemStatus(req.params.id, is_active, admin_note);
+        res.status(200).json({ message: `Item ${is_active ? 'activated' : 'deactivated'} successfully`, item });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     addItem,
     updateItem,
@@ -88,4 +107,6 @@ module.exports = {
     getItemsByShop,
     getItemById,
     getAllItems,
+    getAllItemsAdmin,
+    toggleItemStatus,
 };

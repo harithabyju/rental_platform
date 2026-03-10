@@ -1,25 +1,51 @@
 const shopRepository = require('./shop.repository');
+const userRepository = require('../users/user.repository');
 const { sendEmail } = require('../../utils/email');
 
 const registerShop = async (ownerId, shopData) => {
     const existing = await shopRepository.findShopByOwnerId(ownerId);
     if (existing) throw new Error('You already have a registered shop');
 
-    // Flatten location object and map field names for the repository
+    // Flatten data (handle both nested 'location' and flat fields)
     const { shop_name, name, description, location } = shopData;
+    const finalName = name || shopData.name;
+
+    if (!finalName || finalName.trim() === '') {
+        throw new Error('Shop name is required');
+    }
+
     const flattenedData = {
         owner_id: ownerId,
-        name: name || shop_name || 'My Shop',
-        description: description || '',
-        address: location?.address || '',
-        city: location?.city || '',
-        pincode: location?.zip || '',
-        state: location?.state || '',
-        latitude: location?.latitude || 0,
-        longitude: location?.longitude || 0,
-        phone: location?.phone || '',
-        email: location?.email || ''
+        name: finalName,
+        description: description || shopData.description || '',
+        address: location?.address || shopData.address || '',
+        city: location?.city || shopData.city || '',
+        pincode: location?.zip || shopData.pincode || '',
+        state: location?.state || shopData.state || '',
+        latitude: location?.latitude || shopData.latitude || 0,
+        longitude: location?.longitude || shopData.longitude || 0,
+        phone: location?.phone || shopData.phone || '',
+        email: location?.email || shopData.email || '',
+        // Verification docs
+        govt_id_url: shopData.govt_id_url || null,
+        shop_license_url: shopData.shop_license_url || null,
+        // Bank details
+        bank_account_name: shopData.bank_account_name || null,
+        bank_account_number: shopData.bank_account_number || null,
+        bank_ifsc: shopData.bank_ifsc || null,
+        bank_name: shopData.bank_name || null
     };
+
+    // Auto-set status to 'pending' if all verification fields are present
+    const hasDocs = flattenedData.govt_id_url && flattenedData.shop_license_url;
+    const hasBank = flattenedData.bank_account_name && flattenedData.bank_account_number && flattenedData.bank_ifsc && flattenedData.bank_name;
+    const hasAddress = flattenedData.address && flattenedData.city && flattenedData.state && flattenedData.pincode;
+
+    if (hasDocs && hasBank && hasAddress) {
+        flattenedData.status = 'pending';
+    } else {
+        flattenedData.status = 'incomplete';
+    }
 
     return await shopRepository.createShop(ownerId, flattenedData);
 };
@@ -39,6 +65,9 @@ const approveShop = async (shopId, categoryIds = []) => {
     if (categoryIds.length > 0) {
         await shopRepository.setPermittedCategories(shopId, categoryIds);
     }
+
+    // Promote the user to shop_owner role if they aren't already
+    await userRepository.updateUserRole(shop.owner_id, 'shop_owner');
 
     // Notify the shop owner
     if (shop.email) {
@@ -79,6 +108,25 @@ const getShopById = async (shopId) => {
     return shopRepository.findShopById(shopId);
 };
 
+const submitForApproval = async (ownerId) => {
+    const shop = await shopRepository.findShopByOwnerId(ownerId);
+    if (!shop) throw new Error('Shop not found');
+
+    // Validate that all required verification fields are present
+    const requiredFields = [
+        'govt_id_url', 'shop_license_url',
+        'bank_account_name', 'bank_account_number', 'bank_ifsc', 'bank_name'
+    ];
+
+    for (const field of requiredFields) {
+        if (!shop[field]) {
+            throw new Error(`Please provide all verification details. Missing: ${field.replace(/_/g, ' ')}`);
+        }
+    }
+
+    return await shopRepository.updateShopStatus(shop.id || shop.shop_id, 'pending');
+};
+
 module.exports = {
     registerShop,
     getMyShop,
@@ -88,4 +136,5 @@ module.exports = {
     approveShop,
     rejectShop,
     getPermittedCategories,
+    submitForApproval,
 };

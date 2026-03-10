@@ -28,7 +28,15 @@ const verifyUser = async (email) => {
 };
 
 const getAllUsers = async () => {
-    const result = await db.query("SELECT id, fullname, email, role, verified, created_at, blocked FROM users WHERE role = 'customer' ORDER BY created_at DESC");
+    const result = await db.query(`
+        SELECT 
+            u.id, u.fullname, u.email, u.role, u.verified, u.created_at, u.blocked,
+            s.status AS shop_status
+        FROM users u
+        LEFT JOIN shops s ON u.id = s.owner_id
+        WHERE u.role != 'admin' 
+        ORDER BY u.created_at DESC
+    `);
     return result.rows;
 }
 
@@ -91,6 +99,14 @@ const updateUserOtp = async (email, otp, hashedPassword) => {
     return result.rows[0];
 }
 
+const updateUserRole = async (id, role) => {
+    const result = await db.query(
+        'UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, email, role',
+        [role, id]
+    );
+    return result.rows[0];
+};
+
 module.exports = {
     createUser,
     findUserByEmail,
@@ -101,5 +117,6 @@ module.exports = {
     blockUser,
     unblockUser,
     getShopsAnalytics,
-    updateUserOtp
+    updateUserOtp,
+    updateUserRole
 };

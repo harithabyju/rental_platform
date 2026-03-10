@@ -43,24 +43,32 @@ const findShopById = async (shopId) => {
 
 const createShop = async (ownerId, shopData) => {
     const {
-        shop_name, name, description, address, city, state,
-        pincode, latitude, longitude, phone, email
+        name, description, address, city, state,
+        pincode, latitude, longitude, phone, email,
+        status, govt_id_url, shop_license_url,
+        bank_account_name, bank_account_number, bank_ifsc, bank_name
     } = shopData;
-
-    // Support both 'name' or 'shop_name' from payload
-    const finalName = name || shop_name;
 
     const query = `
         INSERT INTO shops (
             owner_id, name, description, address, city, state, 
-            pincode, latitude, longitude, phone, email, status, created_at, updated_at
+            pincode, latitude, longitude, phone, email, status,
+            govt_id_url, shop_license_url,
+            bank_account_name, bank_account_number, bank_ifsc, bank_name,
+            created_at, updated_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending', NOW(), NOW())
+        VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+            $13, $14, $15, $16, $17, $18,
+            NOW(), NOW()
+        )
         RETURNING *, id as shop_id;
     `;
     const values = [
-        ownerId, finalName, description, address, city,
-        state, pincode, latitude, longitude, phone, email
+        ownerId, name, description, address, city, state,
+        pincode, latitude, longitude, phone, email, status || 'incomplete',
+        govt_id_url, shop_license_url,
+        bank_account_name, bank_account_number, bank_ifsc, bank_name
     ];
     const result = await db.query(query, values);
     return result.rows[0];
@@ -77,7 +85,9 @@ const updateShopStatus = async (shopId, status) => {
 const updateShop = async (shopId, shopData) => {
     const {
         name, description, address, city, state,
-        pincode, latitude, longitude, phone, email
+        pincode, latitude, longitude, phone, email,
+        govt_id_url, shop_license_url,
+        bank_account_name, bank_account_number, bank_ifsc, bank_name
     } = shopData;
 
     const query = `
@@ -92,13 +102,22 @@ const updateShop = async (shopId, shopData) => {
             longitude = COALESCE($8, longitude),
             phone = COALESCE($9, phone),
             email = COALESCE($10, email),
+            govt_id_url = COALESCE($11, govt_id_url),
+            shop_license_url = COALESCE($12, shop_license_url),
+            bank_account_name = COALESCE($13, bank_account_name),
+            bank_account_number = COALESCE($14, bank_account_number),
+            bank_ifsc = COALESCE($15, bank_ifsc),
+            bank_name = COALESCE($16, bank_name),
             updated_at = NOW()
-        WHERE id = $11
+        WHERE id = $17
         RETURNING *, id as shop_id;
     `;
     const values = [
         name, description, address, city, state,
-        pincode, latitude, longitude, phone, email, shopId
+        pincode, latitude, longitude, phone, email,
+        govt_id_url, shop_license_url,
+        bank_account_name, bank_account_number, bank_ifsc, bank_name,
+        shopId
     ];
     const result = await db.query(query, values);
     return result.rows[0];

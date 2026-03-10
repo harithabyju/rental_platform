@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
     Users,
     Store,
@@ -64,7 +64,7 @@ const AdminDashboard = () => {
 
     if (error) {
         return (
-            <div className="bg-red-50 p-4 rounded-lg flex items-center gap-3 text-red-700">
+            <div className="bg-red-900/20 border border-red-800/30 p-4 rounded-xl flex items-center gap-3 text-red-400">
                 <AlertCircle className="w-5 h-5" />
                 <p>{error}</p>
             </div>
@@ -77,18 +77,25 @@ const AdminDashboard = () => {
         <div className="space-y-8 animate-fade-in p-6">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
                     <p className="text-gray-500 mt-1">Monitor your platform's performance at a glance.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-400">Last updated: {new Date().toLocaleTimeString()}</span>
+                    <span className="text-sm text-gray-500">Last updated: {new Date().toLocaleTimeString()}</span>
                 </div>
             </header>
 
             {/* Quick Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <StatCard
-                    title="Total Customers"
+                    title="Total Users"
+                    value={data.stats.totalUsers}
+                    icon={<Users className="w-6 h-6" />}
+                    color="bg-indigo-500"
+                    onClick={() => navigate('/admin/users')}
+                />
+                <StatCard
+                    title="Customers"
                     value={data.stats.totalCustomers}
                     icon={<Users className="w-6 h-6" />}
                     color="bg-blue-500"
@@ -100,14 +107,14 @@ const AdminDashboard = () => {
                     color="bg-green-500"
                 />
                 <StatCard
-                    title="Pending Approvals"
-                    value={data.stats.pendingShops}
+                    title="Pending Appr."
+                    value={data.stats.pendingApprovals}
                     icon={<Clock className="w-6 h-6" />}
-                    color={data.stats.pendingShops > 0 ? "bg-amber-500 animate-pulse" : "bg-gray-400"}
+                    color={data.stats.pendingApprovals > 0 ? "bg-amber-500 animate-pulse" : "bg-gray-400"}
                     onClick={() => navigate('/admin/shops')}
                 />
                 <StatCard
-                    title="Platform Revenue"
+                    title="Revenue"
                     value={`₹${data.stats.totalRevenue.toLocaleString()}`}
                     icon={<TrendingUp className="w-6 h-6" />}
                     color="bg-purple-500"
@@ -115,29 +122,29 @@ const AdminDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <h2 className="text-xl font-semibold mb-6">Quick Management</h2>
+            <div className="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Quick Management</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <ActionButton icon={<Layers />} label="Categories" onClick={() => navigate('/admin/categories')} color="text-emerald-600 bg-emerald-50" />
-                    <ActionButton icon={<ShieldAlert />} label="Fine Management" onClick={() => navigate('/admin/fines')} color="text-red-600 bg-red-50" />
-                    <ActionButton icon={<Users />} label="Users" onClick={() => navigate('/admin/users')} color="text-blue-600 bg-blue-50" />
-                    <ActionButton icon={<Store />} label="Shops" onClick={() => navigate('/admin/shops')} color="text-emerald-600 bg-emerald-50" />
+                    <ActionButton icon={<Layers />} label="Categories" onClick={() => navigate('/admin/categories')} color="text-emerald-400 bg-emerald-900/40 hover:bg-emerald-900/70" />
+                    <ActionButton icon={<ShieldAlert />} label="Fine Management" onClick={() => navigate('/admin/fines')} color="text-red-400 bg-red-900/40 hover:bg-red-900/70" />
+                    <ActionButton icon={<Users />} label="Users" onClick={() => navigate('/admin/users')} color="text-blue-400 bg-blue-900/40 hover:bg-blue-900/70" />
+                    <ActionButton icon={<Store />} label="Shops" onClick={() => navigate('/admin/shops')} color="text-emerald-400 bg-emerald-900/40 hover:bg-emerald-900/70" />
                 </div>
             </div>
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Revenue Trend Line Chart */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h3 className="text-lg font-semibold mb-6">Revenue Trend (Monthly)</h3>
+                <div className="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Revenue Trend (Monthly)</h3>
                     <div className="h-[300px] min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={data.charts.revenueTrend}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                                <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => `₹${val}`} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f2937" />
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                                <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => `₹${val}`} tick={{ fill: '#6b7280', fontSize: 12 }} />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    contentStyle={{ borderRadius: '12px', border: '1px solid #374151', background: '#1f2937', color: '#f3f4f6' }}
                                 />
                                 <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                             </LineChart>
@@ -145,18 +152,37 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
+                {/* Registration Trend Chart */}
+                <div className="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Registration Trend</h3>
+                    <div className="h-[300px] min-w-0">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={data.charts.registrationTrend}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f2937" />
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                                <Tooltip
+                                    cursor={{ fill: '#ffffff10' }}
+                                    contentStyle={{ borderRadius: '12px', border: '1px solid #374151', background: '#1f2937', color: '#f3f4f6' }}
+                                />
+                                <Bar dataKey="count" fill="#4f46e5" radius={[6, 6, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
                 {/* Bookings by Category Bar Chart */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h3 className="text-lg font-semibold mb-6">Bookings by Category</h3>
+                <div className="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Bookings by Category</h3>
                     <div className="h-[300px] min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data.charts.bookingsByCategory}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="category" axisLine={false} tickLine={false} />
-                                <YAxis axisLine={false} tickLine={false} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f2937" />
+                                <XAxis dataKey="category" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
                                 <Tooltip
-                                    cursor={{ fill: '#f9fafb' }}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    cursor={{ fill: '#ffffff10' }}
+                                    contentStyle={{ borderRadius: '12px', border: '1px solid #374151', background: '#1f2937', color: '#f3f4f6' }}
                                 />
                                 <Bar dataKey="booking_count" fill="#10b981" radius={[6, 6, 0, 0]} />
                             </BarChart>
@@ -165,8 +191,8 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Category Distribution Pie Chart */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h3 className="text-lg font-semibold mb-6">Inventory Category Distribution</h3>
+                <div className="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Inventory Category Distribution</h3>
                     <div className="h-[300px] min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -184,20 +210,20 @@ const AdminDashboard = () => {
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    contentStyle={{ borderRadius: '12px', border: '1px solid #374151', background: '#1f2937', color: '#f3f4f6' }}
                                 />
-                                <Legend verticalAlign="bottom" height={36} />
+                                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: '#9ca3af' }} />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
                 {/* Top Performing Shops Table Wrapper */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h3 className="text-lg font-semibold mb-6">Top Performing Shops</h3>
+                <div className="bg-white dark:bg-[#111827] p-6 rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Top Performing Shops</h3>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
+                            <thead className="bg-gray-50 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
                                 <tr>
                                     <th className="px-4 py-3 font-semibold rounded-l-lg">Shop</th>
                                     <th className="px-4 py-3 font-semibold text-center">Items</th>
@@ -205,18 +231,18 @@ const AdminDashboard = () => {
                                     <th className="px-4 py-3 font-semibold text-right rounded-r-lg">Earnings</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
                                 {data.topShops.map((shop, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                                    <tr key={idx} className="hover:bg-gray-50 dark:bg-gray-800/40 transition-colors">
                                         <td className="px-4 py-4">
                                             <div>
-                                                <div className="font-medium text-gray-900">{shop.name}</div>
+                                                <div className="font-medium text-gray-800 dark:text-gray-200">{shop.name}</div>
                                                 <div className="text-xs text-gray-500">{shop.location}</div>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-4 text-center text-sm">{shop.totalItems}</td>
-                                        <td className="px-4 py-4 text-center text-sm">{shop.totalRentals}</td>
-                                        <td className="px-4 py-4 text-right text-sm font-semibold text-emerald-600">
+                                        <td className="px-4 py-4 text-center text-sm text-gray-500 dark:text-gray-400">{shop.totalItems}</td>
+                                        <td className="px-4 py-4 text-center text-sm text-gray-500 dark:text-gray-400">{shop.totalRentals}</td>
+                                        <td className="px-4 py-4 text-right text-sm font-semibold text-emerald-400">
                                             ₹{shop.earnings.toLocaleString()}
                                         </td>
                                     </tr>
@@ -230,15 +256,18 @@ const AdminDashboard = () => {
     );
 };
 
-const StatCard = ({ title, value, icon, color }) => (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+const StatCard = ({ title, value, icon, color, onClick }) => (
+    <div
+        onClick={onClick}
+        className={`bg-white dark:bg-[#111827] p-6 rounded-2xl border border-gray-100 dark:border-gray-800/60 relative overflow-hidden group hover:border-emerald-700/40 transition-all ${onClick ? 'cursor-pointer hover:shadow-lg hover:shadow-black/20' : ''}`}
+    >
         <div className="flex items-center gap-4 relative z-10">
             <div className={`p-3 rounded-xl ${color} text-white shadow-lg`}>
                 {icon}
             </div>
             <div>
-                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">{title}</p>
-                <h4 className="text-2xl font-bold text-gray-900 mt-1">{value}</h4>
+                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{title}</p>
+                <h4 className="text-2xl font-black text-gray-900 dark:text-gray-100 mt-1">{value}</h4>
             </div>
         </div>
         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
@@ -250,7 +279,7 @@ const StatCard = ({ title, value, icon, color }) => (
 const ActionButton = ({ icon, label, onClick, color }) => (
     <button
         onClick={onClick}
-        className={`flex items-center justify-between p-4 rounded-xl font-medium transition-all hover:ring-2 hover:ring-offset-2 hover:scale-[1.02] active:scale-95 ${color}`}
+        className={`flex items-center justify-between p-4 rounded-xl font-medium transition-all hover:scale-[1.02] active:scale-95 ${color}`}
     >
         <div className="flex items-center gap-3">
             {icon}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import * as dashboardService from '../services/dashboardService';
 import PaymentTable from '../components/PaymentTable';
 import { CreditCard, Download, ExternalLink, Info } from 'lucide-react';
@@ -31,18 +31,18 @@ const MyPayments = () => {
         <div className="space-y-8 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Payment History</h1>
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Payment History</h1>
                     <p className="text-gray-500 font-medium mt-1">Track all your transactions and download invoices</p>
                 </div>
 
                 {/* Summary Box */}
-                <div className="flex items-center gap-5 bg-white px-6 py-4 rounded-3xl border border-gray-100 shadow-sm shadow-gray-50">
+                <div className="flex items-center gap-5 bg-white dark:bg-[#111827] px-6 py-4 rounded-3xl border border-gray-100 dark:border-gray-800/60 shadow-sm shadow-gray-50">
                     <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
                         <CreditCard className="w-6 h-6 text-emerald-600" />
                     </div>
                     <div>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Lifetime Spent</p>
-                        <p className="text-xl font-black text-gray-900">
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">Lifetime Spent</p>
+                        <p className="text-xl font-black text-gray-900 dark:text-gray-100">
                             {loading ? '...' : `₹${payments.reduce((acc, p) => acc + (p.status === 'completed' ? p.amount : 0), 0).toLocaleString('en-IN')}`}
                         </p>
                     </div>
@@ -84,7 +84,7 @@ const MyPayments = () => {
                                 <button
                                     disabled={pagination.page === 1}
                                     onClick={() => fetchPayments(pagination.page - 1)}
-                                    className="px-6 py-2.5 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all"
+                                    className="px-6 py-2.5 bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-700/60 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 dark:bg-gray-800/40 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all"
                                 >
                                     Prev
                                 </button>
@@ -96,7 +96,7 @@ const MyPayments = () => {
                                 <button
                                     disabled={pagination.page === pagination.totalPages}
                                     onClick={() => fetchPayments(pagination.page + 1)}
-                                    className="px-6 py-2.5 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all"
+                                    className="px-6 py-2.5 bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-700/60 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 dark:bg-gray-800/40 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all"
                                 >
                                     Next
                                 </button>

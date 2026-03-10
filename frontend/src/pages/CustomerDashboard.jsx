@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDashboard } from '../context/DashboardContext';
@@ -204,7 +204,7 @@ const CustomerDashboard = () => {
                                 placeholder="Search cameras, bikes, camping gear..."
                                 value={searchParams.q}
                                 onChange={(e) => setSearchParams(prev => ({ ...prev, q: e.target.value }))}
-                                className="w-full h-16 pl-16 pr-6 rounded-2xl bg-white text-gray-900 text-lg font-medium focus:outline-none focus:ring-4 focus:ring-emerald-400/30 transition-all placeholder:text-gray-400 shadow-xl"
+                                className="w-full h-16 pl-16 pr-6 rounded-2xl bg-white dark:bg-[#111827] text-gray-900 dark:text-gray-100 text-lg font-medium focus:outline-none focus:ring-4 focus:ring-emerald-400/30 transition-all placeholder:text-gray-500 dark:text-gray-400 shadow-xl"
                             />
                         </div>
                         <div className="relative">
@@ -221,7 +221,7 @@ const CustomerDashboard = () => {
                                 }}
                                 className={`h-16 px-8 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl active-press hover-tilt relative ${showExplorer
                                     ? 'bg-emerald-300 text-emerald-900 ring-4 ring-emerald-300/30'
-                                    : 'bg-emerald-50 text-emerald-900 border-2 border-transparent hover:bg-white'
+                                    : 'bg-emerald-50 text-emerald-900 border-2 border-transparent hover:bg-white dark:bg-[#111827]'
                                     }`}
                             >
                                 <MapIcon size={22} />
@@ -250,8 +250,8 @@ const CustomerDashboard = () => {
                         <Package size={32} />
                     </div>
                     <div>
-                        <p className="text-gray-400 font-bold uppercase tracking-wider text-[10px] mb-1">Active Rentals</p>
-                        <h4 className="text-3xl font-black text-gray-900">{summary?.activeRentals || 0}</h4>
+                        <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider text-[10px] mb-1">Active Rentals</p>
+                        <h4 className="text-3xl font-black text-gray-900 dark:text-gray-100">{summary?.activeRentals || 0}</h4>
                     </div>
                 </div>
 
@@ -260,8 +260,8 @@ const CustomerDashboard = () => {
                         <CheckCircle size={32} />
                     </div>
                     <div>
-                        <p className="text-gray-400 font-bold uppercase tracking-wider text-[10px] mb-1">Completed</p>
-                        <h4 className="text-3xl font-black text-gray-900">{summary?.completedRentals || 0}</h4>
+                        <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider text-[10px] mb-1">Completed</p>
+                        <h4 className="text-3xl font-black text-gray-900 dark:text-gray-100">{summary?.completedRentals || 0}</h4>
                     </div>
                 </div>
 
@@ -270,21 +270,21 @@ const CustomerDashboard = () => {
                         <Wallet size={32} />
                     </div>
                     <div>
-                        <p className="text-gray-400 font-bold uppercase tracking-wider text-[10px] mb-1">Total Spent</p>
-                        <h4 className="text-3xl font-black text-gray-900">{summary?.totalSpentFormatted || '₹0.00'}</h4>
+                        <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider text-[10px] mb-1">Total Spent</p>
+                        <h4 className="text-3xl font-black text-gray-900 dark:text-gray-100">{summary?.totalSpentFormatted || '₹0.00'}</h4>
                     </div>
                 </div>
             </div>
 
             {/* Popular Categories */}
             <div className="space-y-6">
-                <h3 className="text-2xl font-black text-gray-900 px-2">Popular Categories</h3>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 px-2">Popular Categories</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
                     {categories.map((cat) => (
                         <button
                             key={cat.id}
                             onClick={() => navigate(`/dashboard/browse?categoryId=${cat.id}`)}
-                            className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all group flex flex-col items-center gap-3 active-press hover-tilt"
+                            className="bg-white dark:bg-[#111827] p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800/60 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all group flex flex-col items-center gap-3 active-press hover-tilt"
                         >
                             <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-2xl group-hover:bg-emerald-600 group-hover:scale-110 transition-all">
                                 {getCategoryIcon(cat.slug)}
@@ -299,7 +299,7 @@ const CustomerDashboard = () => {
 
             {/* Quick Actions */}
             <div className="space-y-6">
-                <h3 className="text-2xl font-black text-gray-900 px-2">Quick Actions</h3>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 px-2">Quick Actions</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     <button
                         onClick={() => navigate('/dashboard/browse')}
@@ -341,7 +341,7 @@ const CustomerDashboard = () => {
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-2">
                         <div className="space-y-1">
-                            <h3 className="text-2xl font-black text-gray-900">Active Rentals</h3>
+                            <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100">Active Rentals</h3>
                             <p className="text-gray-500 text-sm font-medium">Currently ongoing rentals that you are using.</p>
                         </div>
                         <button onClick={() => navigate('/dashboard/rentals')} className="text-blue-600 text-sm font-black flex items-center gap-1 hover:gap-2 transition-all">
@@ -358,7 +358,7 @@ const CustomerDashboard = () => {
 
             {/* Explorer Section */}
             {showExplorer && (
-                <div id="explorer-section" className="bg-white rounded-[2.5rem] shadow-2xl border border-emerald-100 p-8 sm:p-12 animate-slide-up space-y-10">
+                <div id="explorer-section" className="bg-white dark:bg-[#111827] rounded-[2.5rem] shadow-2xl border border-emerald-100 p-8 sm:p-12 animate-slide-up space-y-10">
                     <div className="flex items-center justify-between">
                         <div className="space-y-2">
                             <h2 className="text-3xl font-black text-emerald-900 flex items-center gap-3">
@@ -366,7 +366,7 @@ const CustomerDashboard = () => {
                             </h2>
                             <p className="text-gray-500 font-medium text-lg">Find precisely what's available near you right now.</p>
                         </div>
-                        <button onClick={() => setShowExplorer(false)} className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-900 transition-all font-black">&times;</button>
+                        <button onClick={() => setShowExplorer(false)} className="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-800/40 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-all font-black">&times;</button>
                     </div>
 
 
@@ -406,10 +406,10 @@ const CustomerDashboard = () => {
             )}
 
             {/* Content Results Section */}
-            <div id="search-results" className="space-y-8 pt-12 border-t border-gray-100">
+            <div id="search-results" className="space-y-8 pt-12 border-t border-gray-100 dark:border-gray-800/60">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
                     <div className="space-y-1">
-                        <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+                        <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
                             Explore Catalog
                         </h2>
                         <p className="text-gray-500 font-medium">
@@ -417,7 +417,7 @@ const CustomerDashboard = () => {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-4 bg-gray-50 p-1.5 rounded-2xl">
+                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/40 p-1.5 rounded-2xl">
                         <SortDropdown value={searchParams.sort} onChange={handleSortChange} />
                         <button
                             onClick={() => navigate('/dashboard/browse')}
@@ -432,11 +432,11 @@ const CustomerDashboard = () => {
                     <SearchResultsGrid items={results} loading={loading} />
 
                     {!loading && results.length === 0 && (
-                        <div className="h-[400px] rounded-[2.5rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 text-center bg-gray-50/50">
-                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm mb-4">
+                        <div className="h-[400px] rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-gray-700/60 flex flex-col items-center justify-center p-8 text-center bg-gray-50 dark:bg-gray-800/40/50">
+                            <div className="w-16 h-16 bg-white dark:bg-[#111827] rounded-full flex items-center justify-center text-emerald-500 shadow-sm mb-4">
                                 <Search size={24} />
                             </div>
-                            <h4 className="font-bold text-gray-900 mb-2">No items found yet</h4>
+                            <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">No items found yet</h4>
                             <p className="text-sm text-gray-500 max-w-xs mb-4">
                                 We couldn't find anything matching your exact location. Try broadening your radius in the Explorer.
                             </p>
@@ -457,7 +457,7 @@ const CustomerDashboard = () => {
                                     onClick={() => setSearchParams(prev => ({ ...prev, page: i + 1 }))}
                                     className={`w-14 h-14 rounded-2xl font-black transition-all shadow-sm ${searchParams.page === i + 1
                                         ? 'bg-[#1a5d3d] text-white shadow-[#1a5d3d]/20 scale-110'
-                                        : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-100'
+                                        : 'bg-white dark:bg-[#111827] text-gray-600 hover:bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800/60'
                                         }`}
                                 >
                                     {i + 1}

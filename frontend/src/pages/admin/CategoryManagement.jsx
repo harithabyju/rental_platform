@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import categoryService from '../../services/category.service';
 import {
     Tag,
@@ -132,7 +132,7 @@ const CategoryManagement = () => {
             {/* Header section */}
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight flex items-center gap-3">
                         <Layers className="text-emerald-600" />
                         Category Management
                     </h1>
@@ -151,13 +151,13 @@ const CategoryManagement = () => {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-end">
                 <div className="lg:col-span-3">
                     <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-emerald-500 transition-colors" size={20} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 group-hover:text-emerald-500 transition-colors" size={20} />
                         <input
                             type="text"
                             placeholder="Search categories by name or description..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all shadow-sm outline-none font-medium"
+                            className="w-full pl-12 pr-4 py-4 bg-white dark:bg-[#111827] border border-gray-100 dark:border-gray-800/60 rounded-2xl focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all shadow-sm outline-none font-medium"
                         />
                     </div>
                 </div>
@@ -166,18 +166,18 @@ const CategoryManagement = () => {
                         <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Total Categories</p>
                         <p className="text-2xl font-black text-emerald-700">{categories.length}</p>
                     </div>
-                    <div className="p-3 bg-white rounded-xl shadow-sm text-emerald-600">
+                    <div className="p-3 bg-white dark:bg-[#111827] rounded-xl shadow-sm text-emerald-600">
                         <Tag size={24} />
                     </div>
                 </div>
             </div>
 
             {/* Categories Table/List */}
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+            <div className="bg-white dark:bg-[#111827] rounded-3xl border border-gray-100 dark:border-gray-800/60 shadow-xl overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-gray-50/50 border-b border-gray-100 font-black text-[10px] text-gray-400 uppercase tracking-[0.2em]">
+                            <tr className="bg-gray-50 dark:bg-gray-800/40/50 border-b border-gray-100 dark:border-gray-800/60 font-black text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em]">
                                 <th className="px-8 py-5">Category</th>
                                 <th className="px-8 py-5">Slug</th>
                                 <th className="px-8 py-5">Status</th>
@@ -196,7 +196,7 @@ const CategoryManagement = () => {
                                 </tr>
                             ) : (
                                 filteredCategories.map((category) => (
-                                    <tr key={category.id} className="group hover:bg-gray-50/80 transition-all duration-300">
+                                    <tr key={category.id} className="group hover:bg-gray-50 dark:bg-gray-800/40/80 transition-all duration-300">
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 font-black text-xl shadow-inner group-hover:scale-110 transition-transform">
@@ -207,15 +207,15 @@ const CategoryManagement = () => {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <div className="font-black text-gray-900 leading-none mb-1">{category.name}</div>
-                                                    <div className="text-xs text-gray-400 font-medium max-w-xs truncate">
+                                                    <div className="font-black text-gray-900 dark:text-gray-100 leading-none mb-1">{category.name}</div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 font-medium max-w-xs truncate">
                                                         {category.description || 'No description provided'}
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <code className="bg-gray-100 text-gray-600 px-2 py-1 rounded-lg text-xs font-bold">
+                                            <code className="bg-gray-100 dark:bg-gray-800 text-gray-600 px-2 py-1 rounded-lg text-xs font-bold">
                                                 {category.slug || '-'}
                                             </code>
                                         </td>
@@ -234,14 +234,14 @@ const CategoryManagement = () => {
                                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
                                                     onClick={() => openModal(category)}
-                                                    className="p-3 hover:bg-white hover:text-emerald-600 hover:shadow-md rounded-xl text-gray-400 transition-all"
+                                                    className="p-3 hover:bg-white dark:bg-[#111827] hover:text-emerald-600 hover:shadow-md rounded-xl text-gray-500 dark:text-gray-400 transition-all"
                                                     title="Edit Category"
                                                 >
                                                     <Edit2 size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(category.id)}
-                                                    className="p-3 hover:bg-white hover:text-red-600 hover:shadow-md rounded-xl text-gray-400 transition-all"
+                                                    className="p-3 hover:bg-white dark:bg-[#111827] hover:text-red-600 hover:shadow-md rounded-xl text-gray-500 dark:text-gray-400 transition-all"
                                                     title="Delete Category"
                                                 >
                                                     <Trash2 size={18} />
@@ -263,46 +263,46 @@ const CategoryManagement = () => {
                         className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm animate-fade-in"
                         onClick={closeModal}
                     />
-                    <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-slide-up">
-                        <div className="px-8 pt-8 pb-4 flex justify-between items-center bg-gray-50/50">
+                    <div className="relative w-full max-w-md bg-white dark:bg-[#111827] rounded-[2rem] shadow-2xl overflow-hidden animate-slide-up">
+                        <div className="px-8 pt-8 pb-4 flex justify-between items-center bg-gray-50 dark:bg-gray-800/40/50">
                             <div>
-                                <h2 className="text-2xl font-black text-gray-900">
+                                <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100">
                                     {isEditing ? 'Edit Category' : 'Add Category'}
                                 </h2>
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1">
                                     Category Details
                                 </p>
                             </div>
                             <button
                                 onClick={closeModal}
-                                className="p-3 bg-white hover:bg-gray-100 rounded-2xl transition-colors shadow-sm"
+                                className="p-3 bg-white dark:bg-[#111827] hover:bg-gray-50 dark:bg-gray-800/60 rounded-2xl transition-colors shadow-sm"
                             >
-                                <X size={20} className="text-gray-400" />
+                                <X size={20} className="text-gray-500 dark:text-gray-400" />
                             </button>
                         </div>
 
                         <form onSubmit={handleSubmit} className="p-8 space-y-6">
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                                    <label className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">
                                         Category Name
                                     </label>
                                     <div className="relative">
-                                        <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                        <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-300" size={18} />
                                         <input
                                             type="text"
                                             name="name"
                                             value={currentCategory.name}
                                             onChange={handleInputChange}
                                             placeholder="e.g. Construction Equipment"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-emerald-50 focus:bg-white transition-all font-bold text-gray-900 outline-none"
+                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800/40 border-none rounded-2xl focus:ring-4 focus:ring-emerald-50 focus:bg-white dark:bg-[#111827] transition-all font-bold text-gray-900 dark:text-gray-100 outline-none"
                                             required
                                         />
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                                    <label className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">
                                         Description
                                     </label>
                                     <textarea
@@ -311,36 +311,36 @@ const CategoryManagement = () => {
                                         onChange={handleInputChange}
                                         placeholder="Enter category description..."
                                         rows="3"
-                                        className="w-full p-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-emerald-50 focus:bg-white transition-all font-medium text-gray-900 outline-none resize-none"
+                                        className="w-full p-4 bg-gray-50 dark:bg-gray-800/40 border-none rounded-2xl focus:ring-4 focus:ring-emerald-50 focus:bg-white dark:bg-[#111827] transition-all font-medium text-gray-900 dark:text-gray-100 outline-none resize-none"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                                    <label className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">
                                         Icon URL (Optional)
                                     </label>
                                     <div className="relative">
-                                        <Image className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                        <Image className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-300" size={18} />
                                         <input
                                             type="text"
                                             name="icon_url"
                                             value={currentCategory.icon_url || ''}
                                             onChange={handleInputChange}
                                             placeholder="https://example.com/icon.svg"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-emerald-50 focus:bg-white transition-all font-medium text-gray-400 outline-none"
+                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800/40 border-none rounded-2xl focus:ring-4 focus:ring-emerald-50 focus:bg-white dark:bg-[#111827] transition-all font-medium text-gray-500 dark:text-gray-400 outline-none"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl group cursor-pointer" onClick={() => setCurrentCategory(prev => ({ ...prev, is_active: !prev.is_active }))}>
+                                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/40 rounded-2xl group cursor-pointer" onClick={() => setCurrentCategory(prev => ({ ...prev, is_active: !prev.is_active }))}>
                                     <div className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${currentCategory.is_active ? 'bg-emerald-600' : 'bg-gray-300'}`}>
-                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${currentCategory.is_active ? 'left-7' : 'left-1'}`} />
+                                        <div className={`absolute top-1 w-4 h-4 bg-white dark:bg-[#111827] rounded-full transition-all duration-300 ${currentCategory.is_active ? 'left-7' : 'left-1'}`} />
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-sm font-black text-gray-900">Active Status</p>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Visibility on platform</p>
+                                        <p className="text-sm font-black text-gray-900 dark:text-gray-100">Active Status</p>
+                                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">Visibility on platform</p>
                                     </div>
-                                    <Power className={currentCategory.is_active ? 'text-emerald-600' : 'text-gray-400'} size={18} />
+                                    <Power className={currentCategory.is_active ? 'text-emerald-600' : 'text-gray-500 dark:text-gray-400'} size={18} />
                                 </div>
                             </div>
 
@@ -348,7 +348,7 @@ const CategoryManagement = () => {
                                 <button
                                     type="button"
                                     onClick={closeModal}
-                                    className="flex-1 px-4 py-4 bg-gray-100 text-gray-600 rounded-2xl font-black hover:bg-gray-200 transition-colors active:scale-95"
+                                    className="flex-1 px-4 py-4 bg-gray-100 dark:bg-gray-800 text-gray-600 rounded-2xl font-black hover:bg-gray-200 transition-colors active:scale-95"
                                 >
                                     Cancel
                                 </button>

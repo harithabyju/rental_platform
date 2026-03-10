@@ -1,12 +1,12 @@
-const DashboardCard = ({ label, value, icon: Icon, iconBg, iconColor, trend }) => {
+﻿const DashboardCard = ({ label, value, icon: Icon, iconBg, iconColor, trend }) => {
     return (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+        <div className="bg-white dark:bg-[#111827] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800/60 hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-gray-500 mb-1">{label}</p>
-                    <p className="text-2xl font-bold text-gray-900">{value}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
                     {trend && (
-                        <p className="text-xs text-gray-400 mt-1">{trend}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{trend}</p>
                     )}
                 </div>
                 {Icon && (

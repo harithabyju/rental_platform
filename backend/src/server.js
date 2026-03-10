@@ -35,6 +35,7 @@ const adminDashboardRoutes = require('./modules/admin/dashboard/adminDashboard.r
 const bookingRoutes = require('./modules/bookings/booking.routes');
 const paymentRoutes = require('./modules/payments/payment.routes');
 const searchRoutes = require('./modules/search/search.routes');
+const reviewRoutes = require('./modules/reviews/review.routes');
 
 // Use Routes
 app.use('/api/dashboard', dashboardRoutes);
@@ -43,6 +44,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/shops', shopRoutes);
 app.use('/api/items', itemRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api', userRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);

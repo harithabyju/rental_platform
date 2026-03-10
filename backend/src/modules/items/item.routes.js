@@ -9,6 +9,12 @@ router.post('/', protect, upload.single('image'), itemController.addItem);
 router.put('/:id', protect, upload.single('image'), itemController.updateItem);
 router.delete('/:id', protect, itemController.deleteItem);
 
+const { authorize } = require('../../middlewares/roleMiddleware');
+
+// Admin Moderation Routes
+router.get('/admin/all', protect, authorize('admin'), itemController.getAllItemsAdmin);
+router.patch('/admin/toggle-status/:id', protect, authorize('admin'), itemController.toggleItemStatus);
+
 // Public / Customer Routes
 router.get('/', itemController.getAllItems);
 router.get('/shop/:shopId', itemController.getItemsByShop);

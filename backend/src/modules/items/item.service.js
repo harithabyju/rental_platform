@@ -9,6 +9,20 @@ const getItemsByShop = async (shopId) => {
     return itemRepository.findItemsByShopId(shopId);
 };
 
+const validateCategoryPermission = async (shopId, categoryId) => {
+    if (!categoryId) return;
+
+    const permitted = await shopRepository.getPermittedCategories(shopId);
+    if (permitted.length === 0) {
+        throw new Error('Your shop has no permitted categories. Please contact admin.');
+    }
+
+    const permittedIds = permitted.map(c => parseInt(c.id));
+    if (!permittedIds.includes(parseInt(categoryId))) {
+        throw new Error('This category is not permitted for your shop. Please stick to your approved niches.');
+    }
+};
+
 const addItem = async (ownerId, itemData) => {
     // Find owner's shop
     const shop = await shopRepository.findShopByOwnerId(ownerId);
@@ -18,15 +32,7 @@ const addItem = async (ownerId, itemData) => {
     const shopId = shop.id || shop.shop_id;
 
     // Validate category is permitted
-    if (itemData.category_id) {
-        const permitted = await shopRepository.getPermittedCategories(shopId);
-        if (permitted.length > 0) {
-            const permittedIds = permitted.map(c => c.id);
-            if (!permittedIds.includes(parseInt(itemData.category_id))) {
-                throw new Error('This category is not permitted for your shop');
-            }
-        }
-    }
+    await validateCategoryPermission(shopId, itemData.category_id);
 
     return itemRepository.createItem({ ...itemData, shop_id: shopId });
 };
@@ -40,6 +46,11 @@ const updateItem = async (ownerId, itemId, itemData) => {
 
     const shopId = shop.id || shop.shop_id;
     if (existing.shop_id !== shopId) throw new Error('Item does not belong to your shop');
+
+    // Validate category if it's being updated
+    if (itemData.category_id) {
+        await validateCategoryPermission(shopId, itemData.category_id);
+    }
 
     return itemRepository.updateItem(itemId, itemData);
 };
@@ -57,10 +68,22 @@ const deleteItem = async (ownerId, itemId) => {
     await itemRepository.deleteItem(itemId);
 };
 
+const getAllItemsAdmin = async () => {
+    return itemRepository.findAllItemsAdmin();
+};
+
+const toggleItemStatus = async (itemId, isActive, adminNote = null) => {
+    const item = await itemRepository.findItemById(itemId);
+    if (!item) throw new Error('Item not found');
+    return itemRepository.updateItemStatus(itemId, isActive, adminNote);
+};
+
 module.exports = {
     getAllItems,
+    getAllItemsAdmin,
     getItemsByShop,
     addItem,
     updateItem,
+    toggleItemStatus,
     deleteItem,
 };

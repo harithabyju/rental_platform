@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createBooking } from '../services/bookingService';
 import { getShopItemDetails } from '../services/dashboardService';
 import paymentService from '../services/paymentService';
 import { MapPin, Truck, Box, Star, Loader2, CheckCircle, CreditCard, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
+
+const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 const BookingPage = () => {
     const { itemId } = useParams();
@@ -79,6 +81,29 @@ const BookingPage = () => {
     const breakdown = calculateBreakdown();
 
     const handlePayment = async (bookingId, amount) => {
+        // MOCK PAYMENT FLOW for development/testing
+        if (import.meta.env.VITE_RAZORPAY_KEY_ID === 'rzp_test_your_key_id' || !import.meta.env.VITE_RAZORPAY_KEY_ID) {
+            console.log('Using Mock Payment Flow');
+            try {
+                setLoading(true);
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // In mock flow, we just show success since backend already records payment as 'paid' in createBooking
+                // However, we should still call verify payment if there's any logic there, 
+                // but based on booking.service, createBooking already did the work.
+
+                setShowSuccess(true);
+                toast.success('Mock Payment Successful!');
+                setTimeout(() => navigate('/dashboard/bookings'), 4000);
+            } catch (err) {
+                toast.error('Mock payment simulation failed');
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
+
         const res = await loadRazorpayScript();
 
         if (!res) {
@@ -91,31 +116,8 @@ const BookingPage = () => {
             // 1. Create Order on Backend
             const orderData = await paymentService.createOrder(bookingId, amount);
 
-            // DEMO MODE BYPASS: If order is a mock, simulate success
-            if (orderData.id.startsWith('order_mock_')) {
-                toast.info('DEMO MODE: Simulating payment success...', { autoClose: 2000 });
-                setTimeout(async () => {
-                    try {
-                        await paymentService.verifyPayment({
-                            razorpay_order_id: orderData.id,
-                            razorpay_payment_id: 'pay_mock_' + Date.now(),
-                            razorpay_signature: 'mock_sig',
-                            bookingId,
-                            amount
-                        });
-                        setShowSuccess(true);
-                        setTimeout(() => navigate('/dashboard/bookings'), 4000);
-                    } catch (err) {
-                        toast.error(err.message || 'Demo verification failed');
-                    } finally {
-                        setLoading(false);
-                    }
-                }, 1500);
-                return;
-            }
-
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key_id',
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount: orderData.amount,
                 currency: orderData.currency,
                 name: 'Rental Platform',
@@ -216,7 +218,7 @@ const BookingPage = () => {
     if (showSuccess) {
         return (
             <div className="max-w-4xl mx-auto py-20 px-4 animate-fade-in">
-                <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-emerald-100 flex flex-col items-center text-center p-12 sm:p-20 relative">
+                <div className="bg-white dark:bg-[#111827] rounded-[3rem] shadow-2xl overflow-hidden border border-emerald-100 flex flex-col items-center text-center p-12 sm:p-20 relative">
                     <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-teal-500" />
 
                     <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-10 shadow-inner group">
@@ -224,20 +226,20 @@ const BookingPage = () => {
                     </div>
 
                     <div className="space-y-6 max-w-2xl">
-                        <h2 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">Booking Confirmed!</h2>
+                        <h2 className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Booking Confirmed!</h2>
                         <p className="text-gray-500 text-lg sm:text-xl font-medium leading-relaxed">
                             Excellent choice! Your rental for <span className="text-emerald-600 font-black border-b-2 border-emerald-200 pb-0.5">{product.item_name}</span> has been successfully processed and confirmed.
                         </p>
                     </div>
 
                     <div className="mt-12 w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="bg-gray-50 p-6 rounded-3xl text-left border border-gray-100">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Status</p>
+                        <div className="bg-gray-50 dark:bg-gray-800/40 p-6 rounded-3xl text-left border border-gray-100 dark:border-gray-800/60">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">Status</p>
                             <p className="text-emerald-700 font-black">Payment Verified</p>
                         </div>
-                        <div className="bg-gray-50 p-6 rounded-3xl text-left border border-gray-100">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Next Step</p>
-                            <p className="text-gray-900 font-black">Pickup/Delivery Setup</p>
+                        <div className="bg-gray-50 dark:bg-gray-800/40 p-6 rounded-3xl text-left border border-gray-100 dark:border-gray-800/60">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">Next Step</p>
+                            <p className="text-gray-900 dark:text-gray-100 font-black">Pickup/Delivery Setup</p>
                         </div>
                     </div>
 
@@ -245,7 +247,7 @@ const BookingPage = () => {
                         <div className="inline-flex items-center gap-3 px-6 py-3 bg-emerald-600 text-white rounded-2xl text-sm font-black shadow-xl shadow-emerald-200 hover:bg-emerald-700 transition-colors active:scale-95 cursor-pointer" onClick={() => navigate('/dashboard/bookings')}>
                             View My Bookings <ArrowRight size={18} />
                         </div>
-                        <p className="text-xs text-gray-400 font-bold flex items-center gap-2">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 font-bold flex items-center gap-2">
                             <Loader2 className="w-3 h-3 animate-spin" /> Redirecting to your rentals in a few seconds...
                         </p>
                     </div>
@@ -257,7 +259,7 @@ const BookingPage = () => {
     return (
         <div className="max-w-6xl mx-auto py-12 animate-fade-in px-4">
             <div className="mb-12">
-                <h1 className="text-4xl font-black text-gray-900 tracking-tight">Finalize Reservation</h1>
+                <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Finalize Reservation</h1>
                 <p className="text-gray-500 font-medium mt-2">Check details and enter your preferences below</p>
             </div>
 
@@ -266,21 +268,25 @@ const BookingPage = () => {
                 <div className="lg:col-span-1 space-y-8 animate-slide-up">
                     <div className="card overflow-hidden group shadow-2xl shadow-gray-100">
                         <div className="relative h-72 overflow-hidden">
-                            <img src={product.image_url || 'https://placehold.co/800x600?text=Premium+Item'} alt={product.item_name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                            <div className="absolute top-4 right-4 flex items-center bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl text-emerald-700 text-xs font-black shadow-lg">
-                                <Star size={14} className="mr-1 fill-emerald-600 text-emerald-600" />
-                                {product.avg_rating || '5.0'}
+                            <img
+                                src={product.image_url ? (product.image_url.startsWith('http') ? product.image_url : `${BACKEND_URL}${product.image_url}`) : 'https://placehold.co/800x600?text=Premium+Item'}
+                                alt={product.item_name}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            />
+                            <div className="absolute top-4 right-4 flex items-center bg-white dark:bg-[#111827]/90 backdrop-blur-md px-3 py-1.5 rounded-2xl text-emerald-700 text-xs font-black shadow-lg">
+                                <Star size={14} className={`mr-1 ${parseFloat(product.avg_rating) > 0 ? 'fill-emerald-600 text-emerald-600' : 'text-gray-700 dark:text-gray-300'}`} />
+                                {parseFloat(product.avg_rating) > 0 ? parseFloat(product.avg_rating).toFixed(1) : 'New'}
                             </div>
                         </div>
                         <div className="p-8">
-                            <h2 className="text-2xl font-black text-gray-900 mb-2 leading-tight">{product.item_name}</h2>
+                            <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 mb-2 leading-tight">{product.item_name}</h2>
                             <p className="text-gray-500 text-sm mb-6 font-medium leading-relaxed">{product.item_description}</p>
 
-                            <div className="flex items-center justify-between pt-6 border-t border-gray-100">
+                            <div className="flex items-center justify-between pt-6 border-t border-gray-100 dark:border-gray-800/60">
                                 <div className="flex items-center gap-4">
                                     <div>
-                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Offered by</p>
-                                        <p className="text-sm font-black text-gray-900">{product.shop_name}</p>
+                                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase tracking-widest">Offered by</p>
+                                        <p className="text-sm font-black text-gray-900 dark:text-gray-100">{product.shop_name}</p>
                                         <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
                                             <Star size={10} className="fill-emerald-600" /> {product.shop_rating} Shop Rating
                                         </div>
@@ -288,7 +294,7 @@ const BookingPage = () => {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-xl font-black text-emerald-600">₹{product.price_per_day_inr}</p>
-                                    <p className="text-[10px] text-gray-400 font-black uppercase">per day</p>
+                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase">per day</p>
                                 </div>
                             </div>
                         </div>
@@ -312,11 +318,11 @@ const BookingPage = () => {
                             <div className="space-y-6">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 bg-emerald-600 text-white rounded-2xl flex items-center justify-center font-black shadow-lg shadow-emerald-200">1</div>
-                                    <h3 className="text-xl font-black text-gray-900 tracking-tight">When do you need it?</h3>
+                                    <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight">When do you need it?</h3>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Pick-up Date</label>
+                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Pick-up Date</label>
                                         <input
                                             type="date"
                                             value={startDate}
@@ -327,7 +333,7 @@ const BookingPage = () => {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Return Date</label>
+                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Return Date</label>
                                         <input
                                             type="date"
                                             value={endDate}
@@ -344,7 +350,7 @@ const BookingPage = () => {
                             <div className="space-y-6">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 bg-emerald-600 text-white rounded-2xl flex items-center justify-center font-black shadow-lg shadow-emerald-200">2</div>
-                                    <h3 className="text-xl font-black text-gray-900 tracking-tight">How will you get it?</h3>
+                                    <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight">How will you get it?</h3>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <button
@@ -352,10 +358,10 @@ const BookingPage = () => {
                                         onClick={() => setDeliveryMethod('pickup')}
                                         className={`p-6 rounded-[2rem] border-4 flex flex-col items-center gap-3 transition-all duration-300 ${deliveryMethod === 'pickup'
                                             ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-2xl shadow-emerald-100 scale-105'
-                                            : 'border-gray-50 hover:border-emerald-100 text-gray-400'
+                                            : 'border-gray-50 hover:border-emerald-100 text-gray-500 dark:text-gray-400'
                                             }`}
                                     >
-                                        <div className={`p-4 rounded-2xl ${deliveryMethod === 'pickup' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-400'} transition-colors`}>
+                                        <div className={`p-4 rounded-2xl ${deliveryMethod === 'pickup' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'} transition-colors`}>
                                             <Box size={28} />
                                         </div>
                                         <span className="font-black text-lg">Self Pickup</span>
@@ -367,10 +373,10 @@ const BookingPage = () => {
                                         onClick={() => setDeliveryMethod('delivery')}
                                         className={`p-6 rounded-[2rem] border-4 flex flex-col items-center gap-3 transition-all duration-300 ${!product.delivery_available ? 'opacity-50 cursor-not-allowed grayscale' : ''} ${deliveryMethod === 'delivery'
                                             ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-2xl shadow-emerald-100 scale-105'
-                                            : 'border-gray-50 hover:border-emerald-100 text-gray-400'
+                                            : 'border-gray-50 hover:border-emerald-100 text-gray-500 dark:text-gray-400'
                                             }`}
                                     >
-                                        <div className={`p-4 rounded-2xl ${deliveryMethod === 'delivery' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-400'} transition-colors`}>
+                                        <div className={`p-4 rounded-2xl ${deliveryMethod === 'delivery' ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'} transition-colors`}>
                                             <Truck size={28} />
                                         </div>
                                         <span className="font-black text-lg">Doorstep Delivery</span>
@@ -416,28 +422,28 @@ const BookingPage = () => {
                             </div>
 
                             {/* Breakdown & Submit */}
-                            <div className="pt-12 border-t border-gray-100">
+                            <div className="pt-12 border-t border-gray-100 dark:border-gray-800/60">
                                 <div className="flex items-center justify-between mb-8">
-                                    <h3 className="text-2xl font-black text-gray-900 tracking-tight">Price Breakdown</h3>
+                                    <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Price Breakdown</h3>
                                     <div className="px-4 py-1.5 bg-gray-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest">
                                         Currency: INR (₹)
                                     </div>
                                 </div>
 
-                                <div className="bg-gray-50/50 rounded-[2rem] p-8 space-y-5 mb-10 border border-gray-100">
+                                <div className="bg-gray-50 dark:bg-gray-800/40/50 rounded-[2rem] p-8 space-y-5 mb-10 border border-gray-100 dark:border-gray-800/60">
                                     {breakdown && !breakdown.error ? (
                                         <>
                                             <div className="flex justify-between items-center text-gray-500">
                                                 <span className="font-bold">Rental Amount ({breakdown.days} days)</span>
-                                                <span className="font-black text-gray-900 text-lg">₹{breakdown.subtotal.toFixed(2)}</span>
+                                                <span className="font-black text-gray-900 dark:text-gray-100 text-lg">₹{breakdown.subtotal.toFixed(2)}</span>
                                             </div>
                                             <div className="flex justify-between items-center text-gray-500">
                                                 <span className="font-bold">Service & Protection Fee</span>
-                                                <span className="font-black text-gray-900 text-lg">₹{breakdown.serviceFee.toFixed(2)}</span>
+                                                <span className="font-black text-gray-900 dark:text-gray-100 text-lg">₹{breakdown.serviceFee.toFixed(2)}</span>
                                             </div>
                                             <div className="flex justify-between items-center text-gray-500">
                                                 <span className="font-bold">GST & Taxes (5%)</span>
-                                                <span className="font-black text-gray-900 text-lg">₹{breakdown.tax.toFixed(2)}</span>
+                                                <span className="font-black text-gray-900 dark:text-gray-100 text-lg">₹{breakdown.tax.toFixed(2)}</span>
                                             </div>
                                             {deliveryMethod === 'delivery' && (
                                                 <div className="flex justify-between items-center text-emerald-700">
@@ -447,15 +453,15 @@ const BookingPage = () => {
                                             )}
                                             <div className="h-px bg-gray-200 mt-4" />
                                             <div className="flex justify-between items-center pt-2">
-                                                <span className="text-xl font-black text-gray-900">Total Payable</span>
+                                                <span className="text-xl font-black text-gray-900 dark:text-gray-100">Total Payable</span>
                                                 <div className="text-right">
                                                     <span className="text-4xl font-black text-emerald-600 tracking-tighter">₹{breakdown.total.toFixed(2)}</span>
-                                                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1 italic">All inclusive</p>
+                                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase tracking-widest mt-1 italic">All inclusive</p>
                                                 </div>
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="text-center text-gray-400 font-bold italic py-8">
+                                        <div className="text-center text-gray-500 dark:text-gray-400 font-bold italic py-8">
                                             Please select rental dates to calculate your total
                                         </div>
                                     )}
@@ -471,7 +477,7 @@ const BookingPage = () => {
                                         {loading ? 'Processing Transaction...' : `Confirm & Pay • ₹${breakdown?.total?.toFixed(2) || '0.00'}`}
                                     </span>
                                 </button>
-                                <p className="text-center text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mt-6">
+                                <p className="text-center text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase tracking-[0.2em] mt-6">
                                     Secure 256-bit Encrypted Transaction
                                 </p>
                             </div>

@@ -14,6 +14,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminShops from './pages/admin/AdminShops';
 import CategoryManagement from './pages/admin/CategoryManagement';
 import ShopApprovals from './pages/admin/ShopApprovals';
+import AdminItems from './pages/admin/AdminItems';
 import ShopOwnerDashboard from './pages/shop-owner/ShopOwnerDashboard';
 import CustomerHome from './pages/customer/CustomerHome';
 import CustomerDashboard from './pages/CustomerDashboard';
@@ -117,71 +118,79 @@ function App() {
                                 }
                             />
 
-                        <Route
-                            path="profile"
-                            element={
-                                <ProtectedRoute>
-                                    <Profile />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="profile"
+                                element={
+                                    <ProtectedRoute>
+                                        <Profile />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="admin/dashboard"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <AdminDashboard />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="admin/users"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <AdminUserManagement />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="admin/categories"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <CategoryManagement />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="admin/shops"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <AdminShops />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="admin/approvals"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <ShopApprovals />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="shop-owner/dashboard"
-                            element={
-                                <ProtectedRoute allowedRoles={['shop_owner']}>
-                                    <ShopOwnerDashboard />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="customer/home"
-                            element={
-                                <ProtectedRoute allowedRoles={['customer']}>
-                                    <CustomerHome />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="admin/dashboard"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminDashboard />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="admin/users"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminUserManagement />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="admin/categories"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <CategoryManagement />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="admin/shops"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminShops />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="admin/approvals"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <ShopApprovals />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="admin/items"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminItems />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="shop-owner/dashboard"
+                                element={
+                                    <ProtectedRoute allowedRoles={['shop_owner']}>
+                                        <ShopOwnerDashboard />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="customer/home"
+                                element={
+                                    <ProtectedRoute allowedRoles={['customer']}>
+                                        <CustomerHome />
+                                    </ProtectedRoute>
+                                }
+                            />
                             <Route
                                 path="dashboard/booking/:itemId"
                                 element={

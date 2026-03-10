@@ -40,6 +40,11 @@ const getPermittedCategories = async () => {
     return response.data;
 };
 
+const submitForApproval = async () => {
+    const response = await api.post('/shops/submit-approval');
+    return response.data;
+};
+
 const shopService = {
     registerShop,
     getMyShop,
@@ -49,6 +54,7 @@ const shopService = {
     rejectShop,
     getAllShops,
     getPermittedCategories,
+    submitForApproval,
 };
 
 export default shopService;

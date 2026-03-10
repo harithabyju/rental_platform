@@ -102,7 +102,7 @@ const deleteItem = async (itemId) => {
 
 const findItemById = async (itemId) => {
     const query = `
-        SELECT i.*, si.price_per_day_inr as price_per_day, si.shop_id, si.is_available, si.quantity_available, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, s.name as shop_name, c.name as category_name
+        SELECT i.*, si.price_per_day_inr as price_per_day, si.shop_id, si.is_available, si.quantity_available, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, s.name as shop_name, c.name as category_name, i.admin_note
         FROM items i
         JOIN shop_items si ON i.id = si.item_id
         JOIN shops s ON si.shop_id = s.id
@@ -115,7 +115,7 @@ const findItemById = async (itemId) => {
 
 const findItemsByShopId = async (shopId) => {
     const query = `
-        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, si.is_available, si.quantity_available, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name
+        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, si.is_available, si.quantity_available, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name, i.admin_note
         FROM items i
         JOIN shop_items si ON i.id = si.item_id
         LEFT JOIN categories c ON si.category_id = c.id
@@ -126,9 +126,9 @@ const findItemsByShopId = async (shopId) => {
     return result.rows;
 };
 
-const findAllItems = async (filters) => {
+const findAllItems = async () => {
     const query = `
-        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, s.name as shop_name, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name
+        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, s.name as shop_name, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name, si.quantity_available
         FROM items i
         JOIN shop_items si ON i.id = si.item_id
         JOIN shops s ON si.shop_id = s.id
@@ -140,11 +140,32 @@ const findAllItems = async (filters) => {
     return result.rows;
 };
 
+const findAllItemsAdmin = async () => {
+    const query = `
+        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, s.name as shop_name, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name, i.is_active as item_is_active, si.is_available as shop_item_is_available, s.id as shop_id, i.admin_note
+        FROM items i
+        JOIN shop_items si ON i.id = si.item_id
+        JOIN shops s ON si.shop_id = s.id
+        LEFT JOIN categories c ON i.category_id = c.id
+        ORDER BY i.created_at DESC
+    `;
+    const result = await db.query(query);
+    return result.rows;
+};
+
+const updateItemStatus = async (itemId, isActive, adminNote = null) => {
+    const query = 'UPDATE items SET is_active = $1, admin_note = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *';
+    const result = await db.query(query, [isActive, adminNote, itemId]);
+    return result.rows[0];
+};
+
 module.exports = {
     findAllItems,
+    findAllItemsAdmin,
     findItemsByShopId,
     findItemById,
     createItem,
     updateItem,
+    updateItemStatus,
     deleteItem,
 };

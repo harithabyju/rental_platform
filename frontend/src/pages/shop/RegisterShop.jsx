@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import shopService from '../../services/shop.service';
 import { toast } from 'react-toastify';
@@ -41,11 +41,11 @@ const RegisterShop = () => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded shadow-md">
+        <div className="max-w-2xl mx-auto mt-10 p-6 bg-white dark:bg-[#111827] rounded shadow-md">
             <h2 className="text-2xl font-bold mb-6 text-center">Register Your Shop</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-gray-700">Shop Name</label>
+                    <label className="block text-gray-700 dark:text-gray-300">Shop Name</label>
                     <input
                         type="text"
                         name="shop_name"
@@ -56,7 +56,7 @@ const RegisterShop = () => {
                     />
                 </div>
                 <div>
-                    <label className="block text-gray-700">Description</label>
+                    <label className="block text-gray-700 dark:text-gray-300">Description</label>
                     <textarea
                         name="description"
                         value={formData.description}
@@ -65,7 +65,7 @@ const RegisterShop = () => {
                     />
                 </div>
                 <div>
-                    <label className="block text-gray-700">Address</label>
+                    <label className="block text-gray-700 dark:text-gray-300">Address</label>
                     <input
                         type="text"
                         name="address"
@@ -76,7 +76,7 @@ const RegisterShop = () => {
                 </div>
                 <div className="flex gap-4">
                     <div className="flex-1">
-                        <label className="block text-gray-700">City</label>
+                        <label className="block text-gray-700 dark:text-gray-300">City</label>
                         <input
                             type="text"
                             name="city"
@@ -86,7 +86,7 @@ const RegisterShop = () => {
                         />
                     </div>
                     <div className="flex-1">
-                        <label className="block text-gray-700">Zip Code</label>
+                        <label className="block text-gray-700 dark:text-gray-300">Zip Code</label>
                         <input
                             type="text"
                             name="zip"

@@ -7,7 +7,8 @@ const createCategory = async (categoryData) => {
 
 const getAllCategories = async () => {
     const response = await api.get('/categories');
-    return response.data;
+    // Handle both wrapped { data: [...] } and direct [...] responses
+    return response.data?.data || response.data || [];
 };
 
 const updateCategory = async (id, categoryData) => {

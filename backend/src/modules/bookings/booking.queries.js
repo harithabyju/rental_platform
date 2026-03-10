@@ -12,7 +12,7 @@ exports.getUserBookings = `
         s.name as shop_name,
         s.city as shop_city
     FROM bookings b
-    JOIN items i ON b.item_id = i.id
+    LEFT JOIN items i ON b.item_id = i.id
     LEFT JOIN shops s ON b.shop_id = s.id
     WHERE b.user_id = $1 
     ORDER BY b.created_at DESC;

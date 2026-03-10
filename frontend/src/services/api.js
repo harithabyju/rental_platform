@@ -2,10 +2,10 @@ import axios from 'axios';
 
 const api = axios.create({
     baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api', // Backend URL with /api prefix
-    headers: {
-        'Content-Type': 'application/json',
-    },
 });
+
+export const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace('/api', '');
+export const IMAGE_BASE_URL = `${BACKEND_URL}/uploads/`;
 
 // Add a request interceptor to attach the token
 api.interceptors.request.use(

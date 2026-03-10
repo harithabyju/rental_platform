@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as dashboardService from '../services/dashboardService';
 import { ShieldAlert, Package, PhoneCall } from 'lucide-react';
@@ -33,7 +33,7 @@ const ActiveRentals = () => {
         <div className="space-y-10 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Active Rentals</h1>
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Active Rentals</h1>
                     <p className="text-gray-500 font-medium mt-1">Track items you currently have and their return dates</p>
                 </div>
 
@@ -47,7 +47,7 @@ const ActiveRentals = () => {
             {/* Overdue Alert */}
             {overdueCount > 0 && (
                 <div className="bg-red-50 border border-red-100 p-8 rounded-[2rem] flex items-start gap-6 shadow-xl shadow-red-100 animate-scale-up">
-                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <div className="w-14 h-14 bg-white dark:bg-[#111827] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
                         <ShieldAlert className="w-8 h-8 text-red-600" />
                     </div>
                     <div>
@@ -66,12 +66,12 @@ const ActiveRentals = () => {
 
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
                     <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center">
+                        <div className="w-16 h-16 bg-white dark:bg-[#111827]/10 backdrop-blur-md rounded-2xl flex items-center justify-center">
                             <PhoneCall className="w-8 h-8 text-emerald-400" />
                         </div>
                         <div>
                             <h4 className="text-xl font-black mb-1">Facing issues with a rental?</h4>
-                            <p className="text-gray-400 font-medium">Our concierge support is available 24/7 to help you.</p>
+                            <p className="text-gray-500 dark:text-gray-400 font-medium">Our concierge support is available 24/7 to help you.</p>
                         </div>
                     </div>
                     <a
@@ -87,7 +87,7 @@ const ActiveRentals = () => {
             {loading ? (
                 <div className="grid grid-cols-1 gap-6">
                     {[101, 102].map(i => (
-                        <div key={i} className="h-40 bg-gray-100 rounded-3xl animate-pulse" />
+                        <div key={i} className="h-40 bg-gray-100 dark:bg-gray-800 rounded-3xl animate-pulse" />
                     ))}
                 </div>
             ) : error ? (
@@ -101,11 +101,11 @@ const ActiveRentals = () => {
                     </button>
                 </div>
             ) : rentals.length === 0 ? (
-                <div className="bg-white rounded-[2rem] border border-gray-100 p-24 text-center shadow-sm animate-scale-up">
-                    <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-                        <Package className="w-12 h-12 text-gray-200" />
+                <div className="bg-white dark:bg-[#111827] rounded-[2rem] border border-gray-100 dark:border-gray-800/60 p-24 text-center shadow-sm animate-scale-up">
+                    <div className="w-24 h-24 bg-gray-50 dark:bg-gray-800/40 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+                        <Package className="w-12 h-12 text-gray-800 dark:text-gray-200" />
                     </div>
-                    <h2 className="text-3xl font-black text-gray-900">Your rental shelf is empty!</h2>
+                    <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100">Your rental shelf is empty!</h2>
                     <p className="text-gray-500 mt-2 max-w-sm mx-auto font-medium">
                         You don't have any items on rent right now. Ready to find your next project or adventure?
                     </p>

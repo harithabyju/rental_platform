@@ -261,7 +261,7 @@ exports.getPaymentsByUser = async (userId, limit, offset) => {
             i.image_url AS item_image
         FROM payments p
         JOIN bookings b ON b.booking_id = p.booking_id
-        JOIN items i ON i.id = b.item_id
+        LEFT JOIN items i ON i.id = b.item_id
         WHERE p.user_id = $1
         ORDER BY p.created_at DESC
         LIMIT $2 OFFSET $3`,

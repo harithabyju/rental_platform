@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import shopService from '../../services/shop.service';
 import itemService from '../../services/item.service';
 import * as dashboardService from '../../services/dashboardService';
@@ -56,7 +56,7 @@ const AddItemModal = ({ onClose, onAdded, shopId }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="bg-white dark:bg-[#111827] rounded-lg p-6 w-full max-w-md">
                 <h2 className="text-xl font-bold mb-4">Add New Item</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <input
@@ -117,7 +117,7 @@ const AddItemModal = ({ onClose, onAdded, shopId }) => {
                     </div>
 
                     <div className="flex justify-end space-x-2 mt-4">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-50 dark:bg-gray-800/60 rounded">Cancel</button>
                         <button type="submit" className="px-4 py-2 bg-primary text-white rounded hover:bg-green-600">Add Item</button>
                     </div>
                 </form>
@@ -180,10 +180,10 @@ const MyShop = () => {
 
     return (
         <div className="max-w-6xl mx-auto p-6">
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div className="bg-white dark:bg-[#111827] rounded-lg shadow-md p-6 mb-8">
                 <div className="flex justify-between items-start">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">{shop.shop_name}</h1>
+                        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">{shop.shop_name}</h1>
                         <p className="text-gray-600 mt-2">{shop.description}</p>
                         <p className="text-sm text-gray-500 mt-1">
                             Status: <span className={`font-semibold ${shop.status === 'approved' ? 'text-green-600' :
@@ -210,7 +210,7 @@ const MyShop = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {items.map(item => (
-                                <div key={item.item_id} className="bg-white rounded shadow p-4">
+                                <div key={item.item_id} className="bg-white dark:bg-[#111827] rounded shadow p-4">
                                     {item.image_url && (
                                         <img src={item.image_url} alt={item.item_name} className="w-full h-48 object-cover rounded mb-4" />
                                     )}

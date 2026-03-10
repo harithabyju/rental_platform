@@ -97,5 +97,6 @@ module.exports = {
     updateMe,
     getAllUsers,
     blockUser,
-    unblockUser
+    unblockUser,
+    getShopsAnalytics
 };

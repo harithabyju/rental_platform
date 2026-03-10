@@ -14,18 +14,6 @@ const razorpay = new Razorpay({
  * @returns {Promise<Object>} Razorpay Order object
  */
 exports.createOrder = async (amount, bookingId) => {
-    // If keys are placeholders, return a mock order for testing
-    if (process.env.RAZORPAY_KEY_ID === 'rzp_test_your_key_id') {
-        console.log('RAZORPAY MOCK MODE: Returning dummy order');
-        return {
-            id: `order_mock_${Date.now()}`,
-            amount: Math.round(amount * 100),
-            currency: 'INR',
-            receipt: `receipt_booking_${bookingId}`,
-            status: 'created'
-        };
-    }
-
     const options = {
         amount: Math.round(amount * 100), // Razorpay expects amount in paise
         currency: 'INR',
@@ -49,11 +37,6 @@ exports.createOrder = async (amount, bookingId) => {
  * @returns {boolean} True if valid
  */
 exports.verifySignature = (orderId, paymentId, signature) => {
-    // If keys are placeholders, always return true for mock signatures
-    if (process.env.RAZORPAY_KEY_ID === 'rzp_test_your_key_id') {
-        return true;
-    }
-
     const generatedSignature = crypto
         .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
         .update(`${orderId}|${paymentId}`)

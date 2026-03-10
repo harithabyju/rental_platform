@@ -1,4 +1,4 @@
-import { AlertTriangle, Clock, Phone, MapPin, Package } from 'lucide-react';
+﻿import { AlertTriangle, Clock, Phone, MapPin, Package } from 'lucide-react';
 
 const RentalStatusCard = ({ rental }) => {
     const isOverdue = rental.isOverdue;
@@ -29,7 +29,7 @@ const RentalStatusCard = ({ rental }) => {
                             OVERDUE BY {rental.daysOverdue} DAY{rental.daysOverdue > 1 ? 's' : ''}
                         </span>
                     </div>
-                    <span className="text-xs font-bold bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                    <span className="text-xs font-bold bg-white dark:bg-[#111827]/20 px-3 py-1 rounded-full backdrop-blur-sm">
                         Fine: {rental.lateFineFormatted?.replace('$', '₹')}
                     </span>
                 </div>
@@ -51,7 +51,7 @@ const RentalStatusCard = ({ rental }) => {
                     <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-4 mb-2">
                             <div>
-                                <h3 className="text-2xl font-black text-gray-900 tracking-tight group-hover:text-emerald-600 transition-colors">{rental.item?.name}</h3>
+                                <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight group-hover:text-emerald-600 transition-colors">{rental.item?.name}</h3>
                                 {rental.shop?.name && (
                                     <p className="text-sm text-emerald-600 font-black mt-0.5 uppercase tracking-widest">{rental.shop.name}</p>
                                 )}
@@ -63,18 +63,18 @@ const RentalStatusCard = ({ rental }) => {
 
                         <div className="flex flex-wrap items-center gap-6 mt-6">
                             {/* Duration */}
-                            <div className="flex items-center gap-2 text-sm font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-xl">
+                            <div className="flex items-center gap-2 text-sm font-bold text-gray-500 bg-gray-50 dark:bg-gray-800/40 px-3 py-1.5 rounded-xl">
                                 <Clock className="w-4 h-4 text-emerald-500" />
                                 <span>
                                     {new Date(rental.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                    <span className="mx-2 text-gray-300">→</span>
+                                    <span className="mx-2 text-gray-700 dark:text-gray-300">→</span>
                                     {new Date(rental.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                 </span>
                             </div>
 
                             {/* Delivery method */}
                             {rental.deliveryMethod && (
-                                <div className="flex items-center gap-2 text-sm font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-xl">
+                                <div className="flex items-center gap-2 text-sm font-bold text-gray-500 bg-gray-50 dark:bg-gray-800/40 px-3 py-1.5 rounded-xl">
                                     <Package className="w-4 h-4 text-emerald-500" />
                                     <span className="capitalize">{rental.deliveryMethod} Delivery</span>
                                 </div>
@@ -82,7 +82,7 @@ const RentalStatusCard = ({ rental }) => {
 
                             {/* Shop location */}
                             {rental.shop?.city && (
-                                <div className="flex items-center gap-2 text-sm font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-xl">
+                                <div className="flex items-center gap-2 text-sm font-bold text-gray-500 bg-gray-50 dark:bg-gray-800/40 px-3 py-1.5 rounded-xl">
                                     <MapPin className="w-4 h-4 text-emerald-500" />
                                     <span>{rental.shop.city} Location</span>
                                 </div>
@@ -103,11 +103,11 @@ const RentalStatusCard = ({ rental }) => {
                 </div>
 
                 {/* Footer */}
-                <div className="flex flex-col sm:flex-row items-center justify-between mt-8 pt-8 border-t border-gray-100 gap-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between mt-8 pt-8 border-t border-gray-100 dark:border-gray-800/60 gap-6">
                     <div className="flex items-center gap-4">
                         <div className="text-right sm:text-left">
-                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Total Rental Value</p>
-                            <p className="text-2xl font-black text-gray-900">{rental.totalAmountFormatted?.replace('$', '₹')}</p>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase tracking-widest">Total Rental Value</p>
+                            <p className="text-2xl font-black text-gray-900 dark:text-gray-100">{rental.totalAmountFormatted?.replace('$', '₹')}</p>
                         </div>
                     </div>
                     {rental.shop?.phone && (
