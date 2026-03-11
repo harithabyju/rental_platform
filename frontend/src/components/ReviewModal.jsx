@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Star } from 'lucide-react';
 import api from '../services/api';
 import { toast } from 'react-toastify';
@@ -30,9 +31,9 @@ const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-            <div className="bg-[#1E293B] rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl shadow-black/50 animate-scale-up border border-gray-700/50">
+    return createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+            <div className="bg-[#1E293B] rounded-[2.5rem] w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/50 animate-scale-up border border-gray-700/50">
                 <div className="p-8">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Rate your Experience</h2>
@@ -88,7 +89,8 @@ const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
                     </form>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

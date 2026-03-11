@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as dashboardService from '../services/dashboardService';
 import { ShieldAlert, Package, PhoneCall } from 'lucide-react';
@@ -58,30 +58,6 @@ const ActiveRentals = () => {
                     </div>
                 </div>
             )}
-
-            {/* Support Box */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-emerald-950 p-8 rounded-[2rem] text-white shadow-2xl animate-slide-up">
-                <div className="absolute -top-10 -right-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl" />
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
-
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-                    <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-white dark:bg-[#111827]/10 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                            <PhoneCall className="w-8 h-8 text-emerald-400" />
-                        </div>
-                        <div>
-                            <h4 className="text-xl font-black mb-1">Facing issues with a rental?</h4>
-                            <p className="text-gray-500 dark:text-gray-400 font-medium">Our concierge support is available 24/7 to help you.</p>
-                        </div>
-                    </div>
-                    <a
-                        href="mailto:help@grabngo.in"
-                        className="w-full md:w-auto px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-95 text-center"
-                    >
-                        Get Priority Support
-                    </a>
-                </div>
-            </div>
 
             {/* Rentals List */}
             {loading ? (

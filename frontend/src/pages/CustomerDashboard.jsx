@@ -1,172 +1,116 @@
-﻿import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDashboard } from '../context/DashboardContext';
-import * as dashboardService from '../services/dashboardService';
-import searchService from '../services/searchService';
-import CategoryDropdown from '../components/CategoryDropdown';
-import DateRangePicker from '../components/DateRangePicker';
-import RadiusSlider from '../components/RadiusSlider';
-import SearchResultsGrid from '../components/SearchResultsGrid';
-import SortDropdown from '../components/SortDropdown';
-import RentalStatusCard from '../components/RentalStatusCard';
-import { Search, Map as MapIcon, Grid, SlidersHorizontal, MapPin, Package, CheckCircle, Wallet, ArrowRight, ChevronRight } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { Search, Grid, Package, CheckCircle, Wallet, ChevronLeft, ChevronRight } from 'lucide-react';
+
+// Swiper Imports
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { EffectCoverflow, Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/effect-coverflow';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 const CustomerDashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const { categories, fetchCategories, summary, fetchSummary } = useDashboard();
-    const [activeRentals, setActiveRentals] = useState([]);
-    const [nearbyShops, setNearbyShops] = useState([]);
-    const [rentalsLoading, setRentalsLoading] = useState(false);
-    const [shopsLoading, setShopsLoading] = useState(false);
+    const scrollRef = useRef(null);
+    const [swiperInstance, setSwiperInstance] = useState(null);
 
-    // Search State
-    const [searchParams, setSearchParams] = useState({
-        category: '',
+    const scroll = (direction) => {
+        if (scrollRef.current) {
+            const { current } = scrollRef;
+            const scrollAmount = direction === 'left' ? -300 : 300;
+            current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    };
+
+    // Default search params
+    const searchParams = {
         lat: user?.latitude || 28.6139,
         lng: user?.longitude || 77.2090,
-        radius: 10,
-        start_date: new Date().toISOString().split('T')[0],
-        end_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        sort: 'distance',
-        page: 1,
-        limit: 12,
         q: ''
-    });
-
-    const [results, setResults] = useState([]);
-    const [pagination, setPagination] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [showExplorer, setShowExplorer] = useState(false);
-    const [hasSearched, setHasSearched] = useState(false);
+    };
 
     useEffect(() => {
         fetchCategories();
         fetchSummary();
-        loadActiveRentals();
-
-        // Auto-load items with broader discovery if location is available
-        const autoSearch = async () => {
-            const defaultParams = {
-                ...searchParams,
-                radius: 100, // Broaden initial discovery
-                category: '' // Show all categories
-            };
-            try {
-                const data = await searchService.searchItems(defaultParams);
-                setResults(data.items.slice(0, 8)); // Show a teaser of 8 items
-                setPagination(data.pagination);
-                setHasSearched(true);
-            } catch (err) {
-                console.error('Initial search failed:', err);
-            }
-        };
-
-        autoSearch();
-
-        if (navigator.geolocation && !user?.latitude) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const coords = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                setSearchParams(prev => ({
-                    ...prev,
-                    ...coords
-                }));
-                // Re-trigger search with new coordinates
-                searchService.searchItems({ ...searchParams, ...coords, radius: 100 })
-                    .then(data => setResults(data.items.slice(0, 8)));
-            });
-        }
     }, [fetchCategories, fetchSummary]);
 
-    const loadActiveRentals = async () => {
-        setRentalsLoading(true);
-        try {
-            const res = await dashboardService.getActiveRentals();
-            setActiveRentals(res.data.slice(0, 3)); // Only show top 3 on dashboard
-        } catch (error) {
-            console.error('Failed to load active rentals:', error);
-        } finally {
-            setRentalsLoading(false);
-        }
-    };
-
-    const handleSearch = async (e) => {
-        if (e && e.preventDefault) e.preventDefault();
-
-        // If searching from the Welcome Board main bar (not in Explorer mode), 
-        // we might want to navigate to the Browse page if it's a new searching action
-        if (!showExplorer && e) {
-            navigate(`/dashboard/browse?q=${encodeURIComponent(searchParams.q)}`);
-            return;
-        }
-
-        setLoading(true);
-        if (e) setHasSearched(true);
-        try {
-            const data = await searchService.searchItems(searchParams);
-
-            setResults(data.items);
-            setPagination(data.pagination);
-
-            // Scroll to results only if user explicitly searched
-            if (e) {
-                const resultsSection = document.getElementById('search-results');
-                if (resultsSection) {
-                    resultsSection.scrollIntoView({ behavior: 'smooth' });
-                }
-            }
-        } catch (error) {
-            toast.error(error.message || 'Failed to fetch results');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleLocationChange = (lat, lng) => {
-        setSearchParams(prev => ({ ...prev, lat, lng }));
-    };
-
-    const handleSortChange = (sort) => {
-        setSearchParams(prev => ({ ...prev, sort }));
-    };
-
     const getCategoryIcon = (slug) => {
-        const icons = {
-            'vehicles': '🚗',
-            'cameras': '📸',
-            'electronics': '💻',
-            'tools': '🔨',
-            'camping': '⛺',
-            'event-items': '🎪',
-            'costumes': '👗',
-        };
-        return icons[slug] || '📦';
+        const slugLower = slug?.toLowerCase() || '';
+        if (slugLower.includes('vehicle') || slugLower.includes('car') || slugLower.includes('bike')) return '🚗';
+        if (slugLower.includes('camera') || slugLower.includes('lens') || slugLower.includes('photo')) return '📸';
+        if (slugLower.includes('electronic') || slugLower.includes('laptop') || slugLower.includes('computer')) return '💻';
+        if (slugLower.includes('tool') || slugLower.includes('drill') || slugLower.includes('hardware')) return '🔨';
+        if (slugLower.includes('camp') || slugLower.includes('tent') || slugLower.includes('outdoor')) return '⛺';
+        if (slugLower.includes('event') || slugLower.includes('party') || slugLower.includes('wedding')) return '🎪';
+        if (slugLower.includes('costume') || slugLower.includes('clothes') || slugLower.includes('apparel')) return '👗';
+        if (slugLower.includes('game') || slugLower.includes('console') || slugLower.includes('play')) return '🎮';
+        if (slugLower.includes('sport') || slugLower.includes('fitness') || slugLower.includes('gym')) return '⚽';
+        if (slugLower.includes('music') || slugLower.includes('instrument') || slugLower.includes('audio')) return '🎸';
+        if (slugLower.includes('book') || slugLower.includes('study') || slugLower.includes('education')) return '📚';
+        if (slugLower.includes('appliances') || slugLower.includes('home')) return '🏠';
+        if (slugLower.includes('furniture')) return '🪑';
+        if (slugLower.includes('toy') || slugLower.includes('kid')) return '🧸';
+        return '📦';
     };
-
-    useEffect(() => {
-        if (hasSearched && (searchParams.sort || searchParams.page)) {
-            handleSearch();
-        }
-    }, [searchParams.sort, searchParams.page]);
-
-    useEffect(() => {
-        if (location.state?.autoOpenExplorer) {
-            setShowExplorer(true);
-            // Scroll to explorer
-            setTimeout(() => {
-                const explorerSection = document.getElementById('explorer-section');
-                if (explorerSection) explorerSection.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-        }
-    }, [location.state]);
 
     return (
         <div className="max-w-7xl mx-auto space-y-12 pb-12 animate-fade-in px-4 sm:px-6">
+            <style>{`
+                /* Swiper Customizations */
+                .category-swiper {
+                    padding: 2rem 1rem 4rem 1rem !important;
+                }
+                .category-swiper .swiper-slide {
+                    width: 200px;
+                    transition: all 0.4s ease;
+                    pointer-events: auto; /* Ensure hover events trigger on all slides */
+                }
+                .category-swiper .swiper-slide:not(.swiper-slide-active) {
+                    filter: blur(4px);
+                    opacity: 0.6;
+                    transform: scale(0.85); /* Slightly scale down non-active */
+                    cursor: pointer; /* Show pointer when hovering blurred slides */
+                }
+                .category-swiper .swiper-slide-active {
+                    filter: blur(0px);
+                    opacity: 1;
+                    z-index: 10;
+                    transform: scale(1.15) translateY(-15px); /* Increased jump effect */
+                }
+                /* Navigation Buttons Customization */
+                .swiper-button-next, .swiper-button-prev {
+                    color: #059669 !important; /* emerald-600 */
+                    background: white;
+                    width: 32px !important;
+                    height: 32px !important;
+                    border-radius: 50%;
+                    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+                    border: 1px solid #f3f4f6; /* gray-100 */
+                    opacity: 0;
+                    transition: opacity 0.3s ease, transform 0.3s ease;
+                }
+                .category-swiper:hover .swiper-button-next,
+                .category-swiper:hover .swiper-button-prev {
+                    opacity: 1;
+                }
+                .dark .swiper-button-next, .dark .swiper-button-prev {
+                    background: #1f2937; /* gray-800 */
+                    border-color: #374151; /* gray-700 */
+                }
+                .swiper-button-next:after, .swiper-button-prev:after {
+                    font-size: 0.9rem !important;
+                    font-weight: 900;
+                }
+                .swiper-button-next:hover, .swiper-button-prev:hover {
+                    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+                    transform: scale(1.1);
+                }
+            `}</style>
             {/* Hero Section */}
             <div className="relative overflow-hidden rounded-[2.5rem] bg-[#1a5d3d] p-8 sm:p-14 text-white shadow-2xl animate-scale-up">
                 <div className="relative z-10 space-y-8">
@@ -206,33 +150,6 @@ const CustomerDashboard = () => {
                                 onChange={(e) => setSearchParams(prev => ({ ...prev, q: e.target.value }))}
                                 className="w-full h-16 pl-16 pr-6 rounded-2xl bg-white dark:bg-[#111827] text-gray-900 dark:text-gray-100 text-lg font-medium focus:outline-none focus:ring-4 focus:ring-emerald-400/30 transition-all placeholder:text-gray-500 dark:text-gray-400 shadow-xl"
                             />
-                        </div>
-                        <div className="relative">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowExplorer(!showExplorer);
-                                    if (!showExplorer) {
-                                        // Scroll to explorer section
-                                        setTimeout(() => {
-                                            document.getElementById('explorer-section')?.scrollIntoView({ behavior: 'smooth' });
-                                        }, 100);
-                                    }
-                                }}
-                                className={`h-16 px-8 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl active-press hover-tilt relative ${showExplorer
-                                    ? 'bg-emerald-300 text-emerald-900 ring-4 ring-emerald-300/30'
-                                    : 'bg-emerald-50 text-emerald-900 border-2 border-transparent hover:bg-white dark:bg-[#111827]'
-                                    }`}
-                            >
-                                <MapIcon size={22} />
-                                Explorer
-                                {!showExplorer && (
-                                    <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
-                                    </span>
-                                )}
-                            </button>
                         </div>
                     </form>
                 </div>
@@ -277,23 +194,48 @@ const CustomerDashboard = () => {
             </div>
 
             {/* Popular Categories */}
-            <div className="space-y-6">
-                <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 px-2">Popular Categories</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
-                    {categories.map((cat) => (
-                        <button
-                            key={cat.id}
-                            onClick={() => navigate(`/dashboard/browse?categoryId=${cat.id}`)}
-                            className="bg-white dark:bg-[#111827] p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800/60 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all group flex flex-col items-center gap-3 active-press hover-tilt"
+            <div className="space-y-6 relative group/slider">
+                <div className="flex items-center justify-between px-2">
+                    <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100">Popular Categories</h3>
+                </div>
+                
+                <div className="relative -mx-4 sm:mx-0">
+                    {categories.length > 0 && (
+                        <Swiper
+                            onSwiper={setSwiperInstance}
+                            initialSlide={Math.max(0, Math.floor(categories.length / 2))}
+                            effect={'coverflow'}
+                            grabCursor={true}
+                            centeredSlides={true}
+                            slidesPerView={'auto'}
+                            coverflowEffect={{
+                                rotate: 0,
+                                stretch: 0,
+                                depth: 100,
+                                modifier: 2.5,
+                                slideShadows: false, // We use custom background/shadows on cards instead
+                            }}
+                            navigation={true}
+                            modules={[EffectCoverflow, Navigation]}
+                            className="category-swiper"
                         >
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-2xl group-hover:bg-emerald-600 group-hover:scale-110 transition-all">
-                                {getCategoryIcon(cat.slug)}
-                            </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 group-hover:text-emerald-700 transition-colors text-center">
-                                {cat.name}
-                            </span>
-                        </button>
-                    ))}
+                            {categories.map((cat, index) => (
+                                <SwiperSlide key={cat.id} onMouseEnter={() => swiperInstance?.slideTo(index)}>
+                                    <button
+                                        onClick={() => navigate(`/dashboard/browse?categoryId=${cat.id}`)}
+                                        className="w-full h-full bg-white dark:bg-[#111827] p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800/60 shadow-xl flex flex-col items-center justify-center gap-4 transition-all"
+                                    >
+                                        <div className="w-20 h-20 rounded-[1.5rem] bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-4xl shadow-inner group-hover:bg-emerald-600 transition-all">
+                                            {getCategoryIcon(cat.slug)}
+                                        </div>
+                                        <span className="text-sm font-black uppercase tracking-widest text-gray-700 dark:text-gray-200 text-center">
+                                            {cat.name}
+                                        </span>
+                                    </button>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+                    )}
                 </div>
             </div>
 
@@ -336,137 +278,6 @@ const CustomerDashboard = () => {
 
 
 
-            {/* Active Bookings Section */}
-            {activeRentals.length > 0 && (
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between px-2">
-                        <div className="space-y-1">
-                            <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100">Active Rentals</h3>
-                            <p className="text-gray-500 text-sm font-medium">Currently ongoing rentals that you are using.</p>
-                        </div>
-                        <button onClick={() => navigate('/dashboard/rentals')} className="text-blue-600 text-sm font-black flex items-center gap-1 hover:gap-2 transition-all">
-                            View All <ChevronRight size={18} />
-                        </button>
-                    </div>
-                    <div className="space-y-4">
-                        {activeRentals.map((rental) => (
-                            <RentalStatusCard key={rental.rentalId} rental={rental} />
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Explorer Section */}
-            {showExplorer && (
-                <div id="explorer-section" className="bg-white dark:bg-[#111827] rounded-[2.5rem] shadow-2xl border border-emerald-100 p-8 sm:p-12 animate-slide-up space-y-10">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                            <h2 className="text-3xl font-black text-emerald-900 flex items-center gap-3">
-                                <MapPin className="text-emerald-500" size={32} /> Location-Based Explorer
-                            </h2>
-                            <p className="text-gray-500 font-medium text-lg">Find precisely what's available near you right now.</p>
-                        </div>
-                        <button onClick={() => setShowExplorer(false)} className="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-800/40 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 transition-all font-black">&times;</button>
-                    </div>
-
-
-
-                    <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-10 items-end">
-                        <CategoryDropdown
-                            categories={categories}
-                            value={searchParams.category}
-                            onChange={(val) => setSearchParams(prev => ({ ...prev, category: val }))}
-                        />
-                        <div className="lg:col-span-2">
-                            <DateRangePicker
-                                startDate={searchParams.start_date}
-                                endDate={searchParams.end_date}
-                                onStartChange={(val) => setSearchParams(prev => ({ ...prev, start_date: val }))}
-                                onEndChange={(val) => setSearchParams(prev => ({ ...prev, end_date: val }))}
-                            />
-                        </div>
-                        <RadiusSlider
-                            value={searchParams.radius}
-                            onChange={(val) => setSearchParams(prev => ({ ...prev, radius: val }))}
-                        />
-                        <div className="lg:col-span-4 flex justify-end">
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="h-16 px-12 bg-emerald-600 text-white rounded-2xl font-black text-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-emerald-200 disabled:opacity-50 active-press hover-tilt"
-                            >
-                                {loading ? <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div> : <Search size={24} />}
-                                Find Items Now
-                            </button>
-                        </div>
-                    </form>
-
-
-                </div>
-            )}
-
-            {/* Content Results Section */}
-            <div id="search-results" className="space-y-8 pt-12 border-t border-gray-100 dark:border-gray-800/60">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
-                    <div className="space-y-1">
-                        <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
-                            Explore Catalog
-                        </h2>
-                        <p className="text-gray-500 font-medium">
-                            {hasSearched ? 'Latest items from verified neighborhood shops.' : 'Discovering items near you...'}
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/40 p-1.5 rounded-2xl">
-                        <SortDropdown value={searchParams.sort} onChange={handleSortChange} />
-                        <button
-                            onClick={() => navigate('/dashboard/browse')}
-                            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-100"
-                        >
-                            Browse All
-                        </button>
-                    </div>
-                </div>
-
-                <div className="min-h-[400px]">
-                    <SearchResultsGrid items={results} loading={loading} />
-
-                    {!loading && results.length === 0 && (
-                        <div className="h-[400px] rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-gray-700/60 flex flex-col items-center justify-center p-8 text-center bg-gray-50 dark:bg-gray-800/40/50">
-                            <div className="w-16 h-16 bg-white dark:bg-[#111827] rounded-full flex items-center justify-center text-emerald-500 shadow-sm mb-4">
-                                <Search size={24} />
-                            </div>
-                            <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2">No items found yet</h4>
-                            <p className="text-sm text-gray-500 max-w-xs mb-4">
-                                We couldn't find anything matching your exact location. Try broadening your radius in the Explorer.
-                            </p>
-                            <button
-                                onClick={() => setShowExplorer(true)}
-                                className="text-emerald-600 font-black text-xs uppercase tracking-widest hover:underline"
-                            >
-                                Open Explorer
-                            </button>
-                        </div>
-                    )}
-
-                    {pagination && pagination.pages > 1 && (
-                        <div className="mt-16 flex justify-center gap-3">
-                            {[...Array(pagination.pages)].map((_, i) => (
-                                <button
-                                    key={i + 1}
-                                    onClick={() => setSearchParams(prev => ({ ...prev, page: i + 1 }))}
-                                    className={`w-14 h-14 rounded-2xl font-black transition-all shadow-sm ${searchParams.page === i + 1
-                                        ? 'bg-[#1a5d3d] text-white shadow-[#1a5d3d]/20 scale-110'
-                                        : 'bg-white dark:bg-[#111827] text-gray-600 hover:bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800/60'
-                                        }`}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
         </div>
     );
 };

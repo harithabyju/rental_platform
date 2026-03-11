@@ -232,11 +232,21 @@ exports.extendBooking = async (userId, bookingId, newEndDate) => {
 };
 
 exports.returnBooking = async (userId, bookingId) => {
-    const bookingResult = await db.query(bookingQueries.getBookingById, [bookingId]);
+    // Modified to join shops table so we can check if the user is the shop owner
+    const bookingResult = await db.query(`
+        SELECT b.*, s.owner_id as shop_owner_id 
+        FROM bookings b
+        JOIN shops s ON b.shop_id = s.id
+        WHERE b.booking_id = $1
+    `, [bookingId]);
+    
     if (bookingResult.rows.length === 0) throw new Error('Booking not found');
     const booking = bookingResult.rows[0];
 
-    if (booking.user_id !== userId) throw new Error('Unauthorized');
+    // Authorize: Only the customer who rented it OR the owner of the shop can confirm the return
+    if (booking.user_id !== userId && booking.shop_owner_id !== userId) {
+        throw new Error('Unauthorized. Only the renter or shop owner can confirm the return.');
+    }
 
     const client = await db.pool.connect();
     try {

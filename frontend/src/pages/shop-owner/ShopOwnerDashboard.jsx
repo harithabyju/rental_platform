@@ -1,9 +1,12 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Store, Package, Plus, X, AlertCircle, Clock, XCircle, Edit2, Trash2, Upload, Image as ImageIcon, DollarSign, Tag, CheckCircle, FileText, MapPin, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import shopService from '../../services/shop.service';
 import itemService from '../../services/item.service';
+import * as dashboardService from '../../services/dashboardService';
+import * as bookingService from '../../services/bookingService';
+import RentalStatusCard from '../../components/RentalStatusCard';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
@@ -771,6 +774,9 @@ const ShopOwnerDashboard = () => {
     const [loadingItems, setLoadingItems] = useState(false);
     const [showVerification, setShowVerification] = useState(false);
     const [submittingApproval, setSubmittingApproval] = useState(false);
+    const [activeRentals, setActiveRentals] = useState([]);
+    const [loadingRentals, setLoadingRentals] = useState(false);
+    const [activeTab, setActiveTab] = useState('inventory');
 
     useEffect(() => {
         loadShop();
@@ -783,6 +789,7 @@ const ShopOwnerDashboard = () => {
             if (data?.status === 'approved') {
                 loadItems(data.shop_id);
                 loadPermittedCategories();
+                loadRentals();
             }
         } catch {
             setShop(null);
@@ -807,6 +814,29 @@ const ShopOwnerDashboard = () => {
             setPermittedCategories(Array.isArray(cats) ? cats : []);
         } catch {
             setPermittedCategories([]);
+        }
+    };
+
+    const loadRentals = async () => {
+        setLoadingRentals(true);
+        try {
+            const res = await dashboardService.getActiveRentals();
+            setActiveRentals(res.data || []);
+        } catch {
+            setActiveRentals([]);
+        } finally {
+            setLoadingRentals(false);
+        }
+    };
+
+    const handleConfirmReturn = async (bookingId) => {
+        if (!window.confirm('Are you sure you want to confirm the return of this item?')) return;
+        try {
+            await bookingService.returnBooking(bookingId);
+            toast.success('Return confirmed successfully!');
+            loadRentals();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to confirm return');
         }
     };
 
@@ -951,42 +981,84 @@ const ShopOwnerDashboard = () => {
                 </div>
             )}
 
-            {/* Items Inventory (only for approved shops) */}
+            {/* Items Inventory and Active Rentals (only for approved shops) */}
             {shop?.status === 'approved' && (
-                <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-100 dark:border-gray-800/60 shadow-sm">
-                    <div className="p-6 border-b border-gray-100 dark:border-gray-800/60 flex items-center justify-between">
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Your Items</h2>
-                        <span className="text-sm font-bold text-gray-500 dark:text-gray-400">{items.length} item{items.length !== 1 ? 's' : ''}</span>
+                <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-100 dark:border-gray-800/60 shadow-sm overflow-hidden">
+                    <div className="border-b border-gray-100 dark:border-gray-800/60 flex items-center bg-gray-50/50 dark:bg-gray-800/20">
+                        <button
+                            onClick={() => setActiveTab('inventory')}
+                            className={`flex-1 py-4 text-sm font-black border-b-2 transition-colors ${activeTab === 'inventory' ? 'border-emerald-500 text-emerald-600 bg-white dark:bg-[#111827]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-white dark:hover:bg-[#111827]'}`}
+                        >
+                            Your Items ({items.length})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('rentals')}
+                            className={`flex-1 py-4 text-sm font-black border-b-2 transition-colors ${activeTab === 'rentals' ? 'border-emerald-500 text-emerald-600 bg-white dark:bg-[#111827]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-white dark:hover:bg-[#111827]'}`}
+                        >
+                            Active Bookings ({activeRentals.length})
+                        </button>
                     </div>
 
-                    {loadingItems ? (
-                        <div className="p-12 text-center">
-                            <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                    {activeTab === 'inventory' && (
+                        <div>
+                            {loadingItems ? (
+                                <div className="p-12 text-center">
+                                    <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                                </div>
+                            ) : items.length === 0 ? (
+                                <div className="p-12 text-center">
+                                    <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Package className="w-8 h-8 text-gray-800 dark:text-gray-200" />
+                                    </div>
+                                    <h3 className="text-base font-bold text-gray-700 dark:text-gray-300">No items yet</h3>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Get started by adding your first rental item</p>
+                                    <button
+                                        onClick={() => { setEditItem(null); setShowForm(true); }}
+                                        className="mt-4 inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:underline"
+                                    >
+                                        <Plus className="w-4 h-4" /> Add your first item
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+                                    {items.map(item => (
+                                        <ItemCard
+                                            key={item.item_id}
+                                            item={item}
+                                            onDelete={handleDelete}
+                                            onEdit={(it) => { setEditItem(it); setShowForm(true); }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    ) : items.length === 0 ? (
-                        <div className="p-12 text-center">
-                            <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/40 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Package className="w-8 h-8 text-gray-800 dark:text-gray-200" />
-                            </div>
-                            <h3 className="text-base font-bold text-gray-700 dark:text-gray-300">No items yet</h3>
-                            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Get started by adding your first rental item</p>
-                            <button
-                                onClick={() => { setEditItem(null); setShowForm(true); }}
-                                className="mt-4 inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:underline"
-                            >
-                                <Plus className="w-4 h-4" /> Add your first item
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
-                            {items.map(item => (
-                                <ItemCard
-                                    key={item.item_id}
-                                    item={item}
-                                    onDelete={handleDelete}
-                                    onEdit={(it) => { setEditItem(it); setShowForm(true); }}
-                                />
-                            ))}
+                    )}
+
+                    {activeTab === 'rentals' && (
+                        <div className="p-6 bg-gray-50 dark:bg-gray-800/20">
+                            {loadingRentals ? (
+                                <div className="p-12 text-center">
+                                    <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                                </div>
+                            ) : activeRentals.length === 0 ? (
+                                <div className="p-12 text-center bg-white dark:bg-[#111827] rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                                    <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Clock className="w-8 h-8 text-gray-800 dark:text-gray-200" />
+                                    </div>
+                                    <h3 className="text-base font-bold text-gray-700 dark:text-gray-300">No active bookings</h3>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Your items are currently waiting to be rented.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-6">
+                                    {activeRentals.map(rental => (
+                                        <RentalStatusCard 
+                                            key={rental.rentalId} 
+                                            rental={rental} 
+                                            onConfirmReturn={handleConfirmReturn}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

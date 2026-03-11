@@ -315,6 +315,48 @@ exports.getActiveRentalsByUser = async (userId) => {
     return result.rows;
 };
 
+// ─── Active Rentals for Shop Owner ───────────────────────────────────────────
+exports.getActiveRentalsForShopOwner = async (userId) => {
+    const result = await db.query(
+        `SELECT
+            r.id AS rental_id,
+            b.booking_id,
+            b.user_id AS renter_id,
+            u.fullname AS renter_name,
+            u.phone AS renter_phone,
+            u.email AS renter_email,
+            COALESCE(r.start_date, b.start_date) as start_date,
+            COALESCE(r.end_date, b.end_date) as end_date,
+            COALESCE(r.status, b.status) AS rental_status,
+            r.late_fine_per_day_inr,
+            r.total_late_fine_inr,
+            b.total_amount,
+            b.delivery_method,
+            i.id AS item_id,
+            i.name AS item_name,
+            i.image_url AS item_image,
+            i.price_unit,
+            s.id AS shop_id,
+            s.name AS shop_name,
+            s.phone AS shop_phone,
+            s.city AS shop_city,
+            s.address AS shop_address,
+            EXTRACT(EPOCH FROM (COALESCE(r.end_date, b.end_date) - NOW())) / 86400 AS days_remaining,
+            EXTRACT(EPOCH FROM (COALESCE(r.start_date, b.start_date) - NOW())) / 86400 AS days_until_start
+        FROM bookings b
+        LEFT JOIN rentals r ON b.booking_id = r.booking_id
+        JOIN items i ON i.id = b.item_id
+        JOIN shops s ON s.id = b.shop_id
+        JOIN users u ON u.id = b.user_id
+        WHERE s.owner_id = $1
+          AND b.status IN ('confirmed', 'active')
+          AND b.end_date >= NOW()
+        ORDER BY b.end_date ASC`,
+        [userId]
+    );
+    return result.rows;
+};
+
 // ─── Nearby Shops ───────────────────────────────────────────────────────────
 exports.getNearbyShops = async (lat, lng, radiusKm = 10) => {
     const result = await db.query(

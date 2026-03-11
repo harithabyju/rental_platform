@@ -87,7 +87,12 @@ exports.getMyPayments = async (req, res) => {
 // GET /rentals/active
 exports.getActiveRentals = async (req, res) => {
     try {
-        const rentals = await service.getActiveRentalsByUser(req.user.id);
+        let rentals;
+        if (req.user.role === 'shop_owner') {
+            rentals = await service.getActiveRentalsForShopOwner(req.user.id);
+        } else {
+            rentals = await service.getActiveRentalsByUser(req.user.id);
+        }
         res.json({ success: true, data: rentals });
     } catch (err) {
         handleError(res, err, 'getActiveRentals');

@@ -1,10 +1,11 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useDashboard } from '../context/DashboardContext';
 import * as dashboardService from '../services/dashboardService';
 import ItemCard from '../components/ItemCard';
 import CategorySidebar from '../components/CategorySidebar';
 import SearchBar from '../components/SearchBar';
+import LocationSearch from '../components/LocationSearch';
 import { SlidersHorizontal, PackageSearch } from 'lucide-react';
 
 const BrowseItems = () => {
@@ -23,6 +24,9 @@ const BrowseItems = () => {
         minPrice: searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')) : null,
         maxPrice: searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')) : null,
         deliveryOnly: searchParams.get('deliveryOnly') === 'true',
+        lat: searchParams.get('lat') ? parseFloat(searchParams.get('lat')) : null,
+        lng: searchParams.get('lng') ? parseFloat(searchParams.get('lng')) : null,
+        radius: searchParams.get('radius') ? parseInt(searchParams.get('radius')) : null,
         page: parseInt(searchParams.get('page')) || 1,
     };
 
@@ -60,7 +64,7 @@ const BrowseItems = () => {
             }
         });
 
-        // Reset to page 1 on filter change
+        // Reset to page 1 on filter change if page is not explicitly set
         if (!newFilters.page) {
             updatedParams.delete('page');
         }
@@ -71,7 +75,7 @@ const BrowseItems = () => {
     return (
         <div className="flex flex-col lg:flex-row gap-8">
             {/* Sidebar / Filters */}
-            <div className="w-full lg:w-64 flex-shrink-0">
+            <div className="w-full lg:w-64 flex-shrink-0 z-10">
                 <CategorySidebar
                     categories={categories}
                     filters={filters}
@@ -81,8 +85,8 @@ const BrowseItems = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1">
-                <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+                <div className="mb-6 flex flex-col xl:flex-row xl:items-start justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                             {filters.categoryId
@@ -90,15 +94,22 @@ const BrowseItems = () => {
                                 : filters.q ? `Search results for "${filters.q}"` : 'Browse All Items'}
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">
-                            {pagination.total || 0} items found
+                            {pagination.total || 0} items found {filters.lat ? `within ${filters.radius || 50}km` : ''}
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3 w-full xl:w-auto relative z-20">
                         <SearchBar
                             value={filters.q}
                             onChange={(q) => handleFilterChange({ q })}
-                            className="w-full md:w-64"
+                            className="w-full sm:w-64"
+                        />
+                        <LocationSearch 
+                            onLocationSelect={(locationData) => handleFilterChange(locationData)}
+                            initialLat={filters.lat}
+                            initialLng={filters.lng}
+                            initialRadius={filters.radius}
+                            className="w-full sm:w-80"
                         />
                     </div>
                 </div>

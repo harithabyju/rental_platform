@@ -1,10 +1,11 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createBooking } from '../services/bookingService';
 import { getShopItemDetails } from '../services/dashboardService';
 import paymentService from '../services/paymentService';
 import { MapPin, Truck, Box, Star, Loader2, CheckCircle, CreditCard, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
+import ReviewList from '../components/ReviewList';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
@@ -299,6 +300,8 @@ const BookingPage = () => {
                             </div>
                         </div>
                     </div>
+                    {/* Add Review List Below the Product Details Card */}
+                    <ReviewList itemId={product.item_id} />
                 </div>
 
                 {/* RIGHT COLUMN: Booking Form */}

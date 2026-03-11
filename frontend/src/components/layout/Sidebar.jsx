@@ -1,4 +1,4 @@
-﻿import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Calendar, User, LogOut, Grid, BookOpen, Settings, BarChart2, Users, Tag, Store, Package, DollarSign, ClipboardCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -7,7 +7,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
+    const isActive = (path) => {
+        if (['/dashboard', '/admin/dashboard', '/shop-owner/dashboard'].includes(path)) {
+            return location.pathname === path;
+        }
+        return location.pathname === path || location.pathname.startsWith(path + '/');
+    };
 
     const navConfig = {
         admin: [

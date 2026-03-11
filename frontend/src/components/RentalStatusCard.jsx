@@ -1,6 +1,7 @@
-﻿import { AlertTriangle, Clock, Phone, MapPin, Package } from 'lucide-react';
+import { AlertTriangle, Clock, Phone, MapPin, Package, CheckCircle } from 'lucide-react';
+import { BACKEND_URL } from '../services/api';
 
-const RentalStatusCard = ({ rental }) => {
+const RentalStatusCard = ({ rental, onConfirmReturn }) => {
     const isOverdue = rental.isOverdue;
     const daysRemaining = rental.daysRemaining;
 
@@ -17,6 +18,10 @@ const RentalStatusCard = ({ rental }) => {
         if (daysRemaining <= 3) return 'bg-orange-50 border-orange-200';
         return 'bg-emerald-50 border-emerald-200';
     };
+
+    const imageUrlStr = rental.item?.imageUrl 
+        ? (rental.item.imageUrl.startsWith('http') ? rental.item.imageUrl : `${BACKEND_URL}${rental.item.imageUrl}`) 
+        : 'https://placehold.co/400x300/1E293B/64748B?text=No+Image';
 
     return (
         <div className={`card overflow-hidden group transition-all duration-300 ${isOverdue ? 'ring-2 ring-red-500 ring-offset-4' : ''}`}>
@@ -40,10 +45,10 @@ const RentalStatusCard = ({ rental }) => {
                     {/* Item Image */}
                     <div className="w-full md:w-32 h-44 md:h-32 rounded-[2rem] overflow-hidden flex-shrink-0 shadow-lg border-4 border-white">
                         <img
-                            src={rental.item?.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
+                            src={imageUrlStr}
                             alt={rental.item?.name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'; }}
+                            onError={(e) => { e.target.src = 'https://placehold.co/400x300/1E293B/64748B?text=No+Image'; }}
                         />
                     </div>
 
@@ -52,8 +57,11 @@ const RentalStatusCard = ({ rental }) => {
                         <div className="flex items-start justify-between gap-4 mb-2">
                             <div>
                                 <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight group-hover:text-emerald-600 transition-colors">{rental.item?.name}</h3>
-                                {rental.shop?.name && (
+                                {rental.shop?.name && !rental.renter && (
                                     <p className="text-sm text-emerald-600 font-black mt-0.5 uppercase tracking-widest">{rental.shop.name}</p>
+                                )}
+                                {rental.renter?.name && (
+                                    <p className="text-sm text-blue-600 font-black mt-0.5 uppercase tracking-widest">Rented to: {rental.renter.name}</p>
                                 )}
                             </div>
                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${getCountdownBg()} ${getCountdownColor()}`}>
@@ -110,15 +118,35 @@ const RentalStatusCard = ({ rental }) => {
                             <p className="text-2xl font-black text-gray-900 dark:text-gray-100">{rental.totalAmountFormatted?.replace('$', '₹')}</p>
                         </div>
                     </div>
-                    {rental.shop?.phone && (
-                        <a
-                            href={`tel:${rental.shop.phone}`}
-                            className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-3.5 bg-gray-900 text-white text-sm font-black rounded-2xl hover:bg-emerald-600 transition-all active:scale-95 shadow-xl shadow-gray-200 hover:shadow-emerald-100"
-                        >
-                            <Phone className="w-4 h-4" />
-                            Direct Contact
-                        </a>
-                    )}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                        {!rental.renter && rental.shop?.phone && (
+                            <a
+                                href={`tel:${rental.shop.phone}`}
+                                className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-3.5 bg-gray-900 text-white text-sm font-black rounded-2xl hover:bg-emerald-600 transition-all active:scale-95 shadow-xl shadow-gray-200 hover:shadow-emerald-100"
+                            >
+                                <Phone className="w-4 h-4" />
+                                Contact Shop
+                            </a>
+                        )}
+                        {rental.renter?.phone && (
+                            <a
+                                href={`tel:${rental.renter.phone}`}
+                                className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-3.5 bg-gray-900 text-white text-sm font-black rounded-2xl hover:bg-blue-600 transition-all active:scale-95 shadow-xl shadow-gray-200 hover:shadow-blue-100"
+                            >
+                                <Phone className="w-4 h-4" />
+                                Contact Renter
+                            </a>
+                        )}
+                        {onConfirmReturn && (
+                            <button
+                                onClick={() => onConfirmReturn(rental.bookingId)}
+                                className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3.5 bg-emerald-600 text-white text-sm font-black rounded-2xl hover:bg-emerald-700 transition-all active:scale-95 shadow-xl shadow-emerald-200"
+                            >
+                                <CheckCircle className="w-4 h-4" />
+                                Confirm Return
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

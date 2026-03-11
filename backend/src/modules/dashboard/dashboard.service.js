@@ -214,6 +214,52 @@ exports.getActiveRentalsByUser = async (userId) => {
     });
 };
 
+exports.getActiveRentalsForShopOwner = async (userId) => {
+    const rows = await query.getActiveRentalsForShopOwner(userId);
+    return rows.map((r) => {
+        const daysRemaining = parseFloat(r.days_remaining || 0);
+        const isOverdue = daysRemaining < 0;
+        const lateFine = isOverdue
+            ? calcLateFine(r.end_date, r.late_fine_per_day_inr)
+            : 0;
+
+        return {
+            rentalId: r.rental_id,
+            bookingId: r.booking_id,
+            startDate: r.start_date,
+            endDate: r.end_date,
+            rentalStatus: isOverdue ? 'overdue' : r.rental_status,
+            daysRemaining: Math.ceil(daysRemaining),
+            isOverdue,
+            daysOverdue: isOverdue ? Math.abs(Math.ceil(daysRemaining)) : 0,
+            lateFine,
+            lateFineFormatted: formatINR(lateFine),
+            totalAmount: parseFloat(r.total_amount || 0),
+            totalAmountFormatted: formatINR(r.total_amount || 0),
+            deliveryMethod: r.delivery_method,
+            renter: {
+                id: r.renter_id,
+                name: r.renter_name,
+                phone: r.renter_phone,
+                email: r.renter_email,
+            },
+            item: {
+                id: r.item_id,
+                name: r.item_name,
+                imageUrl: r.item_image,
+                priceUnit: r.price_unit,
+            },
+            shop: {
+                id: r.shop_id,
+                name: r.shop_name,
+                phone: r.shop_phone,
+                city: r.shop_city,
+                address: r.shop_address,
+            },
+        };
+    });
+};
+
 exports.getUserProfileStats = async (userId) => {
     const stats = await query.getUserProfileStats(userId);
     return {
