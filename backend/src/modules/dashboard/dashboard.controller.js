@@ -56,7 +56,7 @@ exports.getShopsForItem = async (req, res) => {
 // GET /items/search?q=&categoryId=&minPrice=&maxPrice=&deliveryOnly=&page=&pageSize=
 exports.searchItems = async (req, res) => {
     try {
-        const { q, categoryId, minPrice, maxPrice, deliveryOnly, startDate, endDate, page = 1, pageSize = 12 } = req.query;
+        const { q, categoryId, minPrice, maxPrice, deliveryOnly, startDate, endDate, lat, lng, radius, page = 1, pageSize = 12 } = req.query;
         const filters = {
             q,
             categoryId: categoryId ? parseInt(categoryId, 10) : null,
@@ -64,7 +64,10 @@ exports.searchItems = async (req, res) => {
             maxPrice: maxPrice !== undefined ? parseFloat(maxPrice) : null,
             deliveryOnly: deliveryOnly === 'true',
             startDate,
-            endDate
+            endDate,
+            lat: lat !== undefined ? parseFloat(lat) : null,
+            lng: lng !== undefined ? parseFloat(lng) : null,
+            radius: radius !== undefined ? parseFloat(radius) : null
         };
         const result = await service.searchItems(filters, page, pageSize);
         res.json({ success: true, ...result });

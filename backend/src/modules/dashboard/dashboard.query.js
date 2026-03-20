@@ -113,7 +113,7 @@ exports.getShopsForItem = async (itemId) => {
 };
 
 // ─── Search Items ─────────────────────────────────────────────────────────────
-exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, availableOnly, startDate, endDate, limit, offset }) => {
+exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, availableOnly, startDate, endDate, lat, lng, radius, limit, offset }) => {
     const params = [];
     let paramIdx = 1;
 
@@ -147,6 +147,12 @@ exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, 
     `;
     params.push(startDate, endDate);
     paramIdx += 2;
+
+    if (lat !== null && lat !== undefined && !isNaN(lat) && lng !== null && lng !== undefined && !isNaN(lng)) {
+        query += ` AND (6371 * acos(LEAST(GREATEST(cos(radians($${paramIdx})) * cos(radians(s.latitude::float)) * cos(radians(s.longitude::float) - radians($${paramIdx + 1})) + sin(radians($${paramIdx})) * sin(radians(s.latitude::float)), -1), 1))) <= $${paramIdx + 2}`;
+        params.push(lat, lng, radius || 50);
+        paramIdx += 3;
+    }
 
 
     if (q && q.trim()) {
@@ -190,7 +196,7 @@ exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, 
     return result.rows;
 };
 
-exports.countSearchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, startDate, endDate }) => {
+exports.countSearchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, startDate, endDate, lat, lng, radius }) => {
     const params = [];
     let paramIdx = 1;
 
@@ -210,6 +216,12 @@ exports.countSearchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryO
     `;
     params.push(startDate, endDate);
     paramIdx += 2;
+
+    if (lat !== null && lat !== undefined && !isNaN(lat) && lng !== null && lng !== undefined && !isNaN(lng)) {
+        query += ` AND (6371 * acos(LEAST(GREATEST(cos(radians($${paramIdx})) * cos(radians(s.latitude::float)) * cos(radians(s.longitude::float) - radians($${paramIdx + 1})) + sin(radians($${paramIdx})) * sin(radians(s.latitude::float)), -1), 1))) <= $${paramIdx + 2}`;
+        params.push(lat, lng, radius || 50);
+        paramIdx += 3;
+    }
 
 
     if (q && q.trim()) {

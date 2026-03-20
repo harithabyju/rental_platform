@@ -47,7 +47,7 @@ const LocationSearch = ({ onLocationSelect, initialLat, initialLng, initialRadiu
         }
     }, [initialLat, initialLng]);
 
-    // Fetch from nominatim
+    // Fetch from Google Geocoding API
     const searchLocation = async (text) => {
         if (!text || text.length < 3) {
             setSuggestions([]);
@@ -55,9 +55,29 @@ const LocationSearch = ({ onLocationSelect, initialLat, initialLng, initialRadiu
         }
         setLoading(true);
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}&limit=5`);
-            const data = await res.json();
-            setSuggestions(data);
+            const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+            let res;
+            if (apiKey && apiKey !== 'your_google_maps_api_key_here') {
+                res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(text)}&key=${apiKey}`);
+                const data = await res.json();
+                if (data.results) {
+                    setSuggestions(data.results.map(r => ({
+                        place_id: r.place_id,
+                        display_name: r.formatted_address,
+                        lat: r.geometry.location.lat,
+                        lon: r.geometry.location.lng
+                    })));
+                } else {
+                    setSuggestions([]);
+                }
+            } else {
+                // Fallback to nominatim if no API key
+                res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}&limit=5`, {
+                    headers: { 'User-Agent': 'RentalPlatform/1.0' }
+                });
+                const data = await res.json();
+                setSuggestions(data);
+            }
         } catch (error) {
             console.error("Geocoding error:", error);
         } finally {
@@ -118,13 +138,30 @@ const LocationSearch = ({ onLocationSelect, initialLat, initialLng, initialRadiu
                     lng: newLng
                 }));
                 // Try reverse geocoding to get a name
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${newLat}&lon=${newLng}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        setQuery(data.display_name || 'My Location');
-                    }).catch(() => {
-                        setQuery('My Location');
-                    });
+                const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+                if (apiKey && apiKey !== 'your_google_maps_api_key_here') {
+                    fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${newLat},${newLng}&key=${apiKey}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.results && data.results.length > 0) {
+                                setQuery(data.results[0].formatted_address);
+                            } else {
+                                setQuery('My Location');
+                            }
+                        }).catch(() => {
+                            setQuery('My Location');
+                        });
+                } else {
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${newLat}&lon=${newLng}`, {
+                        headers: { 'User-Agent': 'RentalPlatform/1.0' }
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            setQuery(data.display_name || 'My Location');
+                        }).catch(() => {
+                            setQuery('My Location');
+                        });
+                }
                 setActiveMapPreview(true);
                 setLoading(false);
             }, (error) => {
