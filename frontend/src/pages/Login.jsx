@@ -1,7 +1,8 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
+import SplitText from '../components/SplitText';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -35,7 +36,7 @@ const Login = () => {
                 <div className="text-center mb-8">
                     <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl flex items-center justify-center text-white font-black text-2xl mx-auto mb-4 shadow-lg shadow-emerald-900/50">G</div>
                     <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Welcome Back</h2>
-                    <p className="text-gray-500 text-sm mt-2 font-medium">Sign in to your Grab'N'Go account</p>
+                    <p className="text-gray-500 text-sm mt-2 font-medium">Sign in to your <SplitText text="Grab'N'Go" tag="span" /> account</p>
                 </div>
                 {error && (
                     <div className="bg-red-900/20 text-red-400 p-4 rounded-xl mb-6 border border-red-800/30 text-sm font-medium">

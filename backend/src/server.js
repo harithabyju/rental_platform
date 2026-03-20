@@ -7,10 +7,24 @@ const db = require('./config/db');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ABSOLUTELY FIRST LOGGER
+app.use((req, res, next) => {
+    console.log(`>>> [SERVER HIT] ${req.method} ${req.url} [IP: ${req.ip}] [UA: ${req.get('User-Agent')}]`);
+    next();
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Detailed Request Logger (after parsing)
+app.use((req, res, next) => {
+    if (req.method === 'POST') {
+        console.log(`[POST DATA] ${req.url}:`, JSON.stringify(req.body, null, 2));
+    }
+    next();
+});
 
 // Serve uploaded images as static files
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));

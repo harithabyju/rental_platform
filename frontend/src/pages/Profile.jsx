@@ -1,10 +1,11 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { User, Mail, Shield, ArrowLeft, Star, Heart, Store, History, Package, Trophy, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import * as dashboardService from '../services/dashboardService';
 import authService from '../services/authService';
 import GoogleMapLocationSelector from '../components/GoogleMapLocationSelector';
+import SplitText from '../components/SplitText';
 import { toast } from 'react-toastify';
 
 const Profile = () => {
@@ -111,7 +112,7 @@ const Profile = () => {
                 <div className="lg:col-span-2 space-y-8">
                     <div className="animate-slide-up">
                         <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight mb-2">Your Rental Lens</h2>
-                        <p className="text-gray-500 font-medium">Discover your patterns and favorite treasures on Grab'N'Go.</p>
+                        <p className="text-gray-500 font-medium">Discover your patterns and favorite treasures on <SplitText text="Grab'N'Go." tag="span" /></p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

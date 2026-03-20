@@ -1,8 +1,9 @@
-﻿import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Bell, LogOut, User, Menu, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
+import SplitText from '../SplitText';
 
 const Navbar = ({ onMenuClick }) => {
     const { user, logout } = useAuth();
@@ -34,7 +35,7 @@ const Navbar = ({ onMenuClick }) => {
                             <span className="text-xl italic relative z-10">G</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-lg font-black text-gray-900 dark:text-gray-100 leading-none tracking-tighter group-hover:text-emerald-400 transition-colors">Grab'N'Go</span>
+                            <SplitText text="Grab'N'Go" tag="span" className="text-lg font-black text-gray-900 dark:text-gray-100 leading-none tracking-tighter group-hover:text-emerald-400 transition-colors" />
                             <span className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] mt-1">Premium Rentals</span>
                         </div>
                     </Link>

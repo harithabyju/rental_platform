@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Calendar, User, LogOut, Grid, BookOpen, Settings, BarChart2, Users, Tag, Store, Package, DollarSign, ClipboardCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import SplitText from '../SplitText';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
     const { user, logout } = useAuth();
@@ -59,7 +60,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 <div className="flex items-center justify-between px-4 h-16 border-b border-gray-100 dark:border-gray-800/60">
                     <Link to="/" className="text-lg font-black text-emerald-400 flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-emerald-900/50">G</div>
-                        <span>Grab'N'Go</span>
+                        <SplitText text="Grab'N'Go" tag="span" />
                     </Link>
                 </div>
 

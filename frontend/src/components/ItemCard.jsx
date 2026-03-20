@@ -1,7 +1,8 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
 import { BACKEND_URL } from '../services/api';
+import BorderGlow from './BorderGlow';
 
 const ItemCard = ({ item }) => {
     const navigate = useNavigate();
@@ -29,7 +30,8 @@ const ItemCard = ({ item }) => {
     };
 
     return (
-        <div className="bg-white dark:bg-[#111827] rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:shadow-black/30 transition-shadow duration-300 border border-gray-100 dark:border-gray-800/60 flex flex-col h-full group">
+        <BorderGlow className="h-full" borderRadius={12} animated={false}>
+            <div className="bg-white/95 dark:bg-[#111827]/90 rounded-xl shadow-md overflow-hidden transition-shadow duration-300 flex flex-col h-full group border border-transparent">
             <div className="relative h-48 overflow-hidden">
                 <img
                     src={imgSrc}
@@ -85,7 +87,8 @@ const ItemCard = ({ item }) => {
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        </BorderGlow>
     );
 };
 

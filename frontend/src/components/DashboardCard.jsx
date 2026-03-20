@@ -1,6 +1,9 @@
-﻿const DashboardCard = ({ label, value, icon: Icon, iconBg, iconColor, trend }) => {
+import BorderGlow from './BorderGlow';
+
+const DashboardCard = ({ label, value, icon: Icon, iconBg, iconColor, trend }) => {
     return (
-        <div className="bg-white dark:bg-[#111827] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800/60 hover:shadow-md transition-shadow duration-200">
+        <BorderGlow borderRadius={16} animated={false}>
+            <div className="bg-white/95 dark:bg-[#111827]/90 rounded-2xl p-6 shadow-sm border border-transparent hover:shadow-md transition-shadow duration-200 h-full">
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-gray-500 mb-1">{label}</p>
@@ -15,7 +18,8 @@
                     </div>
                 )}
             </div>
-        </div>
+            </div>
+        </BorderGlow>
     );
 };
 

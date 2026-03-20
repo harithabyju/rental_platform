@@ -14,6 +14,14 @@ const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
+        console.log('Submission Debug:', {
+            apiUrl: api.defaults.baseURL,
+            fullUrl: api.defaults.baseURL + '/reviews',
+            itemId: booking.item_id,
+            bookingId: booking.booking_id,
+            rating,
+            comment
+        });
         try {
             await api.post('/reviews', {
                 itemId: booking.item_id,
@@ -25,6 +33,12 @@ const ReviewModal = ({ isOpen, onClose, booking, onSuccess }) => {
             onSuccess();
             onClose();
         } catch (err) {
+            console.error('Submission Error Details:', {
+                status: err.response?.status,
+                data: err.response?.data,
+                headers: err.response?.headers,
+                message: err.message
+            });
             toast.error(err.response?.data?.message || 'Failed to submit review');
         } finally {
             setSubmitting(false);

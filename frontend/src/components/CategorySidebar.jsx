@@ -1,5 +1,6 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Filter, ChevronDown, ChevronUp, Truck, Package } from 'lucide-react';
+import AnimatedList from './AnimatedList';
 
 const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
     const [priceExpanded, setPriceExpanded] = useState(true);
@@ -58,21 +59,24 @@ const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
                                 <div key={i} className="h-10 bg-gray-50 dark:bg-gray-800/40 rounded-xl animate-pulse" />
                             ))
                         ) : (
-                            categories.map((cat, index) => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => handleCategoryClick(cat.id)}
-                                    className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3 animate-slide-up hover-tilt active-press active-pop ${filters.categoryId === cat.id
-                                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100 translate-x-1'
-                                        : 'text-gray-500 hover:bg-emerald-50 hover:text-emerald-700'
-                                        }`}
-                                    style={{ animationDelay: `${(index + 1) * 0.1}s` }}
-                                >
-                                    <span className={`w-2 h-2 rounded-full ${filters.categoryId === cat.id ? 'bg-white dark:bg-[#111827]' : 'bg-gray-300 group-hover:bg-emerald-400'}`} />
-                                    {cat.name}
-                                </button>
-                            ))
-
+                            <AnimatedList
+                                items={categories}
+                                onItemSelect={(cat) => handleCategoryClick(cat.id)}
+                                showGradients={false}
+                                className="w-full"
+                                itemClassName="!p-0 !bg-transparent !mb-0"
+                                renderItem={(cat, { index }) => (
+                                    <div
+                                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3 hover-tilt active-press active-pop ${filters.categoryId === cat.id
+                                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100 translate-x-1'
+                                            : 'text-gray-500 hover:bg-emerald-50 hover:text-emerald-700'
+                                            }`}
+                                    >
+                                        <span className={`w-2 h-2 rounded-full ${filters.categoryId === cat.id ? 'bg-white dark:bg-[#111827]' : 'bg-gray-300 group-hover:bg-emerald-400'}`} />
+                                        {cat.name}
+                                    </div>
+                                )}
+                            />
                         )}
 
                     </div>

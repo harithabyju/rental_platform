@@ -1,19 +1,24 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
+import GhostCursor from '../components/GhostCursor';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Landing = () => {
+    const { theme } = useTheme();
+
     return (
-        <div className="relative flex flex-col items-center justify-center min-h-screen text-center px-4">
-            <div className="absolute top-6 right-6">
+        <div className="relative flex flex-col items-center justify-center min-h-screen text-center px-4 overflow-hidden">
+            {theme === 'dark' && <GhostCursor zIndex={0} />}
+            <div className="absolute top-6 right-6 z-10">
                 <ThemeToggle />
             </div>
-            <h1 className="text-5xl font-extrabold text-gray-900 dark:text-gray-100 mb-6">
+            <h1 className="text-5xl font-extrabold text-gray-900 dark:text-gray-100 mb-6 z-10 relative">
                 Rent Anything, <span className="text-primary">Anytime</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl">
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl z-10 relative">
                 The ultimate multi-vendor platform for renting electronics, furniture, fashion, and more.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 z-10 relative">
                 <Link
                     to="/register"
                     className="bg-primary text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-green-600 transition"
