@@ -46,14 +46,18 @@ const shopRoutes = require('./modules/shops/shop.routes');
 const itemRoutes = require('./modules/items/item.routes');
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
 const adminDashboardRoutes = require('./modules/admin/dashboard/adminDashboard.routes');
+
 const bookingRoutes = require('./modules/bookings/booking.routes');
 const paymentRoutes = require('./modules/payments/payment.routes');
 const searchRoutes = require('./modules/search/search.routes');
 const reviewRoutes = require('./modules/reviews/review.routes');
+const penaltiesRoutes = require('./modules/penalties/penalties.routes');
+
 
 // Use Routes
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
+
 app.use('/api/categories', categoryRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/shops', shopRoutes);
@@ -62,6 +66,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api', userRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/fines', penaltiesRoutes);
+
 
 // Global Error Handler
 app.use((err, req, res, next) => {
