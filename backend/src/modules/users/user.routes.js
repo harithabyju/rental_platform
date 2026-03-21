@@ -8,6 +8,8 @@ const { authorize } = require('../../middlewares/roleMiddleware');
 router.post('/auth/register', userController.register);
 router.post('/auth/verify-otp', userController.verifyOtp);
 router.post('/auth/login', userController.login);
+router.post('/auth/forgot-password', userController.forgotPassword);
+router.post('/auth/reset-password', userController.resetPassword);
 
 // User Routes
 router.get('/users/me', protect, userController.getMe);

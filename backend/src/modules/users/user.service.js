@@ -99,6 +99,37 @@ const getShopsAnalytics = async () => {
     return await userRepository.getShopsAnalytics();
 }
 
+const forgotPassword = async (email) => {
+    email = email.toLowerCase();
+    const user = await userRepository.findUserByEmail(email);
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    const otp = generateOTP();
+    await userRepository.updateUserOtp(email, otp, user.password);
+    await sendEmail(email, 'Reset your password', `Your password reset OTP is ${otp}. Please do not share this with anyone.`);
+
+    return { message: 'Reset OTP sent to your email.' };
+};
+
+const resetPassword = async (email, otp, newPassword) => {
+    email = email.toLowerCase();
+    const user = await userRepository.findUserByEmail(email);
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    if (user.otp !== otp) {
+        throw new Error('Invalid or expired OTP');
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+    await userRepository.updateUserOtp(email, null, hashedPassword);
+
+    return { message: 'Password reset successfully' };
+};
+
 module.exports = {
     register,
     verifyOtp,
@@ -108,5 +139,7 @@ module.exports = {
     updateUserProfile,
     blockUser,
     unblockUser,
-    getShopsAnalytics
+    getShopsAnalytics,
+    forgotPassword,
+    resetPassword
 };

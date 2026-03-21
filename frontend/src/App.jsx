@@ -8,6 +8,8 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import OTP from './pages/OTP';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import AdminUserManagement from './pages/admin/AdminUserManagement';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -67,6 +69,8 @@ function App() {
                             <Route path="login" element={<AuthRedirect><Login /></AuthRedirect>} />
                             <Route path="register" element={<AuthRedirect><Register /></AuthRedirect>} />
                             <Route path="otp" element={<AuthRedirect><OTP /></AuthRedirect>} />
+                            <Route path="forgot-password" element={<AuthRedirect><ForgotPassword /></AuthRedirect>} />
+                            <Route path="reset-password" element={<AuthRedirect><ResetPassword /></AuthRedirect>} />
 
                             {/* Dashboard Routes */}
                             <Route
