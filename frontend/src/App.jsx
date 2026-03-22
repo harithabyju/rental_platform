@@ -22,6 +22,7 @@ import BrowseItems from './pages/BrowseItems';
 import ItemShops from './pages/ItemShops';
 import MyPayments from './pages/MyPayments';
 import ActiveRentals from './pages/ActiveRentals';
+import DeliveryTrackerPage from './pages/DeliveryTrackerPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -196,6 +197,14 @@ function App() {
                                 element={
                                     <ProtectedRoute allowedRoles={['customer', 'renter']}>
                                         <BookingPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="dashboard/delivery/:bookingId"
+                                element={
+                                    <ProtectedRoute>
+                                        <DeliveryTrackerPage />
                                     </ProtectedRoute>
                                 }
                             />

@@ -1,5 +1,6 @@
 const db = require('../../config/db');
 const bookingQueries = require('./booking.queries');
+const deliveryService = require('../delivery/delivery.service');
 
 const OVERLAP_ERROR = 'Dates overlap with an existing booking';
 
@@ -14,7 +15,7 @@ const checkOverlap = async (itemId, startDate, endDate, excludeBookingId = null)
 };
 
 exports.createBooking = async (userId, data) => {
-    const { itemId, shopId, startDate, endDate, totalAmount, deliveryMethod, deliveryFee } = data;
+    const { itemId, shopId, startDate, endDate, totalAmount, deliveryMethod, deliveryFee, address, deliveryCity, deliveryLat, deliveryLng } = data;
 
     // Overlap Check
     const isOverlapping = await checkOverlap(itemId, startDate, endDate);
@@ -39,10 +40,10 @@ exports.createBooking = async (userId, data) => {
 
         // 1. Create Booking
         const result = await client.query(
-            `INSERT INTO bookings (item_id, shop_id, user_id, start_date, end_date, status, total_amount, delivery_method, delivery_fee)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            `INSERT INTO bookings (item_id, shop_id, user_id, start_date, end_date, status, total_amount, delivery_method, delivery_fee, delivery_address, delivery_city, delivery_lat, delivery_lng)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
              RETURNING *`,
-            [itemId, shopId, userId, startDate, endDate, 'confirmed', totalAmount, deliveryMethod || 'pickup', deliveryFee || 0]
+            [itemId, shopId, userId, startDate, endDate, 'confirmed', totalAmount, deliveryMethod || 'pickup', deliveryFee || 0, address || null, deliveryCity || null, deliveryLat || null, deliveryLng || null]
         );
         const booking = result.rows[0];
 
@@ -63,6 +64,24 @@ exports.createBooking = async (userId, data) => {
         );
 
         await client.query('COMMIT');
+
+        // Auto-create delivery order if delivery method is selected
+        if ((deliveryMethod === 'delivery') && address) {
+            try {
+                await deliveryService.createDeliveryOrder(
+                    booking.booking_id,
+                    address,
+                    deliveryCity || null,
+                    deliveryLat || null,
+                    deliveryLng || null,
+                    deliveryFee || 0,
+                    null
+                );
+            } catch (deliveryErr) {
+                console.error('[DELIVERY] Failed to create delivery order:', deliveryErr.message);
+                // Non-fatal: booking is still confirmed
+            }
+        }
 
         // Notify Shop Owner and Customer (Async - fire and forget)
         try {

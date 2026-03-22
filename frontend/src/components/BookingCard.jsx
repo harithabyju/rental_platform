@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { cancelBooking, extendBooking, returnBooking } from '../services/bookingService';
-import { Calendar, Clock, CheckCircle, Star, AlertCircle, MapPin } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, Star, AlertCircle, MapPin, Truck } from 'lucide-react';
 import ReviewModal from './ReviewModal';
+import { useNavigate } from 'react-router-dom';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 const BookingCard = ({ booking, onUpdate, animationDelay = '0s' }) => {
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const navigate = useNavigate();
 
     const handleCancel = async () => {
         if (window.confirm('Are you sure you want to cancel?')) {
@@ -125,6 +127,19 @@ const BookingCard = ({ booking, onUpdate, animationDelay = '0s' }) => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Delivery Badge */}
+                        {booking.delivery_method === 'delivery' && (
+                            <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
+                                <Truck size={12} className="text-emerald-600" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Doorstep Delivery</span>
+                                {booking.delivery_status && (
+                                    <span className="ml-auto text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-300">
+                                        {booking.delivery_status.replace(/_/g, ' ')}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Timeline & Actions */}
@@ -151,7 +166,15 @@ const BookingCard = ({ booking, onUpdate, animationDelay = '0s' }) => {
                             </div>
                         )}
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
+                            {/* Track Delivery button for delivery bookings */}
+                            {booking.delivery_method === 'delivery' && (booking.status === 'confirmed' || booking.status === 'active') && (
+                                <button
+                                    onClick={() => navigate(`/dashboard/delivery/${booking.booking_id}`)}
+                                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 hover:border-emerald-400 transition-all flex items-center gap-1.5">
+                                    <Truck size={11} /> Track Delivery
+                                </button>
+                            )}
                             {booking.status === 'confirmed' && (
                                 <>
                                     <button onClick={handleExtend} className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-700 text-gray-500 dark:text-gray-400 hover:border-emerald-500 hover:text-emerald-400 transition-all">Extend</button>

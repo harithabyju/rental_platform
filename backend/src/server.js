@@ -50,6 +50,7 @@ const bookingRoutes = require('./modules/bookings/booking.routes');
 const paymentRoutes = require('./modules/payments/payment.routes');
 const searchRoutes = require('./modules/search/search.routes');
 const reviewRoutes = require('./modules/reviews/review.routes');
+const deliveryRoutes = require('./modules/delivery/delivery.routes');
 
 // Use Routes
 app.use('/api/dashboard', dashboardRoutes);
@@ -62,6 +63,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api', userRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/delivery', deliveryRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

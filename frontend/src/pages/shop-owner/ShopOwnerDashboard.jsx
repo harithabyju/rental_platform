@@ -7,6 +7,7 @@ import itemService from '../../services/item.service';
 import * as dashboardService from '../../services/dashboardService';
 import * as bookingService from '../../services/bookingService';
 import RentalStatusCard from '../../components/RentalStatusCard';
+import DeliveryManagement from './DeliveryManagement';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
@@ -997,6 +998,12 @@ const ShopOwnerDashboard = () => {
                         >
                             Active Bookings ({activeRentals.length})
                         </button>
+                        <button
+                            onClick={() => setActiveTab('deliveries')}
+                            className={`flex-1 py-4 text-sm font-black border-b-2 transition-colors ${activeTab === 'deliveries' ? 'border-emerald-500 text-emerald-600 bg-white dark:bg-[#111827]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-white dark:hover:bg-[#111827]'}`}
+                        >
+                            🚚 Deliveries
+                        </button>
                     </div>
 
                     {activeTab === 'inventory' && (
@@ -1061,8 +1068,15 @@ const ShopOwnerDashboard = () => {
                             )}
                         </div>
                     )}
+
+                    {activeTab === 'deliveries' && (
+                        <div className="p-6">
+                            <DeliveryManagement />
+                        </div>
+                    )}
                 </div>
             )}
+
 
             {/* Add / Edit Item Modal */}
             {showForm && (
