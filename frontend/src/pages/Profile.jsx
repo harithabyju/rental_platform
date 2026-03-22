@@ -4,8 +4,7 @@ import { User, Mail, Shield, ArrowLeft, Star, Heart, Store, History, Package, Tr
 import { useNavigate } from 'react-router-dom';
 import * as dashboardService from '../services/dashboardService';
 import authService from '../services/authService';
-import GoogleMapLocationSelector from '../components/GoogleMapLocationSelector';
-import SplitText from '../components/SplitText';
+import MapLocationSelector from '../components/MapLocationSelector';
 import { toast } from 'react-toastify';
 
 const Profile = () => {
@@ -219,8 +218,8 @@ const Profile = () => {
                             </button>
                         </div>
 
-                        <div className="rounded-[2rem] overflow-hidden border border-gray-700/40">
-                            <GoogleMapLocationSelector
+                        <div className="rounded-[2rem] overflow-hidden border-2 border-emerald-50">
+                            <MapLocationSelector
                                 lat={location.lat}
                                 lng={location.lng}
                                 radius={5}
