@@ -102,7 +102,7 @@ const deleteItem = async (itemId) => {
 
 const findItemById = async (itemId) => {
     const query = `
-        SELECT i.*, si.price_per_day_inr as price_per_day, si.shop_id, si.is_available, si.quantity_available, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, s.name as shop_name, c.name as category_name, i.admin_note
+        SELECT i.*, si.price_per_day_inr as price_per_day, si.shop_id, si.is_available, si.quantity_available, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, s.name as shop_name, c.name as category_name, i.admin_note, s.working_hours, s.location_restrictions as shop_restrictions
         FROM items i
         JOIN shop_items si ON i.id = si.item_id
         JOIN shops s ON si.shop_id = s.id
@@ -168,4 +168,7 @@ module.exports = {
     updateItem,
     updateItemStatus,
     deleteItem,
+    // Aliases
+    findById: findItemById,
+    update: updateItem
 };

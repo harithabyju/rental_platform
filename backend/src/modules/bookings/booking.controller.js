@@ -18,6 +18,24 @@ exports.getMyBookings = async (req, res, next) => {
     }
 };
 
+exports.getShopBookings = async (req, res, next) => {
+    try {
+        const bookings = await bookingService.getShopBookings(req.user.id);
+        res.json(bookings);
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.confirmBooking = async (req, res, next) => {
+    try {
+        const booking = await bookingService.confirmBooking(req.user.id, req.params.id);
+        res.json(booking);
+    } catch (err) {
+        next(err);
+    }
+};
+
 exports.cancelBooking = async (req, res, next) => {
     try {
         const booking = await bookingService.cancelBooking(req.user.id, req.params.id);

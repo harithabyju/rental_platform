@@ -52,11 +52,12 @@ const paymentRoutes = require('./modules/payments/payment.routes');
 const searchRoutes = require('./modules/search/search.routes');
 const reviewRoutes = require('./modules/reviews/review.routes');
 const penaltiesRoutes = require('./modules/penalties/penalties.routes');
-
+const complianceRoutes = require('./modules/compliance/compliance.routes');
 
 // Use Routes
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
+app.use('/api/compliance', complianceRoutes);
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/search', searchRoutes);

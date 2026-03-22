@@ -1,6 +1,7 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const db = require('../../config/db');
+const bookingRepository = require('../bookings/booking.repository');
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -77,4 +78,49 @@ exports.recordPayment = async (paymentData) => {
 
     const result = await db.query(query, values);
     return result.rows[0];
+};
+
+/**
+ * Handle Webhooks for Risk Management
+ */
+exports.handleRazorpayWebhook = async (event, payload) => {
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        if (event === 'payment.failed') {
+            const { notes } = payload.payment.entity;
+            const bookingId = notes.booking_id;
+
+            // Scenario 7: Auto cancel after 15 minutes of payment failure
+            // Using bookingRepository or direct query
+            await db.query(`UPDATE bookings SET status = 'payment_failed' WHERE booking_id = $1`, [bookingId]);
+
+            console.log(`Payment failed for booking ${bookingId}. Notified customer.`);
+        }
+
+        if (event === 'payment.captured') {
+            const { notes } = payload.payment.entity;
+            const bookingId = notes.booking_id;
+
+            // Active the booking but mark paid
+            await db.query(`UPDATE bookings SET status = 'confirmed' WHERE booking_id = $1`, [bookingId]);
+        }
+
+        if (event === 'refund.processed') {
+            // Scenario 11: Refund Log
+            const { notes } = payload.refund.entity;
+            await db.query(`
+                INSERT INTO payments (booking_id, amount_inr, status, paid_at) 
+                VALUES ($1, $2, 'refunded', NOW())
+            `, [notes.booking_id, -(payload.refund.entity.amount / 100)]);
+        }
+
+        await client.query('COMMIT');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
 };

@@ -1,5 +1,6 @@
 const db = require('../../config/db');
 const bookingQueries = require('./booking.queries');
+const shopService = require('../shops/shop.service');
 
 const OVERLAP_ERROR = 'Dates overlap with an existing booking';
 
@@ -14,7 +15,28 @@ const checkOverlap = async (itemId, startDate, endDate, excludeBookingId = null)
 };
 
 exports.createBooking = async (userId, data) => {
-    const { itemId, shopId, startDate, endDate, totalAmount, deliveryMethod, deliveryFee } = data;
+    const { itemId, shopId, startDate, endDate, totalAmount, deliveryMethod, deliveryFee, delivery_address } = data;
+
+    // 1. Fetch item and associated shop info for Risk Checks
+    const itemResult = await db.query('SELECT * FROM items WHERE id = $1 AND shop_id = $2', [itemId, shopId]);
+    if (itemResult.rows.length === 0) throw new Error('Item not found in this shop');
+    const item = itemResult.rows[0];
+
+    // Scenario 1: Night-Time Rental Restriction
+    const isOpen = await shopService.isShopOpen(shopId, startDate);
+    if (!isOpen) {
+        throw new Error(`Shop is closed at the scheduled pick-up time. Use reasonable working hours.`);
+    }
+
+    // Scenario 10: Location-Based Restrictions
+    if (item.shop_restrictions && delivery_address) {
+        const isRestricted = item.shop_restrictions.some(region =>
+            delivery_address.toLowerCase().includes(region.toLowerCase())
+        );
+        if (isRestricted) {
+            throw new Error('This item cannot be delivered to your selected region.');
+        }
+    }
 
     // Overlap Check
     const isOverlapping = await checkOverlap(itemId, startDate, endDate);
@@ -42,7 +64,7 @@ exports.createBooking = async (userId, data) => {
             `INSERT INTO bookings (item_id, shop_id, user_id, start_date, end_date, status, total_amount, delivery_method, delivery_fee)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
              RETURNING *`,
-            [itemId, shopId, userId, startDate, endDate, 'confirmed', totalAmount, deliveryMethod || 'pickup', deliveryFee || 0]
+            [itemId, shopId, userId, startDate, endDate, 'pending_vendor_confirmation', totalAmount, deliveryMethod || 'pickup', deliveryFee || 0]
         );
         const booking = result.rows[0];
 
@@ -85,13 +107,13 @@ exports.createBooking = async (userId, data) => {
             `;
             db.query(detailsQuery, [userId, shopId, itemId])
                 .then(res => {
-                    const data = res.rows[0];
-                    if (data) {
-                        sendEmail(data.owner_email, 'New Booking Received',
-                            `Hello ${data.owner_name},\n\nYou have received a new booking for your shop "${data.shop_name}".\nItem: ${data.item_name}\nBooking ID: ${booking.booking_id}\nDates: ${startDate} to ${endDate}\nAmount: ₹${totalAmount}\n\nPlease check your dashboard for details.`
+                    const emailData = res.rows[0];
+                    if (emailData) {
+                        sendEmail(emailData.owner_email, 'New Booking Received',
+                            `Hello ${emailData.owner_name},\n\nYou have received a new booking for your shop "${emailData.shop_name}".\nItem: ${emailData.item_name}\nBooking ID: ${booking.booking_id}\nDates: ${startDate} to ${endDate}\nAmount: ₹${totalAmount}\n\nPlease check your dashboard to confirm.`
                         );
-                        sendEmail(data.customer_email, 'Booking Confirmation',
-                            `Hello ${data.customer_name},\n\nYour booking for "${data.item_name}" at "${data.shop_name}" has been confirmed!\nBooking ID: ${booking.booking_id}\nDates: ${startDate} to ${endDate}\nTotal Paid: ₹${totalAmount}\n\nThank you for using our platform!`
+                        sendEmail(emailData.customer_email, 'Booking Request Sent',
+                            `Hello ${emailData.customer_name},\n\nYour booking request for "${emailData.item_name}" at "${emailData.shop_name}" has been sent!\nBooking ID: ${booking.booking_id}\nDates: ${startDate} to ${endDate}\nTotal Paid: ₹${totalAmount}\n\nPlease wait for the vendor to confirm.`
                         );
                     }
                 }).catch(() => { }); // Silently ignore email errors
@@ -109,6 +131,32 @@ exports.createBooking = async (userId, data) => {
 exports.getUserBookings = async (userId) => {
     const result = await db.query(bookingQueries.getUserBookings, [userId]);
     return result.rows;
+};
+
+exports.getShopBookings = async (ownerId) => {
+    const query = `
+        SELECT b.*, i.name as item_name 
+        FROM bookings b
+        JOIN items i ON b.item_id = i.id
+        JOIN shops s ON b.shop_id = s.id
+        WHERE s.owner_id = $1
+        ORDER BY b.created_at DESC;
+    `;
+    const result = await db.query(query, [ownerId]);
+    return result.rows;
+};
+
+exports.confirmBooking = async (ownerId, bookingId) => {
+    const result = await db.query(
+        `UPDATE bookings SET status = 'confirmed', updated_at = CURRENT_TIMESTAMP 
+         FROM items, shops 
+         WHERE bookings.item_id = items.id AND items.shop_id = shops.id AND shops.owner_id = $1 AND bookings.booking_id = $2
+         RETURNING bookings.*`,
+        [ownerId, bookingId]
+    );
+
+    if (result.rows.length === 0) throw new Error('Booking not found or unauthorized');
+    return result.rows[0];
 };
 
 exports.cancelBooking = async (userId, bookingId) => {

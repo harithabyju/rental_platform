@@ -14,8 +14,6 @@ const getAllShops = async (status) => {
     `;
     const params = [];
     if (status) {
-        // Handle both 'status' column or 'is_active' mapping
-        // Assuming 'status' exists if we're filtering by text status
         query += ` WHERE s.status = $1`;
         params.push(status);
     }
@@ -46,7 +44,8 @@ const createShop = async (ownerId, shopData) => {
         name, description, address, city, state,
         pincode, latitude, longitude, phone, email,
         status, govt_id_url, shop_license_url,
-        bank_account_name, bank_account_number, bank_ifsc, bank_name
+        bank_account_name, bank_account_number, bank_ifsc, bank_name,
+        working_hours, location_restrictions
     } = shopData;
 
     const query = `
@@ -55,11 +54,13 @@ const createShop = async (ownerId, shopData) => {
             pincode, latitude, longitude, phone, email, status,
             govt_id_url, shop_license_url,
             bank_account_name, bank_account_number, bank_ifsc, bank_name,
+            working_hours, location_restrictions,
             created_at, updated_at
         )
         VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
             $13, $14, $15, $16, $17, $18,
+            $19, $20,
             NOW(), NOW()
         )
         RETURNING *, id as shop_id;
@@ -68,7 +69,9 @@ const createShop = async (ownerId, shopData) => {
         ownerId, name, description, address, city, state,
         pincode, latitude, longitude, phone, email, status || 'incomplete',
         govt_id_url, shop_license_url,
-        bank_account_name, bank_account_number, bank_ifsc, bank_name
+        bank_account_name, bank_account_number, bank_ifsc, bank_name,
+        working_hours ? JSON.stringify(working_hours) : null,
+        location_restrictions ? JSON.stringify(location_restrictions) : null
     ];
     const result = await db.query(query, values);
     return result.rows[0];
@@ -87,7 +90,8 @@ const updateShop = async (shopId, shopData) => {
         name, description, address, city, state,
         pincode, latitude, longitude, phone, email,
         govt_id_url, shop_license_url,
-        bank_account_name, bank_account_number, bank_ifsc, bank_name
+        bank_account_name, bank_account_number, bank_ifsc, bank_name,
+        working_hours, location_restrictions
     } = shopData;
 
     const query = `
@@ -108,8 +112,10 @@ const updateShop = async (shopId, shopData) => {
             bank_account_number = COALESCE($14, bank_account_number),
             bank_ifsc = COALESCE($15, bank_ifsc),
             bank_name = COALESCE($16, bank_name),
+            working_hours = COALESCE($17, working_hours),
+            location_restrictions = COALESCE($18, location_restrictions),
             updated_at = NOW()
-        WHERE id = $17
+        WHERE id = $19
         RETURNING *, id as shop_id;
     `;
     const values = [
@@ -117,6 +123,8 @@ const updateShop = async (shopId, shopData) => {
         pincode, latitude, longitude, phone, email,
         govt_id_url, shop_license_url,
         bank_account_name, bank_account_number, bank_ifsc, bank_name,
+        working_hours ? JSON.stringify(working_hours) : null,
+        location_restrictions ? JSON.stringify(location_restrictions) : null,
         shopId
     ];
     const result = await db.query(query, values);
@@ -163,4 +171,9 @@ module.exports = {
     updateShopStatus,
     setPermittedCategories,
     getPermittedCategories,
+    // Aliases for compatibility with other logic
+    findById: findShopById,
+    create: createShop,
+    update: updateShop,
+    findByOwnerId: findShopByOwnerId
 };

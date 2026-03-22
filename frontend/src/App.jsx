@@ -5,6 +5,7 @@ import ShopApprovals from './pages/admin/ShopApprovals';
 import AdminItems from './pages/admin/AdminItems';
 import ShopOwnerDashboard from './pages/shop-owner/ShopOwnerDashboard';
 import CustomerHome from './pages/customer/CustomerHome';
+<<<<<<< ours
 import CustomerDashboard from './pages/CustomerDashboard';
 import BrowseItems from './pages/BrowseItems';
 import ItemShops from './pages/ItemShops';
@@ -17,6 +18,11 @@ import AdminDisputePanel from './pages/admin/AdminDisputePanel';
 import ReportDamage from './pages/owner/ReportDamage';
 import MyFines from './pages/customer/MyFines';
 import RaiseDispute from './pages/customer/RaiseDispute';
+=======
+import ComplianceAdminDashboard from './pages/admin/ComplianceDashboard';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+>>>>>>> theirs
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const { user, loading } = useAuth();
@@ -150,7 +156,19 @@ function App() {
                         />
 
                         <Route
+<<<<<<< ours
                             path="fines"
+=======
+                            path="admin/compliance"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <ComplianceAdminDashboard />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="shop-owner/dashboard"
+>>>>>>> theirs
                             element={
                                 <ProtectedRoute allowedRoles={['customer']}>
                                     <MyFines />

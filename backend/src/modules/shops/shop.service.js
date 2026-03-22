@@ -127,6 +127,23 @@ const submitForApproval = async (ownerId) => {
     return await shopRepository.updateShopStatus(shop.id || shop.shop_id, 'pending');
 };
 
+const isShopOpen = async (shopId, bookingTime) => {
+    const shop = await shopRepository.findShopById(shopId);
+    if (!shop) throw new Error('Shop not found');
+
+    const { working_hours } = shop;
+    if (!working_hours) return true; // Default open if no working hours defined
+    if (working_hours.is_24x7) return true;
+
+    const time = new Date(bookingTime);
+    const hours = time.getHours();
+    const minutes = time.getMinutes();
+    const currentTimeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+    return currentTimeString >= working_hours.open && currentTimeString <= working_hours.close;
+};
+
+
 module.exports = {
     registerShop,
     getMyShop,
@@ -137,4 +154,5 @@ module.exports = {
     rejectShop,
     getPermittedCategories,
     submitForApproval,
+    isShopOpen,
 };
