@@ -4,7 +4,7 @@ import { User, Mail, Shield, ArrowLeft, Star, Heart, Store, History, Package, Tr
 import { useNavigate } from 'react-router-dom';
 import * as dashboardService from '../services/dashboardService';
 import authService from '../services/authService';
-import GoogleMapLocationSelector from '../components/GoogleMapLocationSelector';
+import MapLocationSelector from '../components/MapLocationSelector';
 import { toast } from 'react-toastify';
 
 const Profile = () => {
@@ -218,10 +218,10 @@ const Profile = () => {
                         </div>
 
                         <div className="rounded-[2rem] overflow-hidden border-2 border-emerald-50">
-                            <GoogleMapLocationSelector
+                            <MapLocationSelector
                                 lat={location.lat}
                                 lng={location.lng}
-                                radius={5} // Default radius for profile view
+                                radius={5}
                                 onLocationChange={(lat, lng) => setLocation({ lat, lng })}
                             />
                         </div>

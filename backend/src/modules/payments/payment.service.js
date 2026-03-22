@@ -3,8 +3,8 @@ const crypto = require('crypto');
 const db = require('../../config/db');
 
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_your_key_id',
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'your_test_secret',
 });
 
 /**
