@@ -4,21 +4,22 @@ const shopService = require('../shops/shop.service');
 
 const OVERLAP_ERROR = 'Dates overlap with an existing booking';
 
-const checkOverlap = async (itemId, startDate, endDate, excludeBookingId = null) => {
-    const query = bookingQueries.checkOverlap(excludeBookingId);
+const checkOverlap = async (itemId, shopId, startDate, endDate, quantityLimit, excludeBookingId = null) => {
+    const query = bookingQueries.checkOverlapCount(excludeBookingId);
     const params = excludeBookingId
-        ? [itemId, startDate, endDate, excludeBookingId]
-        : [itemId, startDate, endDate];
+        ? [itemId, shopId, startDate, endDate, excludeBookingId]
+        : [itemId, shopId, startDate, endDate];
 
     const result = await db.query(query, params);
-    return result.rows.length > 0;
+    const count = parseInt(result.rows[0].count);
+    return count >= quantityLimit;
 };
 
 exports.createBooking = async (userId, data) => {
     const { itemId, shopId, startDate, endDate, totalAmount, deliveryMethod, deliveryFee, delivery_address } = data;
 
     // 1. Fetch item and associated shop info for Risk Checks
-    const itemResult = await db.query('SELECT * FROM items WHERE id = $1 AND shop_id = $2', [itemId, shopId]);
+    const itemResult = await db.query('SELECT * FROM shop_items WHERE id = $1 AND shop_id = $2', [itemId, shopId]);
     if (itemResult.rows.length === 0) throw new Error('Item not found in this shop');
     const item = itemResult.rows[0];
 
@@ -38,18 +39,18 @@ exports.createBooking = async (userId, data) => {
         }
     }
 
-    // Overlap Check
-    const isOverlapping = await checkOverlap(itemId, startDate, endDate);
+    // Overlap Check (based on quantity)
+    const isOverlapping = await checkOverlap(item.item_id, shopId, startDate, endDate, item.quantity_available);
     if (isOverlapping) {
-        const error = new Error(OVERLAP_ERROR);
+        const error = new Error(`All units of this item are already in rent for that time period. Please try different dates or pick another shop.`);
         error.statusCode = 400;
         throw error;
     }
 
     // Check quantity available
     const qtyCheck = await db.query(
-        'SELECT quantity_available FROM shop_items WHERE item_id = $1 AND shop_id = $2',
-        [itemId, shopId]
+        'SELECT quantity_available FROM shop_items WHERE id = $1 AND shop_id = $2',
+        [item.id, shopId]
     );
     if (qtyCheck.rows.length === 0) throw new Error('Item not found in this shop');
     if (qtyCheck.rows[0].quantity_available <= 0) throw new Error('Item is out of stock');
@@ -61,28 +62,15 @@ exports.createBooking = async (userId, data) => {
 
         // 1. Create Booking
         const result = await client.query(
-            `INSERT INTO bookings (item_id, shop_id, user_id, start_date, end_date, status, total_amount, delivery_method, delivery_fee)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            `INSERT INTO bookings (item_id, shop_id, user_id, start_date, end_date, status, total_amount, delivery_method, delivery_fee, delivery_address)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
              RETURNING *`,
-            [itemId, shopId, userId, startDate, endDate, 'pending_vendor_confirmation', totalAmount, deliveryMethod || 'pickup', deliveryFee || 0]
+            [item.item_id, shopId, userId, startDate, endDate, 'pending_payment', totalAmount, deliveryMethod || 'pickup', deliveryFee || 0, delivery_address]
         );
         const booking = result.rows[0];
 
-        // 2. Record initial payment
-        await client.query(
-            `INSERT INTO payments (booking_id, user_id, amount_inr, status, razorpay_order_id, paid_at)
-             VALUES ($1, $2, $3, $4, $5, NOW())`,
-            [booking.booking_id, userId, totalAmount, 'paid', `mock_order_${booking.booking_id}`]
-        );
-
-        // 3. Decrement quantity_available
-        await client.query(
-            `UPDATE shop_items 
-             SET quantity_available = quantity_available - 1,
-                 is_available = CASE WHEN quantity_available - 1 <= 0 THEN false ELSE true END
-             WHERE item_id = $1 AND shop_id = $2`,
-            [itemId, shopId]
-        );
+        // 2. Note: Payment record will be created after Razorpay verification
+        // 3. Increment/Decrement happens at Activation/Return
 
         await client.query('COMMIT');
 
@@ -189,14 +177,7 @@ exports.cancelBooking = async (userId, bookingId) => {
         // 1. Update booking status to cancelled
         const result = await client.query(bookingQueries.updateStatus, ['cancelled', bookingId]);
 
-        // 2. Increment quantity_available back (restore stock)
-        await client.query(
-            `UPDATE shop_items 
-             SET quantity_available = quantity_available + 1,
-                 is_available = true
-             WHERE item_id = $1 AND shop_id = $2`,
-            [booking.item_id, booking.shop_id]
-        );
+        // 2. Cancellation completed
 
         await client.query('COMMIT');
 
@@ -303,14 +284,7 @@ exports.returnBooking = async (userId, bookingId) => {
         // 1. Mark booking as completed
         const result = await client.query(bookingQueries.updateStatus, ['completed', bookingId]);
 
-        // 2. Increment quantity_available (restore stock)
-        await client.query(
-            `UPDATE shop_items 
-             SET quantity_available = quantity_available + 1,
-                 is_available = true
-             WHERE item_id = $1 AND shop_id = $2`,
-            [booking.item_id, booking.shop_id]
-        );
+        // 2. Increment        // No manual replenishment here (using calendar-based logic)
 
         await client.query('COMMIT');
         return result.rows[0];
@@ -320,4 +294,93 @@ exports.returnBooking = async (userId, bookingId) => {
     } finally {
         client.release();
     }
+};
+
+/**
+ * Activate booking and decrement inventory (Lazy Reservation)
+ */
+exports.activateBooking = async (bookingId) => {
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Get Booking details
+        const result = await client.query('SELECT * FROM bookings WHERE booking_id = $1', [bookingId]);
+        if (result.rows.length === 0) throw new Error('Booking not found');
+        const booking = result.rows[0];
+
+        if (booking.status === 'confirmed' || booking.status === 'active') {
+            await client.query('COMMIT');
+            return booking; // Already activated
+        }
+
+        // 2. Check Inventory via overlap count (Wait, we already checked during creation, 
+        // but let's re-verify peak concurrency just in case of race conditions)
+        // EXCLUDE the current booking from the count since it's already in the DB
+        const overlapQuery = bookingQueries.checkOverlapCount(bookingId);
+        const overlapRes = await client.query(overlapQuery, [booking.item_id, booking.shop_id, booking.start_date, booking.end_date, bookingId]);
+        const currentBookedCount = parseInt(overlapRes.rows[0].count);
+
+        const shopItemRes = await client.query(
+            'SELECT quantity_available FROM shop_items WHERE item_id = $1 AND shop_id = $2',
+            [booking.item_id, booking.shop_id]
+        );
+        const totalQuantity = shopItemRes.rows[0].quantity_available;
+
+        if (currentBookedCount >= totalQuantity) {
+            throw new Error('This item is already fully rented for this period.');
+        }
+
+        // 3. Send Email Notification to Shop Owner if this booking hits the limit for its period
+        if (currentBookedCount + 1 >= totalQuantity) {
+            try {
+                const ownerRes = await client.query(
+                    `SELECT u.email, u.fullname, s.name as shop_name, i.name as item_name
+                     FROM shops s
+                     JOIN users u ON s.owner_id = u.id
+                     JOIN items i ON i.id = $1
+                     WHERE s.id = $2`,
+                    [booking.item_id, booking.shop_id]
+                );
+
+                if (ownerRes.rows.length > 0) {
+                    const { email, fullname, shop_name, item_name } = ownerRes.rows[0];
+                    const subject = `Urgent: Item Capacity Reached - ${item_name}`;
+                    const text = `Hello ${fullname},\n\nYour item "${item_name}" in shop "${shop_name}" has reached its maximum rental capacity for the period starting ${new Date(booking.start_date).toLocaleDateString()}.\n\nIt won't be visible on the explore page for these specific dates unless you add more quantity.\n\nregards from antigravity`;
+                    
+                    const { sendEmail } = require('../../utils/email');
+                    sendEmail(email, subject, text);
+                }
+            } catch (emailErr) {
+                console.error('Failed to send capacity email:', emailErr);
+            }
+        }
+
+        // 4. Update Booking Status
+        const finalBooking = await client.query(
+            `UPDATE bookings SET status = 'confirmed', updated_at = NOW() WHERE booking_id = $1 RETURNING *`,
+            [bookingId]
+        );
+
+        await client.query('COMMIT');
+        return finalBooking.rows[0];
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
+};
+
+exports.deleteBooking = async (userId, bookingId) => {
+    // Only allow deletion of own bookings that are still pending payment
+    const result = await db.query(
+        'DELETE FROM bookings WHERE booking_id = $1 AND user_id = $2 AND status = \'pending_payment\' RETURNING *',
+        [bookingId, userId]
+    );
+    
+    if (result.rows.length === 0) {
+        throw new Error('Booking not found or cannot be deleted (already paid or not yours)');
+    }
+    return result.rows[0];
 };

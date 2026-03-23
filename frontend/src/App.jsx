@@ -1,3 +1,17 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { DashboardProvider } from './context/DashboardContext';
+import Layout from './components/layout/Layout';
+import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import OTP from './pages/OTP';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import MyBookingsPage from './pages/MyBookingsPage';
+import Profile from './pages/Profile';
+import AdminUserManagement from './pages/admin/AdminUserManagement';
+
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminShops from './pages/admin/AdminShops';
 import CategoryManagement from './pages/admin/CategoryManagement';
@@ -10,6 +24,8 @@ import BrowseItems from './pages/BrowseItems';
 import ItemShops from './pages/ItemShops';
 import MyPayments from './pages/MyPayments';
 import ActiveRentals from './pages/ActiveRentals';
+import BookingProcess from './pages/BookingProcess';
+// Trace Comment: App.jsx version 1.0.2 - Renamed to BookingProcess
 
 // fine-module imports
 import AdminFineDashboard from './pages/admin/AdminFineDashboard';
@@ -84,6 +100,14 @@ function App() {
                                 }
                             />
                             <Route
+                                path="dashboard/booking/:itemId"
+                                element={
+                                    <ProtectedRoute>
+                                        <BookingProcess />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
                                 path="dashboard/item/:itemId/shops"
                                 element={
                                     <ProtectedRoute>
@@ -139,6 +163,42 @@ function App() {
                             element={
                                 <ProtectedRoute allowedRoles={['admin']}>
                                     <AdminUserManagement />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="admin/categories"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <CategoryManagement />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="admin/shops"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <AdminShops />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="admin/approvals"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <ShopApprovals />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="admin/items"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <AdminItems />
                                 </ProtectedRoute>
                             }
                         />

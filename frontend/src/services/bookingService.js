@@ -24,3 +24,8 @@ export const returnBooking = async (bookingId) => {
     const response = await api.patch(`/bookings/return/${bookingId}`);
     return response.data;
 };
+
+export const deleteBooking = async (bookingId) => {
+    const response = await api.delete(`/bookings/${bookingId}`);
+    return response.data;
+};

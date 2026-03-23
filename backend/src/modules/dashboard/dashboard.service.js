@@ -76,8 +76,8 @@ exports.getItemsByCategory = async (categoryId, page = 1, pageSize = 12) => {
     };
 };
 
-exports.getShopsForItem = async (itemId) => {
-    const rows = await query.getShopsForItem(itemId);
+exports.getShopsForItem = async (itemId, dates = {}) => {
+    const rows = await query.getShopsForItem(itemId, dates);
     return rows.map((row) => ({
         shopItemId: row.shop_item_id,
         shopId: row.shop_id,
@@ -292,10 +292,12 @@ function formatItem(i) {
         imageUrl: i.image_url,
         priceUnit: i.price_unit,
         minPriceInr: parseFloat(i.min_price_inr || 0),
+        price: parseFloat(i.min_price_inr || 0),
         minPriceFormatted: formatINR(i.min_price_inr || 0),
         avgRating: parseFloat(i.avg_rating || 0),
         totalReviews: parseInt(i.total_reviews || 0, 10),
         shopCount: parseInt(i.shop_count || 0, 10),
+        totalQuantity: parseInt(i.total_quantity || 0, 10),
         deliveryAvailable: i.delivery_available,
         pickupAvailable: i.pickup_available,
         isAvailable: i.is_available !== false,
@@ -307,8 +309,11 @@ function formatItem(i) {
     };
 }
 
-exports.getShopItemDetails = async (shopItemId) => {
-    return await query.getShopItemDetails(shopItemId);
+exports.getShopItemDetails = async (shopItemId, dates = {}) => {
+    const detail = await query.getShopItemDetails(shopItemId, dates);
+    if (!detail) return null;
+    const upcoming = await query.getUpcomingBookings(detail.item_id, detail.shop_id);
+    return { ...detail, upcomingBookings: upcoming };
 };
 
 exports.getNearbyShops = async (lat, lng, radius) => {

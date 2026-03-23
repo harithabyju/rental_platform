@@ -1,5 +1,7 @@
 const penaltiesRepository = require('./penalties.repository');
 const { sendEmail } = require('../../utils/email');
+const notificationService = require('../notifications/notifications.service');
+const db = require('../../config/db');
 
 const calculateLateFine = async (bookingId) => {
     const booking = await penaltiesRepository.getBookingForFine(bookingId);
@@ -44,6 +46,14 @@ const calculateLateFine = async (bookingId) => {
         booking.customer_email,
         'Late Return Fine Notification',
         `Dear ${booking.customer_name},\n\nYou have been charged a late return fine of $${fineAmount} for booking #${bookingId} (${booking.item_name}).\nReason: ${description}\n\nPlease pay the fine through your dashboard.`
+    );
+
+    // Create in-app notification
+    await notificationService.createNotification(
+        booking.customer_id,
+        'Late Return Fine',
+        `You have been charged a fine of ₹${fineAmount} for the late return of ${booking.item_name}.`,
+        'warning'
     );
 
     return fine;
@@ -94,6 +104,14 @@ const approveDamageReport = async (reportId, amount) => {
         `Dear ${booking.customer_name},\n\nYou have been charged a damage penalty of $${amount} for booking #${report.booking_id} (${booking.item_name}).\nDescription: ${report.description}\n\nPlease pay the fine through your dashboard.`
     );
 
+    // Create in-app notification
+    await notificationService.createNotification(
+        booking.customer_id,
+        'Damage Penalty',
+        `A damage penalty of ₹${amount} has been approved for your booking of ${booking.item_name}.`,
+        'error'
+    );
+
     return { report, fine };
 };
 
@@ -128,10 +146,10 @@ const resolveDispute = async (disputeId, status, response) => {
     const dispute = await penaltiesRepository.getDisputeById(disputeId);
     if (!dispute) throw new Error('Dispute not found');
 
-    const booking = await penaltiesRepository.getBookingForFine(dispute.fine_id); // Wait, this is actually fine_id. We need the booking from fine.
-    // Let's get fine first to get user/booking details
-    const result = await db.query('SELECT f.*, u.email, u.fullname FROM fines f JOIN users u ON f.user_id = u.id WHERE f.id = $1', [dispute.fine_id]);
-    const fineData = result.rows[0];
+    // Get fine details to get the correct booking_id
+    const fineResult = await db.query('SELECT f.*, u.email, u.fullname FROM fines f JOIN users u ON f.user_id = u.id WHERE f.id = $1', [dispute.fine_id]);
+    const fineData = fineResult.rows[0];
+    if (!fineData) throw new Error('Fine not found for this dispute');
 
     const updatedDispute = await penaltiesRepository.updateDispute(disputeId, status, response);
 
@@ -147,6 +165,14 @@ const resolveDispute = async (disputeId, status, response) => {
             fineData.email,
             'Dispute Resolution Notification',
             `Dear ${fineData.fullname},\n\nYour dispute for fine #${dispute.fine_id} has been ${status}.\nAdmin Response: ${response}\n\nThank you.`
+        );
+
+        // Create in-app notification
+        await notificationService.createNotification(
+            fineData.user_id,
+            'Dispute Resolution',
+            `Your dispute for fine #${dispute.fine_id} has been ${status}. Response: ${response}`,
+            status === 'resolved' ? 'success' : 'info'
         );
     }
 

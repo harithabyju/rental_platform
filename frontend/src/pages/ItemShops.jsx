@@ -1,5 +1,5 @@
-﻿import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import * as dashboardService from '../services/dashboardService';
 import RatingDisplay from '../components/RatingDisplay';
 import { MapPin, Truck, Package, ArrowLeft, ShieldCheck, Info } from 'lucide-react';
@@ -7,6 +7,11 @@ import { MapPin, Truck, Package, ArrowLeft, ShieldCheck, Info } from 'lucide-rea
 const ItemShops = () => {
     const { itemId } = useParams();
     const navigate = useNavigate();
+    const { search } = useLocation();
+    const queryParams = new URLSearchParams(search);
+    const startDate = queryParams.get('startDate');
+    const endDate = queryParams.get('endDate');
+
     const [shops, setShops] = useState([]);
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -16,7 +21,7 @@ const ItemShops = () => {
         const fetchShopAvailability = async () => {
             setLoading(true);
             try {
-                const res = await dashboardService.getShopsForItem(itemId);
+                const res = await dashboardService.getShopsForItem(itemId, { startDate, endDate });
                 setShops(res.data);
                 if (res.data.length > 0) {
                     setItem(res.data[0].item);
@@ -31,7 +36,7 @@ const ItemShops = () => {
         };
 
         fetchShopAvailability();
-    }, [itemId]);
+    }, [itemId, startDate, endDate]);
 
     if (loading) {
         return (
@@ -147,9 +152,15 @@ const ItemShops = () => {
                                         )}
                                     </div>
 
-                                    <div className="inline-flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-gray-800/40 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 group-hover:bg-emerald-50 transition-colors">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                                        {shop.quantityAvailable} units ready to rent
+                                    <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${
+                                        shop.available_quantity > 0 
+                                        ? 'bg-emerald-50 text-emerald-600' 
+                                        : 'bg-rose-50 text-rose-600'
+                                    }`}>
+                                        <span className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)] ${
+                                            shop.available_quantity > 0 ? 'bg-emerald-500' : 'bg-rose-500'
+                                        }`} />
+                                        {shop.available_quantity} available / {shop.total_quantity} total
                                     </div>
                                 </div>
 
@@ -159,10 +170,15 @@ const ItemShops = () => {
                                         <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase tracking-tighter">per {shop.priceUnit}</p>
                                     </div>
                                     <Link
-                                        to={`/book/${itemId}?shopId=${shop.shopId}`}
-                                        className="px-10 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-emerald-600 shadow-2xl shadow-gray-200 transition-all active:scale-95 group-hover:shadow-emerald-100"
+                                        to={`/book/${itemId}?shopId=${shop.shopId}${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`}
+                                        className={`px-10 py-4 font-black rounded-2xl shadow-2xl transition-all active:scale-95 ${
+                                            shop.available_quantity > 0
+                                            ? 'bg-gray-900 text-white hover:bg-emerald-600 shadow-gray-200 group-hover:shadow-emerald-100'
+                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        }`}
+                                        onClick={(e) => shop.available_quantity <= 0 && e.preventDefault()}
                                     >
-                                        Reserve
+                                        {shop.available_quantity > 0 ? 'Reserve' : 'Sold Out'}
                                     </Link>
                                 </div>
                             </div>

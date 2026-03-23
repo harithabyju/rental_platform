@@ -74,7 +74,7 @@ exports.countItemsByCategory = async (categoryId) => {
 };
 
 // ─── Shop Availability for an Item ───────────────────────────────────────────
-exports.getShopsForItem = async (itemId) => {
+exports.getShopsForItem = async (itemId, dates = {}) => {
     const result = await db.query(
         `SELECT
             si.id AS shop_item_id,
@@ -90,7 +90,17 @@ exports.getShopsForItem = async (itemId) => {
             s.rating AS shop_rating,
             s.total_reviews AS shop_reviews,
             si.price_per_day_inr,
-            si.quantity_available,
+            si.quantity_available AS total_quantity,
+            si.quantity_available - (
+                SELECT COUNT(*) FROM bookings b 
+                WHERE b.item_id = si.item_id 
+                  AND b.shop_id = si.shop_id 
+                  AND b.status IN ('confirmed', 'active', 'pending_payment')
+                  AND (b.start_date, b.end_date) OVERLAPS (
+                      COALESCE($2::date, CURRENT_DATE), 
+                      COALESCE($3::date, CURRENT_DATE + interval '1 day')
+                  )
+            ) AS available_quantity,
             si.is_available,
             si.delivery_available,
             si.pickup_available,
@@ -107,13 +117,13 @@ exports.getShopsForItem = async (itemId) => {
         WHERE si.item_id = $1
           AND si.is_available = true
         ORDER BY si.price_per_day_inr ASC`,
-        [itemId]
+        [itemId, dates.startDate || null, dates.endDate || null]
     );
     return result.rows;
 };
 
 // ─── Search Items ─────────────────────────────────────────────────────────────
-exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, availableOnly, startDate, endDate, lat, lng, radius, limit, offset }) => {
+exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, startDate, endDate, lat, lng, radius, limit, offset }) => {
     const params = [];
     let paramIdx = 1;
 
@@ -129,8 +139,16 @@ exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, 
             c.id AS category_id,
             c.name AS category_name,
             c.slug AS category_slug,
-            MIN(si.price_per_day_inr) AS min_price_inr,
+            COALESCE(MIN(si.price_per_day_inr), 0) AS min_price_inr,
             COUNT(DISTINCT si.shop_id) AS shop_count,
+            SUM(si.quantity_available) AS total_quantity,
+            SUM(si.quantity_available - (
+                SELECT COUNT(*) FROM bookings b 
+                WHERE b.item_id = i.id 
+                  AND b.shop_id = si.shop_id
+                  AND b.status IN ('confirmed', 'active', 'pending_payment')
+                  AND (b.start_date, b.end_date) OVERLAPS (COALESCE($1::date, CURRENT_DATE), COALESCE($2::date, CURRENT_DATE + interval '1 day'))
+            )) AS available_quantity,
             BOOL_OR(si.delivery_available) AS delivery_available,
             BOOL_OR(si.pickup_available) AS pickup_available
         FROM items i
@@ -138,12 +156,6 @@ exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, 
         JOIN shop_items si ON si.item_id = i.id AND si.is_available = true
         JOIN shops s ON s.id = si.shop_id AND s.is_active = true AND s.status = 'approved'
         WHERE i.is_active = true
-          AND NOT EXISTS (
-              SELECT 1 FROM bookings b
-              WHERE b.item_id = i.id
-              AND b.status IN ('confirmed', 'active')
-              AND (b.start_date, b.end_date) OVERLAPS ($${paramIdx}, $${paramIdx + 1})
-          )
     `;
     params.push(startDate, endDate);
     paramIdx += 2;
@@ -153,7 +165,6 @@ exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, 
         params.push(lat, lng, radius || 50);
         paramIdx += 3;
     }
-
 
     if (q && q.trim()) {
         query += ` AND (i.name ILIKE $${paramIdx} OR i.description ILIKE $${paramIdx})`;
@@ -186,7 +197,6 @@ exports.searchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryOnly, 
     query += `
         GROUP BY i.id, i.name, i.description, i.image_url, i.price_unit,
                  i.avg_rating, i.total_reviews, c.id, c.name, c.slug
-        HAVING COUNT(DISTINCT si.shop_id) > 0
         ORDER BY i.avg_rating DESC, i.name ASC
         LIMIT $${paramIdx} OFFSET $${paramIdx + 1}
     `;
@@ -207,12 +217,13 @@ exports.countSearchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryO
         JOIN shop_items si ON si.item_id = i.id AND si.is_available = true
         JOIN shops s ON s.id = si.shop_id AND s.is_active = true AND s.status = 'approved'
         WHERE i.is_active = true
-          AND NOT EXISTS (
-              SELECT 1 FROM bookings b
+          AND (si.quantity_available > (
+              SELECT COUNT(*) FROM bookings b
               WHERE b.item_id = i.id
-              AND b.status IN ('confirmed', 'active')
-              AND (b.start_date, b.end_date) OVERLAPS ($${paramIdx}, $${paramIdx + 1})
-          )
+              AND b.shop_id = si.shop_id
+              AND b.status IN ('confirmed', 'active', 'pending_payment')
+              AND (b.start_date, b.end_date) OVERLAPS (COALESCE($1::date, CURRENT_DATE), COALESCE($2::date, CURRENT_DATE + interval '1 day'))
+          ))
     `;
     params.push(startDate, endDate);
     paramIdx += 2;
@@ -222,7 +233,6 @@ exports.countSearchItems = async ({ q, categoryId, minPrice, maxPrice, deliveryO
         params.push(lat, lng, radius || 50);
         paramIdx += 3;
     }
-
 
     if (q && q.trim()) {
         query += ` AND (i.name ILIKE $${paramIdx} OR i.description ILIKE $${paramIdx})`;
@@ -320,7 +330,7 @@ exports.getActiveRentalsByUser = async (userId) => {
         JOIN shops s ON s.id = b.shop_id
         WHERE b.user_id = $1
           AND b.status IN ('confirmed', 'active')
-          AND b.end_date >= NOW()
+          AND b.end_date::date >= CURRENT_DATE
         ORDER BY b.end_date ASC`,
         [userId]
     );
@@ -362,9 +372,22 @@ exports.getActiveRentalsForShopOwner = async (userId) => {
         JOIN users u ON u.id = b.user_id
         WHERE s.owner_id = $1
           AND b.status IN ('confirmed', 'active')
-          AND b.end_date >= NOW()
+          AND b.end_date::date >= CURRENT_DATE
         ORDER BY b.end_date ASC`,
         [userId]
+    );
+    return result.rows;
+};
+
+exports.getUpcomingBookings = async (itemId, shopId) => {
+    const result = await db.query(
+        `SELECT start_date, end_date, status
+         FROM bookings
+         WHERE item_id = $1 AND shop_id = $2
+           AND end_date::date >= CURRENT_DATE
+           AND status IN ('confirmed', 'active', 'pending_payment')
+         ORDER BY start_date ASC`,
+        [itemId, shopId]
     );
     return result.rows;
 };
@@ -445,14 +468,24 @@ exports.getUserProfileStats = async (userId) => {
 };
 
 // ─── Shop Item Details ────────────────────────────────────────────────────────
-exports.getShopItemDetails = async (shopItemId) => {
+exports.getShopItemDetails = async (shopItemId, dates = {}) => {
     const result = await db.query(
         `SELECT 
             si.id AS shop_item_id,
             si.item_id,
             si.shop_id,
             si.price_per_day_inr,
-            si.quantity_available,
+            si.quantity_available AS total_quantity,
+            si.quantity_available - (
+                SELECT COUNT(*) FROM bookings b 
+                WHERE b.item_id = si.item_id 
+                  AND b.shop_id = si.shop_id 
+                  AND b.status IN ('confirmed', 'active', 'pending_payment')
+                  AND (b.start_date, b.end_date) OVERLAPS (
+                      COALESCE($2::date, CURRENT_DATE), 
+                      COALESCE($3::date, CURRENT_DATE + interval '1 day')
+                  )
+            ) AS available_quantity,
             si.is_available,
             si.delivery_available,
             si.pickup_available,
@@ -476,7 +509,7 @@ exports.getShopItemDetails = async (shopItemId) => {
         JOIN items i ON si.item_id = i.id
         JOIN shops s ON si.shop_id = s.id
         WHERE si.id = $1`,
-        [shopItemId]
+        [shopItemId, dates.startDate || null, dates.endDate || null]
     );
     return result.rows[0];
 };

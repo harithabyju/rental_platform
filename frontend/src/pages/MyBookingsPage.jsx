@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getMyBookings } from '../services/bookingService';
 import BookingCard from '../components/BookingCard';
 import { Calendar, ArrowLeft } from 'lucide-react';
@@ -29,7 +29,7 @@ const MyBookingsPage = () => {
 
     const filteredBookings = bookings.filter(booking => {
         const status = booking.status?.toLowerCase();
-        if (activeTab === 'Active') return status === 'confirmed' || status === 'active';
+        if (activeTab === 'Active') return ['confirmed', 'active'].includes(status);
         if (activeTab === 'Completed') return status === 'completed' || status === 'returned';
         if (activeTab === 'Cancelled') return status === 'cancelled';
         return true;
@@ -38,7 +38,7 @@ const MyBookingsPage = () => {
     const getCount = (tab) => {
         return bookings.filter(b => {
             const s = b.status?.toLowerCase();
-            if (tab === 'Active') return s === 'confirmed' || s === 'active';
+            if (tab === 'Active') return ['confirmed', 'active'].includes(s);
             if (tab === 'Completed') return s === 'completed' || s === 'returned';
             if (tab === 'Cancelled') return s === 'cancelled';
             return false;

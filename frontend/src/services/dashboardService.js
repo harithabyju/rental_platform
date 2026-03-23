@@ -13,8 +13,8 @@ export const getItemsByCategory = (categoryId, page = 1, pageSize = 12) =>
     api.get(`/items/category/${categoryId}`, { params: { page, pageSize } }).then(r => r.data);
 
 // Shop availability for an item
-export const getShopsForItem = (itemId) =>
-    api.get(`/dashboard/items/${itemId}/shops`).then(r => r.data);
+export const getShopsForItem = (itemId, params = {}) =>
+    api.get(`/dashboard/items/${itemId}/shops`, { params }).then(r => r.data);
 
 // Search items with filters — only pass params accepted by the search Joi schema
 export const searchItems = (params) => {
@@ -56,8 +56,8 @@ export const getProfileStats = () =>
     api.get('/dashboard/profile/stats');
 
 // Shop item details
-export const getShopItemDetails = (shopItemId) =>
-    api.get(`/dashboard/shop-items/${shopItemId}`).then(r => r.data);
+export const getShopItemDetails = (shopItemId, params = {}) =>
+    api.get(`/dashboard/shop-items/${shopItemId}`, { params }).then(r => r.data);
 
 // Nearby shops
 export const getNearbyShops = (params) =>

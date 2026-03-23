@@ -53,6 +53,7 @@ const searchRoutes = require('./modules/search/search.routes');
 const reviewRoutes = require('./modules/reviews/review.routes');
 const penaltiesRoutes = require('./modules/penalties/penalties.routes');
 const complianceRoutes = require('./modules/compliance/compliance.routes');
+const notificationRoutes = require('./modules/notifications/notifications.routes');
 
 // Use Routes
 app.use('/api/dashboard', dashboardRoutes);
@@ -68,6 +69,7 @@ app.use('/api', userRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/fines', penaltiesRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 
 // Global Error Handler

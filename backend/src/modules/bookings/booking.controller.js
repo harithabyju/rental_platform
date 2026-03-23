@@ -62,3 +62,12 @@ exports.returnBooking = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.deletePendingBooking = async (req, res, next) => {
+    try {
+        const result = await bookingService.deleteBooking(req.user.id, req.params.id);
+        res.json({ message: 'Pending booking cleaned up', booking: result });
+    } catch (err) {
+        next(err);
+    }
+};

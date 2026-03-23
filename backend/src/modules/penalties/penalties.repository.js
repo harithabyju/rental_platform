@@ -2,12 +2,12 @@ const db = require('../../config/db');
 
 const getBookingForFine = async (bookingId) => {
     const result = await db.query(
-        `SELECT b.*, i.price_per_day, i.name as item_name, s.owner_id as shop_owner_id, u.email as customer_email, u.fullname as customer_name
+        `SELECT b.*, b.user_id as customer_id, i.base_price_inr as price_per_day, i.name as item_name, s.owner_id as shop_owner_id, u.email as customer_email, u.fullname as customer_name
          FROM bookings b
          JOIN items i ON b.item_id = i.id
-         JOIN shops s ON i.shop_id = s.id
-         JOIN users u ON b.customer_id = u.id
-         WHERE b.id = $1`,
+         JOIN shops s ON b.shop_id = s.id
+         JOIN users u ON b.user_id = u.id
+         WHERE b.booking_id = $1`,
         [bookingId]
     );
     return result.rows[0];
@@ -58,7 +58,7 @@ const getCustomerFines = async (userId) => {
     const result = await db.query(
         `SELECT f.*, i.name as item_name 
          FROM fines f
-         JOIN bookings b ON f.booking_id = b.id
+         JOIN bookings b ON f.booking_id = b.booking_id
          JOIN items i ON b.item_id = i.id
          WHERE f.user_id = $1
          ORDER BY f.created_at DESC`,
@@ -72,7 +72,7 @@ const getAllFinesAdmin = async () => {
         `SELECT f.*, u.fullname as customer_name, i.name as item_name
          FROM fines f
          JOIN users u ON f.user_id = u.id
-         JOIN bookings b ON f.booking_id = b.id
+         JOIN bookings b ON f.booking_id = b.booking_id
          JOIN items i ON b.item_id = i.id
          ORDER BY f.created_at DESC`
     );

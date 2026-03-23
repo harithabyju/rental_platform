@@ -58,6 +58,8 @@ const BookingCard = ({ booking, onUpdate, animationDelay = '0s' }) => {
         switch ((status || '').toLowerCase()) {
             case 'confirmed': return 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/30';
             case 'active': return 'bg-emerald-600 text-white';
+            case 'pending_payment':
+            case 'pending': return 'bg-amber-900/50 text-amber-300 border border-amber-700/30';
             case 'completed':
             case 'returned': return 'bg-blue-900/50 text-blue-300 border border-blue-700/30';
             case 'cancelled': return 'bg-red-900/50 text-red-300 border border-red-700/30';
@@ -84,7 +86,9 @@ const BookingCard = ({ booking, onUpdate, animationDelay = '0s' }) => {
                     />
                     <div className="absolute top-4 left-4">
                         <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider shadow-lg backdrop-blur-md ${getStatusColor(booking.status)}`}>
-                            {booking.status}
+                            {booking.status === 'pending_payment' ? 'Awaiting Payment' : 
+                             booking.status === 'pending' ? 'Processing Payment' : 
+                             booking.status}
                         </span>
                     </div>
                 </div>

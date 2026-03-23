@@ -50,15 +50,15 @@ const ReviewList = ({ itemId }) => {
             </h3>
             
             <div className="space-y-4">
-                {reviews.map((review) => (
-                    <div key={review.review_id} className="bg-white dark:bg-[#111827] p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800/60 shadow-sm hover:shadow-md transition-shadow">
+                {reviews.map((review, index) => (
+                    <div key={review.id || index} className="bg-white dark:bg-[#111827] p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800/60 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-black text-lg">
-                                    {review.reviewer_name?.charAt(0).toUpperCase() || 'U'}
+                                    {(review.user_name || review.reviewer_name)?.charAt(0).toUpperCase() || 'U'}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-black text-gray-900 dark:text-gray-100">{review.reviewer_name}</p>
+                                    <p className="text-sm font-black text-gray-900 dark:text-gray-100">{review.user_name || review.reviewer_name}</p>
                                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{new Date(review.created_at).toLocaleDateString()}</p>
                                 </div>
                             </div>

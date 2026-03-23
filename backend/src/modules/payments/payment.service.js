@@ -2,6 +2,7 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const db = require('../../config/db');
 const bookingRepository = require('../bookings/booking.repository');
+const bookingService = require('../bookings/booking.service');
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_your_key_id',
@@ -103,8 +104,8 @@ exports.handleRazorpayWebhook = async (event, payload) => {
             const { notes } = payload.payment.entity;
             const bookingId = notes.booking_id;
 
-            // Active the booking but mark paid
-            await db.query(`UPDATE bookings SET status = 'confirmed' WHERE booking_id = $1`, [bookingId]);
+            // Activate the booking (status confirmed + inventory decrement)
+            await bookingService.activateBooking(bookingId);
         }
 
         if (event === 'refund.processed') {

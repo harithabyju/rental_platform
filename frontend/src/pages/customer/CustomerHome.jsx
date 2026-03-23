@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import itemService from '../../services/item.service';
 import { Search, Filter, Package, Star, ArrowRight, Loader2, Tag, Store } from 'lucide-react';
@@ -50,7 +50,9 @@ const ItemCard = ({ item }) => {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-between">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Available Now</div>
+                    <div className={`text-[10px] font-black uppercase tracking-widest ${item.available_quantity > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {item.available_quantity > 0 ? `${item.available_quantity} Available` : 'Fully Booked'}
+                    </div>
                     <div className="w-8 h-8 rounded-full bg-emerald-900/40 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 border border-emerald-700/20">
                         <ArrowRight size={16} />
                     </div>

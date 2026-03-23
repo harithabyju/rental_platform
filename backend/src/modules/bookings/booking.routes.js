@@ -12,6 +12,7 @@ router.get('/my', protect, authorize('customer'), bookingController.getMyBooking
 router.patch('/cancel/:id', protect, authorize('customer'), bookingController.cancelBooking);
 router.patch('/extend/:id', protect, authorize('customer'), bookingController.extendBooking);
 router.patch('/return/:id', protect, authorize('customer'), bookingController.returnBooking);
+router.delete('/:id', protect, authorize('customer'), bookingController.deletePendingBooking);
 
 // Shop owner Routes
 router.get('/shop', protect, authorize('shop_owner'), bookingController.getShopBookings);

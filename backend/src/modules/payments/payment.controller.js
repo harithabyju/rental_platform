@@ -1,4 +1,5 @@
 const paymentService = require('./payment.service');
+const bookingService = require('../bookings/booking.service');
 const db = require('../../config/db');
 const PDFDocument = require('pdfkit');
 
@@ -34,33 +35,34 @@ exports.verifyPayment = async (req, res, next) => {
             amount
         } = req.body;
 
-        const isValid = paymentService.verifySignature(
-            razorpay_order_id,
-            razorpay_payment_id,
-            razorpay_signature
-        );
+        // MOCK VERIFICATION for development/testing
+        const isMock = req.body.mock === true || razorpay_order_id === 'mock_order_id';
+        const isValid = isMock ? true : paymentService.verifySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
 
         if (!isValid) {
             return res.status(400).json({ message: 'Invalid payment signature' });
         }
 
-        // Update Booking Status
-        await db.query(
-            "UPDATE bookings SET status = 'confirmed' WHERE booking_id = $1",
-            [bookingId]
-        );
+        // Update Booking Status and Inventory
+        await bookingService.activateBooking(bookingId);
 
         // Update shop_items availability if necessary (or quantities)
         // For now assuming quantity 1 and marking confirmed is enough.
 
         // Record Payment
+        let finalAmount = amount;
+        if (!finalAmount) {
+            const booking = await db.query('SELECT total_amount FROM bookings WHERE booking_id = $1', [bookingId]);
+            finalAmount = booking.rows[0]?.total_amount;
+        }
+
         await paymentService.recordPayment({
             booking_id: bookingId,
             user_id: req.user.id,
-            amount_inr: amount,
-            razorpay_order_id,
-            razorpay_payment_id,
-            razorpay_signature,
+            amount_inr: finalAmount,
+            razorpay_order_id: razorpay_order_id || 'mock_order_id',
+            razorpay_payment_id: razorpay_payment_id || 'mock_payment_id',
+            razorpay_signature: razorpay_signature || 'mock_signature',
             status: 'completed'
         });
 

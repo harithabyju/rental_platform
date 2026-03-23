@@ -1,30 +1,35 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { createBooking } from '../services/bookingService';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { createBooking, deleteBooking } from '../services/bookingService';
 import { getShopItemDetails } from '../services/dashboardService';
 import paymentService from '../services/paymentService';
 import { MapPin, Truck, Box, Star, Loader2, CheckCircle, CreditCard, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import ReviewList from '../components/ReviewList';
+import MockRazorpayModal from '../components/MockRazorpayModal';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
-const BookingPage = () => {
+const BookingProcess = () => {
     const { itemId } = useParams();
     const navigate = useNavigate();
+    const { search } = useLocation();
+    const queryParams = new URLSearchParams(search);
 
     // Data State
     const [product, setProduct] = useState(null);
     const [pageLoading, setPageLoading] = useState(true);
 
-    // Booking State
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    // Booking State (Initialize from URL if possible)
+    const [startDate, setStartDate] = useState(queryParams.get('startDate') || '');
+    const [endDate, setEndDate] = useState(queryParams.get('endDate') || '');
     const [deliveryMethod, setDeliveryMethod] = useState('pickup'); // 'pickup' | 'delivery'
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [isMockModalOpen, setIsMockModalOpen] = useState(false);
+    const [currentBookingId, setCurrentBookingId] = useState(null);
 
     // Constants
     const serviceFeeRate = 0.10;
@@ -33,7 +38,7 @@ const BookingPage = () => {
     useEffect(() => {
         const fetchDetails = async () => {
             try {
-                const res = await getShopItemDetails(itemId);
+                const res = await getShopItemDetails(itemId, { startDate, endDate });
                 setProduct(res.data);
             } catch (err) {
                 toast.error('Failed to load item details');
@@ -43,7 +48,7 @@ const BookingPage = () => {
             }
         };
         fetchDetails();
-    }, [itemId, navigate]);
+    }, [itemId, navigate, startDate, endDate]);
 
     // Load Razorpay Script
     const loadRazorpayScript = () => {
@@ -85,23 +90,8 @@ const BookingPage = () => {
         // MOCK PAYMENT FLOW for development/testing
         if (import.meta.env.VITE_RAZORPAY_KEY_ID === 'rzp_test_your_key_id' || !import.meta.env.VITE_RAZORPAY_KEY_ID) {
             console.log('Using Mock Payment Flow');
-            try {
-                setLoading(true);
-                // Simulate network delay
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                // In mock flow, we just show success since backend already records payment as 'paid' in createBooking
-                // However, we should still call verify payment if there's any logic there, 
-                // but based on booking.service, createBooking already did the work.
-
-                setShowSuccess(true);
-                toast.success('Mock Payment Successful!');
-                setTimeout(() => navigate('/dashboard/bookings'), 4000);
-            } catch (err) {
-                toast.error('Mock payment simulation failed');
-            } finally {
-                setLoading(false);
-            }
+            setCurrentBookingId(bookingId);
+            setIsMockModalOpen(true);
             return;
         }
 
@@ -152,10 +142,17 @@ const BookingPage = () => {
                     color: '#059669' // emerald-600
                 },
                 modal: {
-                    ondismiss: function () {
+                    ondismiss: async function () {
                         setLoading(false);
-                        toast.info('Payment cancelled. Your booking is still saved as pending.');
-                        navigate('/dashboard/bookings');
+                        if (bookingId) {
+                            try {
+                                await deleteBooking(bookingId);
+                                toast.info('Booking cancelled.');
+                            } catch (err) {
+                                console.error('Failed to cleanup booking:', err);
+                            }
+                        }
+                        navigate('/dashboard');
                     }
                 }
             };
@@ -188,15 +185,16 @@ const BookingPage = () => {
         try {
             // 1. Create Pending Booking
             const booking = await createBooking({
-                itemId, // This is si.item_id or si.id depending on what si is
+                itemId,
                 shopId: product.shop_id,
                 startDate,
                 endDate,
                 totalAmount: breakdown.total,
                 deliveryMethod,
                 deliveryFee: breakdown.deliveryFee,
-                address: deliveryMethod === 'delivery' ? address : null
+                delivery_address: deliveryMethod === 'delivery' ? address : null
             });
+            setCurrentBookingId(booking.booking_id); // Store booking ID for potential mock payment
 
             // 2. Start Razorpay Flow
             await handlePayment(booking.booking_id, breakdown.total);
@@ -293,9 +291,16 @@ const BookingPage = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-xl font-black text-emerald-600">₹{product.price_per_day_inr}</p>
-                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase">per day</p>
+                                <div className="text-right space-y-2">
+                                    <div>
+                                        <p className="text-xl font-black text-emerald-600">₹{product.price_per_day_inr}</p>
+                                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase">per day</p>
+                                    </div>
+                                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight ${
+                                        product.available_quantity > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                                    }`}>
+                                        {product.available_quantity} / {product.total_quantity} Available
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -323,6 +328,33 @@ const BookingPage = () => {
                                     <div className="w-10 h-10 bg-emerald-600 text-white rounded-2xl flex items-center justify-center font-black shadow-lg shadow-emerald-200">1</div>
                                     <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight">When do you need it?</h3>
                                 </div>
+
+                                {product.upcomingBookings && product.upcomingBookings.length > 0 && (
+                                    <div className="bg-amber-50 border-2 border-amber-100 p-6 rounded-3xl animate-scale-up space-y-3">
+                                        <div className="flex items-center gap-3 text-amber-900">
+                                            <Star size={20} className="fill-amber-500 text-amber-500" />
+                                            <p className="font-black text-sm uppercase tracking-tight">Future Reservations Notice</p>
+                                        </div>
+                                        <p className="text-amber-800 text-xs font-bold leading-relaxed">
+                                            This item is already booked for some future dates by other customers. 
+                                            <span className="block mt-1 text-amber-900 font-extrabold italic">
+                                                Please choose another date range other than these booked periods.
+                                            </span>
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {product.upcomingBookings.slice(0, 3).map((b, i) => (
+                                                <div key={i} className="px-3 py-1 bg-white border border-amber-200 rounded-full text-[10px] font-black text-amber-700">
+                                                    {new Date(b.start_date).toLocaleDateString()} - {new Date(b.end_date).toLocaleDateString()}
+                                                </div>
+                                            ))}
+                                            {product.upcomingBookings.length > 3 && (
+                                                <div className="px-3 py-1 bg-white border border-amber-200 rounded-full text-[10px] font-black text-amber-700">
+                                                    + {product.upcomingBookings.length - 3} more
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Pick-up Date</label>
@@ -334,6 +366,11 @@ const BookingPage = () => {
                                             required
                                             min={new Date().toISOString().split('T')[0]}
                                         />
+                                        Payment Mode: {
+                                            import.meta.env.VITE_RAZORPAY_KEY_ID === 'rzp_test_your_key_id' || !import.meta.env.VITE_RAZORPAY_KEY_ID
+                                            ? 'MockRazorpay'
+                                            : 'Razorpay Live/Test'
+                                        }
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Return Date</label>
@@ -488,8 +525,52 @@ const BookingPage = () => {
                     </div>
                 </div>
             </div>
+            <MockRazorpayModal 
+                isOpen={isMockModalOpen}
+                onClose={async () => {
+                    setIsMockModalOpen(false);
+                    setLoading(false);
+                    if (currentBookingId) {
+                        try {
+                            await deleteBooking(currentBookingId);
+                            toast.info('Booking cancelled.');
+                        } catch (err) {
+                            console.error('Failed to cleanup booking:', err);
+                        }
+                    }
+                    navigate('/dashboard');
+                }}
+                productName={product?.item_name || 'Rental Item'}
+                amount={breakdown?.total || 0}
+                onPaymentSuccess={async () => {
+                    try {
+                        setLoading(true);
+                        setIsMockModalOpen(false); // Close modal immediately
+                        // Simulate network delay
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+
+                        // In mock flow, we now call backend to activate the booking and decrement inventory
+                        await paymentService.verifyPayment({
+                            razorpay_order_id: 'mock_order_id',
+                            razorpay_payment_id: 'mock_payment_id',
+                            razorpay_signature: 'mock_signature',
+                            bookingId: currentBookingId, // Use the stored booking ID
+                            amount: breakdown?.total,
+                            mock: true
+                        });
+
+                        setShowSuccess(true);
+                        toast.success('Mock Payment Successful! Inventory updated.');
+                        setTimeout(() => navigate('/dashboard/bookings'), 4000);
+                    } catch (err) {
+                        toast.error('Mock payment simulation failed');
+                    } finally {
+                        setLoading(false);
+                    }
+                }}
+            />
         </div>
     );
 };
 
-export default BookingPage;
+export default BookingProcess;

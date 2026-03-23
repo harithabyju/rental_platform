@@ -46,7 +46,8 @@ exports.getItemsByCategory = async (req, res) => {
 exports.getShopsForItem = async (req, res) => {
     try {
         const { itemId } = req.params;
-        const shops = await service.getShopsForItem(itemId);
+        const { startDate, endDate } = req.query;
+        const shops = await service.getShopsForItem(itemId, { startDate, endDate });
         res.json({ success: true, data: shops });
     } catch (err) {
         handleError(res, err, 'getShopsForItem');
@@ -116,8 +117,9 @@ exports.getProfileStats = async (req, res) => {
 // GET /shop-items/:itemId
 exports.getShopItemDetails = async (req, res) => {
     try {
-        const { itemId } = req.params;
-        const details = await service.getShopItemDetails(itemId);
+        const { itemId } = req.params; // In this route, itemId is actually shop_item_id
+        const { startDate, endDate } = req.query;
+        const details = await service.getShopItemDetails(itemId, { startDate, endDate });
         if (!details) {
             return res.status(404).json({ success: false, message: 'Shop item not found' });
         }

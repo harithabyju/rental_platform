@@ -27,6 +27,8 @@ const BrowseItems = () => {
         lat: searchParams.get('lat') ? parseFloat(searchParams.get('lat')) : null,
         lng: searchParams.get('lng') ? parseFloat(searchParams.get('lng')) : null,
         radius: searchParams.get('radius') ? parseInt(searchParams.get('radius')) : null,
+        startDate: searchParams.get('startDate') || null,
+        endDate: searchParams.get('endDate') || null,
         page: parseInt(searchParams.get('page')) || 1,
     };
 

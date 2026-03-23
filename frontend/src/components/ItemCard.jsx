@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
 import { BACKEND_URL } from '../services/api';
 import BorderGlow from './BorderGlow';
@@ -18,7 +18,15 @@ const ItemCard = ({ item }) => {
         is_available
     } = item;
 
-    const isAvailable = item.is_available !== false;
+    const { search } = useLocation();
+    const queryParams = new URLSearchParams(search);
+    const startDate = queryParams.get('startDate');
+    const endDate = queryParams.get('endDate');
+
+    const availableCount = item.available_quantity !== undefined ? item.available_quantity : (is_available !== false ? (item.total_quantity || 1) : 0);
+    const totalCount = item.total_quantity || 1;
+    const isActuallyAvailable = availableCount > 0;
+
     const rating = parseFloat(avg_rating || item_rating || 0);
 
     const imgSrc = image_url
@@ -26,7 +34,8 @@ const ItemCard = ({ item }) => {
         : 'https://placehold.co/400x300/1E293B/64748B?text=No+Image';
 
     const handleBookNow = () => {
-        navigate(`/dashboard/booking/${id}`);
+        const dateParams = (startDate && endDate) ? `?startDate=${startDate}&endDate=${endDate}` : '';
+        navigate(`/dashboard/booking/${id}${dateParams}`);
     };
 
     return (
@@ -67,22 +76,22 @@ const ItemCard = ({ item }) => {
                     </div>
 
                     <div className="flex items-center justify-between gap-2">
-                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${isAvailable
-                            ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-700/20'
-                            : 'bg-red-900/40 text-red-400 border border-red-700/20'
+                        <span className={`text-[10px] px-3 py-1 rounded-lg font-black uppercase tracking-tight ${isActuallyAvailable
+                            ? 'bg-emerald-50 text-emerald-600'
+                            : 'bg-rose-50 text-rose-600'
                             }`}>
-                            {isAvailable ? 'Available' : 'Booked'}
+                            {isActuallyAvailable ? 'Available' : '0 Available'}
                         </span>
 
                         <button
                             onClick={handleBookNow}
-                            disabled={!isAvailable}
-                            className={`flex-grow py-2 rounded-lg font-bold text-sm transition-all duration-200 ${isAvailable
-                                ? 'bg-emerald-600 text-white hover:bg-emerald-500 active:scale-95 shadow-md shadow-emerald-900/30'
+                            disabled={!isActuallyAvailable}
+                            className={`flex-grow py-2 rounded-lg font-black text-sm transition-all duration-200 ${isActuallyAvailable
+                                ? 'bg-gray-900 text-white hover:bg-emerald-600 active:scale-95 shadow-md shadow-gray-200 hover:shadow-emerald-100'
                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-500 cursor-not-allowed'
                                 }`}
                         >
-                            Book Now
+                            {isActuallyAvailable ? 'Reserve' : 'Out of Stock'}
                         </button>
                     </div>
                 </div>

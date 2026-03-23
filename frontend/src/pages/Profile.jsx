@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import * as dashboardService from '../services/dashboardService';
 import authService from '../services/authService';
 import MapLocationSelector from '../components/MapLocationSelector';
+import SplitText from '../components/SplitText';
 import { toast } from 'react-toastify';
 
 const Profile = () => {

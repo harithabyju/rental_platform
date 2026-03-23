@@ -15,7 +15,7 @@ const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
     };
 
     const handleReset = () => {
-        onFilterChange({ categoryId: null, minPrice: null, maxPrice: null, deliveryOnly: false });
+        onFilterChange({ categoryId: null, minPrice: null, maxPrice: null, deliveryOnly: false, startDate: null, endDate: null });
     };
 
     return (
@@ -122,6 +122,35 @@ const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
                         </div>
                     </div>
                 )}
+            </div>
+
+            <hr className="border-gray-100 dark:border-gray-800/60 mb-6" />
+
+            {/* Date Range Filter */}
+            <div className="mb-6">
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider block mb-4">Rental Dates</span>
+                <div className="space-y-3">
+                    <div>
+                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Pick-up</label>
+                        <input
+                            type="date"
+                            value={filters.startDate || ''}
+                            min={new Date().toISOString().split('T')[0]}
+                            onChange={(e) => onFilterChange({ startDate: e.target.value })}
+                            className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800/40 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Return</label>
+                        <input
+                            type="date"
+                            value={filters.endDate || ''}
+                            min={filters.startDate || new Date().toISOString().split('T')[0]}
+                            onChange={(e) => onFilterChange({ endDate: e.target.value })}
+                            className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800/40 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                        />
+                    </div>
+                </div>
             </div>
 
             <hr className="border-gray-100 dark:border-gray-800/60 mb-6" />

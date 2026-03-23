@@ -1,5 +1,6 @@
 const itemRepository = require('./item.repository');
 const shopRepository = require('../shops/shop.repository');
+const db = require('../../config/db');
 
 const getAllItems = async () => {
     return itemRepository.findAllItems();
@@ -64,6 +65,16 @@ const deleteItem = async (ownerId, itemId) => {
 
     const shopId = shop.id || shop.shop_id;
     if (existing.shop_id !== shopId) throw new Error('Item does not belong to your shop');
+
+    // Prevent deletion if there are active or confirmed bookings
+    const activeCheck = await db.query(
+        "SELECT COUNT(*) FROM bookings WHERE item_id = $1 AND status IN ('confirmed', 'active')",
+        [existing.item_id] // item_id here is the global ID
+    );
+
+    if (parseInt(activeCheck.rows[0].count) > 0) {
+        throw new Error('Cannot delete item with active or confirmed rentals. Please complete or cancel them first.');
+    }
 
     await itemRepository.deleteItem(itemId);
 };
