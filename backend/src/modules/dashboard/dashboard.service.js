@@ -90,6 +90,8 @@ exports.getShopsForItem = async (itemId, dates = {}) => {
             latitude: row.latitude,
             longitude: row.longitude,
         },
+        workingHours: row.working_hours,
+        locationRestrictions: row.location_restrictions,
         shopPhone: row.phone,
         shopRating: parseFloat(row.shop_rating || 0),
         shopReviews: parseInt(row.shop_reviews || 0, 10),

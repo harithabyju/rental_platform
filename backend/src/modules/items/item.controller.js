@@ -12,7 +12,8 @@ const addItem = async (req, res) => {
             price_per_day,
             category_id,
             image_url,
-            quantity: parseInt(quantity) || 1
+            quantity: parseInt(quantity) || 1,
+            delivery_available: req.body.delivery_available === 'true' || req.body.delivery_available === true
         });
         res.status(201).json({ message: 'Item added successfully', item });
     } catch (error) {
@@ -31,7 +32,8 @@ const updateItem = async (req, res) => {
             price_per_day,
             status,
             image_url,
-            quantity: quantity !== undefined ? parseInt(quantity) : undefined
+            quantity: quantity !== undefined ? parseInt(quantity) : undefined,
+            delivery_available: req.body.delivery_available !== undefined ? (req.body.delivery_available === 'true' || req.body.delivery_available === true) : undefined
         });
         res.status(200).json({ message: 'Item updated successfully', item });
     } catch (error) {

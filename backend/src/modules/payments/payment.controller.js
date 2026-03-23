@@ -43,17 +43,17 @@ exports.verifyPayment = async (req, res, next) => {
             return res.status(400).json({ message: 'Invalid payment signature' });
         }
 
-        // Update Booking Status and Inventory
-        await bookingService.activateBooking(bookingId);
-
-        // Update shop_items availability if necessary (or quantities)
-        // For now assuming quantity 1 and marking confirmed is enough.
+        const result = await bookingService.activateBooking(bookingId);
 
         // Record Payment
         let finalAmount = amount;
         if (!finalAmount) {
             const booking = await db.query('SELECT total_amount FROM bookings WHERE booking_id = $1', [bookingId]);
-            finalAmount = booking.rows[0]?.total_amount;
+            if (booking.rows.length === 0) {
+                console.error(`[PAYMENT VERIFY] Booking ${bookingId} not found for amount lookup`);
+                throw new Error('Booking not found');
+            }
+            finalAmount = booking.rows[0].total_amount;
         }
 
         await paymentService.recordPayment({
@@ -68,6 +68,8 @@ exports.verifyPayment = async (req, res, next) => {
 
         res.json({ message: 'Payment verified successfully', success: true });
     } catch (err) {
+        console.error(`[PAYMENT VERIFY] Fatal Error for Booking ${req.body.bookingId}:`, err.message);
+        console.error(err.stack);
         next(err);
     }
 };

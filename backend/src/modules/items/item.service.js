@@ -35,7 +35,11 @@ const addItem = async (ownerId, itemData) => {
     // Validate category is permitted
     await validateCategoryPermission(shopId, itemData.category_id);
 
-    return itemRepository.createItem({ ...itemData, shop_id: shopId });
+    return itemRepository.createItem({ 
+        ...itemData, 
+        shop_id: shopId, 
+        delivery_available: shop.delivery_enabled 
+    });
 };
 
 const updateItem = async (ownerId, itemId, itemData) => {

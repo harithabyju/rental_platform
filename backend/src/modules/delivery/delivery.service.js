@@ -168,16 +168,16 @@ exports.getDeliveryStatus = async (bookingId, userId) => {
 
     const result = await db.query(
         `SELECT 
-            do.*,
+            d.*,
             b.start_date, b.end_date, b.delivery_method, b.total_amount,
             i.name as item_name, i.image_url as item_image,
             s.name as shop_name, s.city as shop_city, s.address as shop_address,
             s.phone as shop_phone
-         FROM delivery_orders do
-         JOIN bookings b ON b.booking_id = do.booking_id
+         FROM delivery_orders d
+         JOIN bookings b ON b.booking_id = d.booking_id
          JOIN items i ON i.id = b.item_id
          JOIN shops s ON s.id = b.shop_id
-         WHERE do.booking_id = $1`,
+         WHERE d.booking_id = $1`,
         [bookingId]
     );
 
@@ -220,11 +220,11 @@ exports.getDeliveryStatus = async (bookingId, userId) => {
 exports.updateDeliveryStatus = async (bookingId, ownerId, newStatus) => {
     // Verify the shop owner owns this booking's shop
     const result = await db.query(
-        `SELECT do.*, b.shop_id, s.owner_id
-         FROM delivery_orders do
-         JOIN bookings b ON b.booking_id = do.booking_id
+        `SELECT d.*, b.shop_id, s.owner_id
+         FROM delivery_orders d
+         JOIN bookings b ON b.booking_id = d.booking_id
          JOIN shops s ON s.id = b.shop_id
-         WHERE do.booking_id = $1`,
+         WHERE d.booking_id = $1`,
         [bookingId]
     );
 
@@ -270,23 +270,23 @@ exports.getShopDeliveries = async (ownerId, statusFilter) => {
     const validStatuses = ['pending', 'assigned', 'picked_up', 'out_for_delivery', 'delivered', 'failed', 'all'];
     const filter = validStatuses.includes(statusFilter) ? statusFilter : 'all';
 
-    const statusWhere = filter !== 'all' ? `AND do.status = '${filter}'` : `AND do.status NOT IN ('delivered')`;
+    const statusWhere = filter !== 'all' ? `AND d.status = '${filter}'` : `AND d.status NOT IN ('delivered')`;
 
     const result = await db.query(
         `SELECT 
-            do.*,
+            d.*,
             b.start_date, b.end_date, b.total_amount, b.delivery_fee,
             i.name as item_name, i.image_url as item_image,
-            u.fullname as customer_name, u.email as customer_email, u.phone as customer_phone,
+            u.fullname as customer_name, u.email as customer_email,
             s.name as shop_name, s.id as shop_id
-         FROM delivery_orders do
-         JOIN bookings b ON b.booking_id = do.booking_id
+         FROM delivery_orders d
+         JOIN bookings b ON b.booking_id = d.booking_id
          JOIN items i ON i.id = b.item_id
          JOIN users u ON u.id = b.user_id
          JOIN shops s ON s.id = b.shop_id
          WHERE s.owner_id = $1
          ${statusWhere}
-         ORDER BY do.created_at DESC`,
+         ORDER BY d.created_at DESC`,
         [ownerId]
     );
 

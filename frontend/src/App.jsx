@@ -18,7 +18,6 @@ import CategoryManagement from './pages/admin/CategoryManagement';
 import ShopApprovals from './pages/admin/ShopApprovals';
 import AdminItems from './pages/admin/AdminItems';
 import ShopOwnerDashboard from './pages/shop-owner/ShopOwnerDashboard';
-import CustomerHome from './pages/customer/CustomerHome';
 import CustomerDashboard from './pages/CustomerDashboard';
 import BrowseItems from './pages/BrowseItems';
 import ItemShops from './pages/ItemShops';
@@ -35,7 +34,6 @@ import ReportDamage from './pages/owner/ReportDamage';
 import MyFines from './pages/customer/MyFines';
 import RaiseDispute from './pages/customer/RaiseDispute';
 import ComplianceAdminDashboard from './pages/admin/ComplianceDashboard';
-import CustomerHome from './pages/customer/CustomerHome';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -270,14 +268,6 @@ function App() {
                                 element={
                                     <ProtectedRoute allowedRoles={['admin']}>
                                         <AdminDisputePanel />
-                                    </ProtectedRoute>
-                                }
-                            />
-                             <Route
-                                path="customer/home"
-                                element={
-                                    <ProtectedRoute allowedRoles={['customer']}>
-                                        <CustomerHome />
                                     </ProtectedRoute>
                                 }
                             />

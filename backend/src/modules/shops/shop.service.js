@@ -1,5 +1,6 @@
 const shopRepository = require('./shop.repository');
 const userRepository = require('../users/user.repository');
+const itemRepository = require('../items/item.repository');
 const { sendEmail } = require('../../utils/email');
 
 const registerShop = async (ownerId, shopData) => {
@@ -33,7 +34,9 @@ const registerShop = async (ownerId, shopData) => {
         bank_account_name: shopData.bank_account_name || null,
         bank_account_number: shopData.bank_account_number || null,
         bank_ifsc: shopData.bank_ifsc || null,
-        bank_name: shopData.bank_name || null
+        bank_name: shopData.bank_name || null,
+        working_hours: typeof shopData.working_hours === 'string' ? JSON.parse(shopData.working_hours) : (shopData.working_hours || null),
+        location_restrictions: typeof shopData.location_restrictions === 'string' ? JSON.parse(shopData.location_restrictions) : (shopData.location_restrictions || null)
     };
 
     // Auto-set status to 'pending' if all verification fields are present
@@ -101,7 +104,23 @@ const getPermittedCategories = async (ownerId) => {
 const updateMyShop = async (ownerId, shopData) => {
     const shop = await shopRepository.findShopByOwnerId(ownerId);
     if (!shop) throw new Error('Shop not found');
-    return await shopRepository.updateShop(shop.id || shop.shop_id, shopData);
+    
+    // Parse JSON strings from FormData if necessary
+    if (typeof shopData.working_hours === 'string') {
+        try { shopData.working_hours = JSON.parse(shopData.working_hours); } catch (e) {}
+    }
+    if (typeof shopData.location_restrictions === 'string') {
+        try { shopData.location_restrictions = JSON.parse(shopData.location_restrictions); } catch (e) {}
+    }
+
+    const updatedShop = await shopRepository.updateShop(shop.id || shop.shop_id, shopData);
+
+    // If delivery_enabled is explicitly set to true, enable delivery (and pickup) for all items
+    if (shopData.delivery_enabled === true || shopData.delivery_enabled === 'true') {
+        await itemRepository.updateDeliveryForShopItems(shop.id || shop.shop_id, true);
+    }
+
+    return updatedShop;
 };
 
 const getShopById = async (shopId) => {

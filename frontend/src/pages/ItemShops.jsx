@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import * as dashboardService from '../services/dashboardService';
 import RatingDisplay from '../components/RatingDisplay';
-import { MapPin, Truck, Package, ArrowLeft, ShieldCheck, Info } from 'lucide-react';
+import { MapPin, Truck, Package, ArrowLeft, ShieldCheck, Info, Clock } from 'lucide-react';
 
 const ItemShops = () => {
     const { itemId } = useParams();
@@ -121,69 +121,88 @@ const ItemShops = () => {
                     <span className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{shops.length} options available</span>
                 </div>
                 <div className="space-y-6">
-                    {shops.map((shop) => (
-                        <div key={shop.shopId} className="card p-8 group border-2 border-transparent hover:border-emerald-500 transition-all duration-300">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-4 mb-3">
-                                        <h3 className="font-black text-gray-900 dark:text-gray-100 text-2xl group-hover:text-emerald-600 transition-colors">
-                                            {shop.shopName}
-                                        </h3>
-                                        <div className="h-6 w-px bg-gray-200" />
-                                        <RatingDisplay rating={shop.shopRating} totalReviews={shop.shopReviews} />
-                                    </div>
+                    {shops.map((shop) => {
+                        const isOpen = !shop.workingHours || shop.workingHours.is_24x7 || (() => {
+                            const now = new Date();
+                            const current = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                            return current >= shop.workingHours.open && current <= shop.workingHours.close;
+                        })();
 
-                                    <div className="flex flex-wrap items-center gap-6 text-sm font-bold text-gray-500 mb-6">
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-4 h-4 text-emerald-500" />
-                                            <span>{shop.location.city} Shop</span>
+                        return (
+                            <div key={shop.shopId} className={`card p-8 group border-2 transition-all duration-300 ${!isOpen ? 'opacity-75 grayscale-[0.5]' : 'hover:border-emerald-500'}`}>
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-4 mb-3">
+                                            <h3 className="font-black text-gray-900 dark:text-gray-100 text-2xl group-hover:text-emerald-600 transition-colors">
+                                                {shop.shopName}
+                                            </h3>
+                                            <div className="h-6 w-px bg-gray-200" />
+                                            <RatingDisplay rating={shop.shopRating} totalReviews={shop.shopReviews} />
+                                            {!isOpen && (
+                                                <span className="px-3 py-1 bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase tracking-wider animate-pulse">
+                                                    Temporarily Closed
+                                                </span>
+                                            )}
                                         </div>
-                                        {shop.deliveryAvailable && (
-                                            <div className="flex items-center gap-2 text-blue-600">
-                                                <Truck className="w-4 h-4" />
-                                                <span>Express Delivery (₹{shop.deliveryFee})</span>
+
+                                        <div className="flex flex-wrap items-center gap-6 text-sm font-bold text-gray-500 mb-6">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="w-4 h-4 text-emerald-500" />
+                                                <span>{shop.location.city} Shop</span>
                                             </div>
-                                        )}
-                                        {shop.pickupAvailable && (
-                                            <div className="flex items-center gap-2 text-emerald-600">
-                                                <Package className="w-4 h-4" />
-                                                <span>Self-Pickup Ready</span>
-                                            </div>
-                                        )}
+                                            {shop.workingHours && (
+                                                <div className="flex items-center gap-2 text-amber-600">
+                                                    <Clock className="w-4 h-4" />
+                                                    <span>{shop.workingHours.is_24x7 ? 'Open 24/7' : `${shop.workingHours.open} - ${shop.workingHours.close}`}</span>
+                                                </div>
+                                            )}
+                                            {shop.deliveryAvailable && (
+                                                <div className="flex items-center gap-2 text-blue-600">
+                                                    <Truck className="w-4 h-4" />
+                                                    <span>Express Delivery (₹{shop.deliveryFee})</span>
+                                                </div>
+                                            )}
+                                            {shop.pickupAvailable && (
+                                                <div className="flex items-center gap-2 text-emerald-600">
+                                                    <Package className="w-4 h-4" />
+                                                    <span>Self-Pickup Ready</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${
+                                            shop.available_quantity > 0 
+                                            ? 'bg-emerald-50 text-emerald-600' 
+                                            : 'bg-rose-50 text-rose-600'
+                                        }`}>
+                                            <span className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)] ${
+                                                shop.available_quantity > 0 ? 'bg-emerald-500' : 'bg-rose-500'
+                                            }`} />
+                                            {shop.available_quantity} available / {shop.total_quantity} total
+                                        </div>
                                     </div>
 
-                                    <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${
-                                        shop.available_quantity > 0 
-                                        ? 'bg-emerald-50 text-emerald-600' 
-                                        : 'bg-rose-50 text-rose-600'
-                                    }`}>
-                                        <span className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)] ${
-                                            shop.available_quantity > 0 ? 'bg-emerald-500' : 'bg-rose-500'
-                                        }`} />
-                                        {shop.available_quantity} available / {shop.total_quantity} total
+                                    <div className="flex items-center gap-10 md:border-l border-gray-100 dark:border-gray-800/60 md:pl-10">
+                                        <div className="text-right">
+                                            <p className="text-3xl font-black text-emerald-600">₹{shop.priceFormatted?.replace('$', '')?.replace('₹', '')}</p>
+                                            <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase tracking-tighter">per {shop.priceUnit}</p>
+                                        </div>
+                                        <Link
+                                            to={isOpen ? `/book/${itemId}?shopId=${shop.shopId}${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}` : '#'}
+                                            className={`px-10 py-4 font-black rounded-2xl shadow-2xl transition-all active:scale-95 ${
+                                                shop.available_quantity > 0 && isOpen
+                                                ? 'bg-gray-900 text-white hover:bg-emerald-600 shadow-gray-200 group-hover:shadow-emerald-100'
+                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            }`}
+                                            onClick={(e) => (shop.available_quantity <= 0 || !isOpen) && e.preventDefault()}
+                                        >
+                                            {shop.available_quantity <= 0 ? 'Sold Out' : (!isOpen ? 'Shop Closed' : 'Reserve')}
+                                        </Link>
                                     </div>
-                                </div>
-
-                                <div className="flex items-center gap-10 md:border-l border-gray-100 dark:border-gray-800/60 md:pl-10">
-                                    <div className="text-right">
-                                        <p className="text-3xl font-black text-emerald-600">₹{shop.priceFormatted?.replace('$', '')?.replace('₹', '')}</p>
-                                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase tracking-tighter">per {shop.priceUnit}</p>
-                                    </div>
-                                    <Link
-                                        to={`/book/${itemId}?shopId=${shop.shopId}${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`}
-                                        className={`px-10 py-4 font-black rounded-2xl shadow-2xl transition-all active:scale-95 ${
-                                            shop.available_quantity > 0
-                                            ? 'bg-gray-900 text-white hover:bg-emerald-600 shadow-gray-200 group-hover:shadow-emerald-100'
-                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        }`}
-                                        onClick={(e) => shop.available_quantity <= 0 && e.preventDefault()}
-                                    >
-                                        {shop.available_quantity > 0 ? 'Reserve' : 'Sold Out'}
-                                    </Link>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>

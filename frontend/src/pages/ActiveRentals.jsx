@@ -95,7 +95,7 @@ const ActiveRentals = () => {
             ) : (
                 <div className="grid grid-cols-1 gap-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                     {rentals.map(rental => (
-                        <RentalStatusCard key={rental.rentalId} rental={rental} />
+                        <RentalStatusCard key={rental.bookingId} rental={rental} />
                     ))}
                 </div>
             )}

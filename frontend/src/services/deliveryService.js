@@ -1,11 +1,4 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-const getAuthHeader = () => {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-};
+import api from './api';
 
 const deliveryService = {
     /**
@@ -18,7 +11,7 @@ const deliveryService = {
         const params = { shopId };
         if (lat) params.lat = lat;
         if (lng) params.lng = lng;
-        const res = await axios.get(`${API_URL}/delivery/options`, { params });
+        const res = await api.get('/delivery/options', { params });
         return res.data;
     },
 
@@ -27,9 +20,7 @@ const deliveryService = {
      * @param {number} bookingId
      */
     getDeliveryStatus: async (bookingId) => {
-        const res = await axios.get(`${API_URL}/delivery/${bookingId}/status`, {
-            headers: getAuthHeader(),
-        });
+        const res = await api.get(`/delivery/${bookingId}/status`);
         return res.data;
     },
 
@@ -39,11 +30,7 @@ const deliveryService = {
      * @param {string} status - new status value
      */
     updateDeliveryStatus: async (bookingId, status) => {
-        const res = await axios.patch(
-            `${API_URL}/delivery/${bookingId}/status`,
-            { status },
-            { headers: getAuthHeader() }
-        );
+        const res = await api.patch(`/delivery/${bookingId}/status`, { status });
         return res.data;
     },
 
@@ -52,8 +39,7 @@ const deliveryService = {
      * @param {string} statusFilter - optional e.g. 'pending', 'all'
      */
     getShopDeliveries: async (statusFilter = 'all') => {
-        const res = await axios.get(`${API_URL}/delivery/shop/pending`, {
-            headers: getAuthHeader(),
+        const res = await api.get('/delivery/shop/pending', {
             params: { status: statusFilter },
         });
         return res.data;

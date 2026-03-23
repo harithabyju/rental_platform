@@ -89,6 +89,8 @@ exports.getShopsForItem = async (itemId, dates = {}) => {
             s.longitude::float,
             s.rating AS shop_rating,
             s.total_reviews AS shop_reviews,
+            s.working_hours,
+            s.location_restrictions,
             si.price_per_day_inr,
             si.quantity_available AS total_quantity,
             si.quantity_available - (
@@ -345,7 +347,6 @@ exports.getActiveRentalsForShopOwner = async (userId) => {
             b.booking_id,
             b.user_id AS renter_id,
             u.fullname AS renter_name,
-            u.phone AS renter_phone,
             u.email AS renter_email,
             COALESCE(r.start_date, b.start_date) as start_date,
             COALESCE(r.end_date, b.end_date) as end_date,
@@ -371,7 +372,7 @@ exports.getActiveRentalsForShopOwner = async (userId) => {
         JOIN shops s ON s.id = b.shop_id
         JOIN users u ON u.id = b.user_id
         WHERE s.owner_id = $1
-          AND b.status IN ('confirmed', 'active')
+          AND b.status = 'confirmed'
           AND b.end_date::date >= CURRENT_DATE
         ORDER BY b.end_date ASC`,
         [userId]
@@ -504,7 +505,9 @@ exports.getShopItemDetails = async (shopItemId, dates = {}) => {
             s.pincode,
             s.latitude::float,
             s.longitude::float,
-            s.phone
+            s.phone,
+            s.working_hours,
+            s.location_restrictions
         FROM shop_items si
         JOIN items i ON si.item_id = i.id
         JOIN shops s ON si.shop_id = s.id

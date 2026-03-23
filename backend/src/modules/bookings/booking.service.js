@@ -76,12 +76,12 @@ exports.createBooking = async (userId, data) => {
 
         await client.query('COMMIT');
 
-        // Auto-create delivery order if delivery method is selected
-        if ((deliveryMethod === 'delivery') && address) {
+        // Auto-create delivery order if delivery method is selected and address is provided
+        if ((deliveryMethod === 'delivery') && (finalAddress)) {
             try {
                 await deliveryService.createDeliveryOrder(
                     booking.booking_id,
-                    address,
+                    finalAddress,
                     deliveryCity || null,
                     deliveryLat || null,
                     deliveryLng || null,
@@ -90,7 +90,7 @@ exports.createBooking = async (userId, data) => {
                 );
             } catch (deliveryErr) {
                 console.error('[DELIVERY] Failed to create delivery order:', deliveryErr.message);
-                // Non-fatal: booking is still confirmed
+                // Non-fatal at this stage
             }
         }
 
@@ -164,7 +164,26 @@ exports.confirmBooking = async (ownerId, bookingId) => {
     );
 
     if (result.rows.length === 0) throw new Error('Booking not found or unauthorized');
-    return result.rows[0];
+    const booking = result.rows[0];
+
+    // Ensure delivery order exists if it's a delivery booking
+    if (booking.delivery_method === 'delivery' && booking.delivery_address) {
+        try {
+            await deliveryService.createDeliveryOrder(
+                booking.booking_id,
+                booking.delivery_address,
+                booking.delivery_city,
+                booking.delivery_lat,
+                booking.delivery_lng,
+                booking.delivery_fee,
+                null
+            );
+        } catch (deliveryErr) {
+            console.error('[DELIVERY] Failed to auto-create delivery order on confirmation:', deliveryErr.message);
+        }
+    }
+
+    return booking;
 };
 
 exports.cancelBooking = async (userId, bookingId) => {
@@ -334,9 +353,7 @@ exports.activateBooking = async (bookingId) => {
             return booking; // Already activated
         }
 
-        // 2. Check Inventory via overlap count (Wait, we already checked during creation, 
-        // but let's re-verify peak concurrency just in case of race conditions)
-        // EXCLUDE the current booking from the count since it's already in the DB
+        // 2. Check Inventory via overlap count
         const overlapQuery = bookingQueries.checkOverlapCount(bookingId);
         const overlapRes = await client.query(overlapQuery, [booking.item_id, booking.shop_id, booking.start_date, booking.end_date, bookingId]);
         const currentBookedCount = parseInt(overlapRes.rows[0].count);
@@ -345,6 +362,11 @@ exports.activateBooking = async (bookingId) => {
             'SELECT quantity_available FROM shop_items WHERE item_id = $1 AND shop_id = $2',
             [booking.item_id, booking.shop_id]
         );
+        
+        if (shopItemRes.rows.length === 0) {
+            throw new Error(`Item configuration not found for shop ${booking.shop_id}`);
+        }
+        
         const totalQuantity = shopItemRes.rows[0].quantity_available;
 
         if (currentBookedCount >= totalQuantity) {
@@ -377,13 +399,31 @@ exports.activateBooking = async (bookingId) => {
         }
 
         // 4. Update Booking Status
-        const finalBooking = await client.query(
+        const updateRes = await client.query(
             `UPDATE bookings SET status = 'confirmed', updated_at = NOW() WHERE booking_id = $1 RETURNING *`,
             [bookingId]
         );
+        const finalBooking = updateRes.rows[0];
+
+        // 5. Ensure delivery order exists if it's a delivery booking
+        if (finalBooking.delivery_method === 'delivery' && finalBooking.delivery_address) {
+            try {
+                await deliveryService.createDeliveryOrder(
+                    finalBooking.booking_id,
+                    finalBooking.delivery_address,
+                    finalBooking.delivery_city,
+                    finalBooking.delivery_lat,
+                    finalBooking.delivery_lng,
+                    finalBooking.delivery_fee,
+                    null
+                );
+            } catch (deliveryErr) {
+                console.error('[DELIVERY] Failed to auto-create delivery order on activation:', deliveryErr.message);
+            }
+        }
 
         await client.query('COMMIT');
-        return finalBooking.rows[0];
+        return finalBooking;
     } catch (error) {
         await client.query('ROLLBACK');
         throw error;

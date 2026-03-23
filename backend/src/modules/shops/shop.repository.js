@@ -91,7 +91,8 @@ const updateShop = async (shopId, shopData) => {
         pincode, latitude, longitude, phone, email,
         govt_id_url, shop_license_url,
         bank_account_name, bank_account_number, bank_ifsc, bank_name,
-        working_hours, location_restrictions
+        working_hours, location_restrictions,
+        delivery_enabled
     } = shopData;
 
     const query = `
@@ -114,8 +115,9 @@ const updateShop = async (shopId, shopData) => {
             bank_name = COALESCE($16, bank_name),
             working_hours = COALESCE($17, working_hours),
             location_restrictions = COALESCE($18, location_restrictions),
+            delivery_enabled = COALESCE($19, delivery_enabled),
             updated_at = NOW()
-        WHERE id = $19
+        WHERE id = $20
         RETURNING *, id as shop_id;
     `;
     const values = [
@@ -125,6 +127,7 @@ const updateShop = async (shopId, shopData) => {
         bank_account_name, bank_account_number, bank_ifsc, bank_name,
         working_hours ? JSON.stringify(working_hours) : null,
         location_restrictions ? JSON.stringify(location_restrictions) : null,
+        delivery_enabled,
         shopId
     ];
     const result = await db.query(query, values);

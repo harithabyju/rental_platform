@@ -25,7 +25,6 @@ const MockRazorpayModal = ({ isOpen, onClose, onPaymentSuccess, amount, productN
             // Wait a bit on success then close and trigger callback
             setTimeout(() => {
                 onPaymentSuccess();
-                onClose();
             }, 1500);
         }, 2000);
     };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Store, Package, Plus, X, AlertCircle, Clock, XCircle, Edit2, Trash2, Upload, Image as ImageIcon, DollarSign, Tag, CheckCircle, FileText, MapPin, AlertTriangle } from 'lucide-react';
+import { Store, Package, Plus, X, AlertCircle, Clock, XCircle, Edit2, Trash2, Upload, Image as ImageIcon, DollarSign, Tag, CheckCircle, FileText, MapPin, AlertTriangle, Truck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import shopService from '../../services/shop.service';
@@ -135,7 +135,8 @@ const VerificationForm = ({ shop, onSaved, onCancel }) => {
         bank_account_name: shop.bank_account_name || '',
         bank_account_number: shop.bank_account_number || '',
         bank_ifsc: shop.bank_ifsc || '',
-        bank_name: shop.bank_name || ''
+        bank_name: shop.bank_name || '',
+        working_hours: shop.working_hours || { open: '09:00', close: '18:00', is_24x7: false }
     });
     const [govtId, setGovtId] = useState(null);
     const [shopLicense, setShopLicense] = useState(null);
@@ -216,6 +217,48 @@ const VerificationForm = ({ shop, onSaved, onCancel }) => {
                                 />
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Working Hours Section */}
+                <div className="pt-4 border-t border-gray-50 text-emerald-800">
+                    <h3 className="text-sm font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <Clock className="w-4 h-4" /> Working Hours
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center gap-4">
+                            <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={form.working_hours?.is_24x7}
+                                    onChange={e => setForm(f => ({ ...f, working_hours: { ...f.working_hours, is_24x7: e.target.checked } }))}
+                                    className="w-4 h-4 rounded-lg border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                Open 24/7
+                            </label>
+                        </div>
+                        {!form.working_hours?.is_24x7 && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 text-xs">Opening Time *</label>
+                                    <input
+                                        type="time" required={!form.working_hours?.is_24x7}
+                                        value={form.working_hours?.open || '09:00'}
+                                        onChange={e => setForm(f => ({ ...f, working_hours: { ...f.working_hours, open: e.target.value } }))}
+                                        className="w-full border border-gray-200 dark:border-gray-700/60 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 text-xs">Closing Time *</label>
+                                    <input
+                                        type="time" required={!form.working_hours?.is_24x7}
+                                        value={form.working_hours?.close || '18:00'}
+                                        onChange={e => setForm(f => ({ ...f, working_hours: { ...f.working_hours, close: e.target.value } }))}
+                                        className="w-full border border-gray-200 dark:border-gray-700/60 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -323,7 +366,8 @@ const UnifiedShopRegisterForm = ({ onRegistered }) => {
         bank_account_name: '',
         bank_account_number: '',
         bank_ifsc: '',
-        bank_name: ''
+        bank_name: '',
+        working_hours: { open: '09:00', close: '18:00', is_24x7: false }
     });
     const [govtId, setGovtId] = useState(null);
     const [shopLicense, setShopLicense] = useState(null);
@@ -454,6 +498,49 @@ const UnifiedShopRegisterForm = ({ onRegistered }) => {
                     </div>
                 </section>
 
+                {/* Working Hours Section */}
+                <section>
+                    <h3 className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                        <Clock className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Working Hours
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                        <div className="col-span-full mb-2">
+                            <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={form.working_hours?.is_24x7}
+                                    onChange={e => setForm(f => ({ ...f, working_hours: { ...f.working_hours, is_24x7: e.target.checked } }))}
+                                    className="w-4 h-4 rounded-lg border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                />
+                                Open 24/7
+                            </label>
+                        </div>
+                        {!form.working_hours?.is_24x7 && (
+                            <>
+                                <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-black text-gray-500 uppercase">Opening Time *</label>
+                                    <input
+                                        type="time" required={!form.working_hours?.is_24x7}
+                                        value={form.working_hours?.open || '09:00'}
+                                        onChange={e => setForm(f => ({ ...f, working_hours: { ...f.working_hours, open: e.target.value } }))}
+                                        className="w-full border border-gray-200 dark:border-gray-700/60 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="block text-[10px] font-black text-gray-500 uppercase">Closing Time *</label>
+                                    <input
+                                        type="time" required={!form.working_hours?.is_24x7}
+                                        value={form.working_hours?.close || '18:00'}
+                                        onChange={e => setForm(f => ({ ...f, working_hours: { ...f.working_hours, close: e.target.value } }))}
+                                        className="w-full border border-gray-200 dark:border-gray-700/60 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </section>
+
                 {/* 3. Verification Documents */}
                 <section>
                     <h3 className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
@@ -573,6 +660,9 @@ const ItemCard = ({ item, onDelete, onEdit }) => {
                     <div className="mt-3 p-2 bg-red-50 rounded-xl border border-red-100">
                         <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Feedback from Admin:</p>
                         <p className="text-[11px] text-red-800 font-medium italic">"{item.admin_note}"</p>
+                        <p className="text-[10px] text-red-500 font-bold mt-2 flex items-center gap-1">
+                            <Plus className="w-3 h-3" /> Update this item to request re-activation.
+                        </p>
                     </div>
                 )}
 
@@ -580,6 +670,11 @@ const ItemCard = ({ item, onDelete, onEdit }) => {
                     {item.category_name && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-full">
                             <Tag className="w-3 h-3" />{item.category_name}
+                        </span>
+                    )}
+                    {item.delivery_available && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider rounded-full">
+                            <Truck className="w-3 h-3" /> Delivery
                         </span>
                     )}
                 </div>
@@ -591,7 +686,7 @@ const ItemCard = ({ item, onDelete, onEdit }) => {
     );
 };
 
-const ItemFormModal = ({ categories, editItem, shopId, onClose, onSaved }) => {
+const ItemFormModal = ({ categories, editItem, shopId, onClose, onSaved, shopDeliveryEnabled }) => {
     const isEdit = !!editItem;
     const fileRef = useRef(null);
     const [form, setForm] = useState({
@@ -600,6 +695,7 @@ const ItemFormModal = ({ categories, editItem, shopId, onClose, onSaved }) => {
         price_per_day: editItem?.price_per_day || '',
         category_id: editItem?.category_id || '',
         quantity: editItem?.quantity_available || 1,
+        delivery_available: editItem ? !!editItem.delivery_available : !!shopDeliveryEnabled
     });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(
@@ -626,6 +722,7 @@ const ItemFormModal = ({ categories, editItem, shopId, onClose, onSaved }) => {
             fd.append('price_per_day', form.price_per_day);
             fd.append('category_id', form.category_id);
             fd.append('quantity', form.quantity);
+            fd.append('delivery_available', form.delivery_available);
             if (imageFile) fd.append('image', imageFile);
 
             if (isEdit) {
@@ -652,6 +749,16 @@ const ItemFormModal = ({ categories, editItem, shopId, onClose, onSaved }) => {
                         <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                     </button>
                 </div>
+                {isEdit && editItem.is_active === false && (
+                    <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-100 rounded-2xl">
+                        <div className="flex items-center gap-2 text-red-600 mb-1">
+                            <AlertTriangle className="w-4 h-4" />
+                            <p className="text-xs font-black uppercase tracking-widest">Item Blocked</p>
+                        </div>
+                        <p className="text-[11px] text-red-800 font-medium italic mb-2">"{editItem.admin_note}"</p>
+                        <p className="text-[10px] text-red-600 font-bold">Addressing these issues and saving will notify the admin for review.</p>
+                    </div>
+                )}
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {/* Image Upload */}
                     <div>
@@ -742,6 +849,36 @@ const ItemFormModal = ({ categories, editItem, shopId, onClose, onSaved }) => {
                         )}
                     </div>
 
+                    {/* Delivery Toggle (Only if shop allows it) */}
+                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-800/60">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-xl ${form.delivery_available ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
+                                <Truck className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-900 dark:text-gray-100">Delivery Available</p>
+                                <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-0.5">
+                                    {form.delivery_available ? 'Delivery options active' : 'Pickup only for this item'}
+                                </p>
+                            </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer group">
+                            <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={form.delivery_available}
+                                onChange={() => setForm(f => ({ ...f, delivery_available: !f.delivery_available }))}
+                                disabled={!shopDeliveryEnabled && !form.delivery_available}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        </label>
+                    </div>
+                    {!shopDeliveryEnabled && (
+                        <p className="text-[10px] text-amber-600 font-bold px-2">
+                             Shop-wide delivery is currently disabled. Enable it in dashboard to use this feature.
+                        </p>
+                    )}
+
                     {/* Actions */}
                     <div className="flex gap-3 pt-2">
                         <button
@@ -827,6 +964,20 @@ const ShopOwnerDashboard = () => {
             setActiveRentals([]);
         } finally {
             setLoadingRentals(false);
+        }
+    };
+
+    const toggleDelivery = async () => {
+        const newValue = !shop.delivery_enabled;
+        if (newValue && !window.confirm('Enabling delivery will automatically turn on "Delivery Available" for ALL your items. Continue?')) return;
+
+        try {
+            // Using a simple object for updateMyShop as it handles JSON too
+            await shopService.updateMyShop({ delivery_enabled: newValue });
+            toast.success(`Delivery service ${newValue ? 'enabled' : 'disabled'}!`);
+            loadShop();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to update delivery setting');
         }
     };
 
@@ -967,6 +1118,26 @@ const ShopOwnerDashboard = () => {
                             </button>
                         )}
                     </div>
+                    {shop.status === 'approved' && (
+                        <div className="mt-6 pt-6 border-t border-gray-50 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${shop.delivery_enabled ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                                    <Truck className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-black text-gray-900 dark:text-gray-100 uppercase tracking-widest">Delivery Service</p>
+                                    <p className="text-[10px] text-gray-500 mt-0.5">{shop.delivery_enabled ? 'Global delivery is active for your shop' : 'Delivery service is currently disabled'}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={toggleDelivery}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all focus:outline-none ${shop.delivery_enabled ? 'bg-emerald-600' : 'bg-gray-200 dark:bg-gray-800'}`}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${shop.delivery_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+                    )}
+
                     {shop.status === 'approved' && permittedCategories.length > 0 && (
                         <div className="mt-4 pt-4 border-t border-gray-50">
                             <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">PERMITTED CATEGORIES</p>
@@ -1061,7 +1232,6 @@ const ShopOwnerDashboard = () => {
                                         <RentalStatusCard 
                                             key={rental.rentalId} 
                                             rental={rental} 
-                                            onConfirmReturn={handleConfirmReturn}
                                         />
                                     ))}
                                 </div>
@@ -1086,6 +1256,7 @@ const ShopOwnerDashboard = () => {
                     shopId={shop?.shop_id}
                     onClose={() => { setShowForm(false); setEditItem(null); }}
                     onSaved={handleItemSaved}
+                    shopDeliveryEnabled={shop?.delivery_enabled}
                 />
             )}
         </div>

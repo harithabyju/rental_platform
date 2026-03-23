@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import itemService from '../../services/item.service';
 import categoryService from '../../services/category.service';
 import { Package, Search, Filter, AlertTriangle, Eye, EyeOff, Trash2, Store, Tag, X, Send } from 'lucide-react';
@@ -125,7 +125,8 @@ const AdminItems = () => {
         const matchesCategory = selectedCategory === 'all' || item.category_id?.toString() === selectedCategory;
         const matchesStatus = statusFilter === 'all' ||
             (statusFilter === 'active' && item.item_is_active) ||
-            (statusFilter === 'inactive' && !item.item_is_active);
+            (statusFilter === 'inactive' && !item.item_is_active) ||
+            (statusFilter === 'needs_review' && item.needs_review);
 
         return matchesSearch && matchesCategory && matchesStatus;
     });
@@ -175,6 +176,7 @@ const AdminItems = () => {
                         >
                             <option value="all">All Status</option>
                             <option value="active">Active Only</option>
+                            <option value="needs_review">Needs Review</option>
                             <option value="inactive">Inactive/Blocked</option>
                         </select>
                     </div>
@@ -248,6 +250,11 @@ const AdminItems = () => {
                                                 <div className={`w-1.5 h-1.5 rounded-full ${item.item_is_active ? 'bg-emerald-600' : 'bg-red-600 animate-pulse'}`} />
                                                 {item.item_is_active ? 'Public' : 'Blocked'}
                                             </span>
+                                            {item.needs_review && (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-wider w-fit border border-amber-100 animate-bounce">
+                                                    Updated for Review
+                                                </span>
+                                            )}
                                             {!item.item_is_active && item.admin_note && (
                                                 <p className="text-[10px] text-red-400 font-medium italic max-w-[150px] truncate" title={item.admin_note}>
                                                     "{item.admin_note}"

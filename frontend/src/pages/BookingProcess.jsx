@@ -30,6 +30,7 @@ const BookingProcess = () => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [isMockModalOpen, setIsMockModalOpen] = useState(false);
     const [currentBookingId, setCurrentBookingId] = useState(null);
+    const bookingRef = useRef(null);
     const [createdBookingId, setCreatedBookingId] = useState(null);
 
     // Delivery address state
@@ -139,7 +140,8 @@ const BookingProcess = () => {
 
     const handlePayment = async (bookingId, amount) => {
         if (import.meta.env.VITE_RAZORPAY_KEY_ID === 'rzp_test_your_key_id' || !import.meta.env.VITE_RAZORPAY_KEY_ID) {
-            console.log('Using Mock Payment Flow');
+            console.log('Using Mock Payment Flow for Booking ID:', bookingId);
+            bookingRef.current = bookingId;
             setCurrentBookingId(bookingId);
             setIsMockModalOpen(true);
             return;
@@ -393,19 +395,19 @@ const BookingProcess = () => {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Pick-up Date</label>
                                         <input
-                                            type="date"
+                                            type="datetime-local"
                                             value={startDate}
                                             onChange={(e) => setStartDate(e.target.value)}
                                             className="input-field py-4 focus:ring-4 focus:ring-emerald-50"
                                             required
-                                            min={new Date().toISOString().split('T')[0]}
+                                            min={new Date().toISOString().slice(0, 16)}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Return Date</label>
-                                        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+                                        <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Return Date & Time</label>
+                                        <input type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)}
                                             className="input-field py-4 focus:ring-4 focus:ring-emerald-50" required
-                                            min={startDate || new Date().toISOString().split('T')[0]} />
+                                            min={startDate || new Date().toISOString().slice(0, 16)} />
                                     </div>
                                 </div>
                             </div>
@@ -632,14 +634,19 @@ const BookingProcess = () => {
                         setLoading(true);
                         setIsMockModalOpen(false); // Close modal immediately
                         // Simulate network delay
-                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        
+                        // CLEAR the reference so it's not deleted by onClose if it triggers
+                        const bookingIdToVerify = bookingRef.current;
+                        bookingRef.current = null;
+                        setCurrentBookingId(null);
 
                         // In mock flow, we now call backend to activate the booking and decrement inventory
                         await paymentService.verifyPayment({
                             razorpay_order_id: 'mock_order_id',
                             razorpay_payment_id: 'mock_payment_id',
                             razorpay_signature: 'mock_signature',
-                            bookingId: currentBookingId, // Use the stored booking ID
+                            bookingId: bookingIdToVerify, // Use local variable
                             amount: breakdown?.total,
                             mock: true
                         });

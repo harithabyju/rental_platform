@@ -11,14 +11,14 @@ exports.getUserBookings = `
         i.image_url as item_image,
         s.name as shop_name,
         s.city as shop_city,
-        do.status as delivery_status,
-        do.estimated_delivery_at,
-        do.agent_name,
-        do.delivery_address as delivery_address_detail
+        dord.status as delivery_status,
+        dord.estimated_delivery_at,
+        dord.agent_name,
+        dord.delivery_address as delivery_address_detail
     FROM bookings b
     LEFT JOIN items i ON b.item_id = i.id
     LEFT JOIN shops s ON b.shop_id = s.id
-    LEFT JOIN delivery_orders do ON do.booking_id = b.booking_id
+    LEFT JOIN delivery_orders dord ON dord.booking_id = b.booking_id
     WHERE b.user_id = $1 
     ORDER BY b.created_at DESC;
 `;

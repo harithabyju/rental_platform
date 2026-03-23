@@ -5,7 +5,7 @@ const db = require('../../config/db');
  * Following the items/shop_items separate table schema.
  */
 const createItem = async (itemData) => {
-    const { shop_id, category_id, item_name, description, price_per_day, image_url, quantity } = itemData;
+    const { shop_id, category_id, item_name, description, price_per_day, image_url, quantity, delivery_available } = itemData;
 
     // We use a transaction to ensure both records are created
     const client = await db.pool.connect();
@@ -27,11 +27,11 @@ const createItem = async (itemData) => {
 
         // 2. Link to shop_items table
         const shopItemQuery = `
-            INSERT INTO shop_items (shop_id, item_id, price_per_day_inr, quantity_available, is_available, category_id, category_name)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING id as shop_item_id, price_per_day_inr as price_per_day;
+            INSERT INTO shop_items (shop_id, item_id, price_per_day_inr, quantity_available, is_available, category_id, category_name, delivery_available)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING id as shop_item_id, price_per_day_inr as price_per_day, delivery_available;
         `;
-        const shopItemResult = await client.query(shopItemQuery, [shop_id, newItem.id, price_per_day, quantity || 1, true, category_id, categoryName]);
+        const shopItemResult = await client.query(shopItemQuery, [shop_id, newItem.id, price_per_day, quantity || 1, true, category_id, categoryName, !!delivery_available]);
 
         await client.query('COMMIT');
 
@@ -58,6 +58,7 @@ const updateItem = async (itemId, itemData) => {
             description = COALESCE($2, description),
             image_url = COALESCE($3, image_url),
             category_id = COALESCE($4, category_id),
+            needs_review = CASE WHEN is_active = false THEN true ELSE needs_review END,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $5
         RETURNING *;
@@ -80,13 +81,14 @@ const updateItem = async (itemId, itemData) => {
             quantity_available = COALESCE($3, quantity_available),
             category_id = COALESCE($4, category_id),
             category_name = COALESCE($5, category_name),
+            delivery_available = COALESCE($6, delivery_available),
             updated_at = CURRENT_TIMESTAMP
-        WHERE item_id = $6
+        WHERE item_id = $7
         RETURNING *;
     `;
     // Map 'available' status to boolean is_available if needed
     const isAvailable = status === 'available' ? true : (status === 'unavailable' ? false : undefined);
-    const result = await db.query(shopItemQuery, [price_per_day, isAvailable, quantity, category_id, categoryName, itemId]);
+    const result = await db.query(shopItemQuery, [price_per_day, isAvailable, quantity, category_id, categoryName, itemData.delivery_available, itemId]);
 
     const r = result.rows[0];
     return r ? { ...r, item_id: itemId } : null;
@@ -102,7 +104,7 @@ const deleteItem = async (itemId) => {
 
 const findItemById = async (itemId) => {
     const query = `
-        SELECT i.*, si.price_per_day_inr as price_per_day, si.shop_id, si.is_available, si.quantity_available, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, s.name as shop_name, c.name as category_name, i.admin_note, s.working_hours, s.location_restrictions as shop_restrictions
+        SELECT i.*, si.price_per_day_inr as price_per_day, si.shop_id, si.is_available, si.quantity_available, si.delivery_available, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, s.name as shop_name, c.name as category_name, i.admin_note, s.working_hours, s.location_restrictions as shop_restrictions
         FROM items i
         JOIN shop_items si ON i.id = si.item_id
         JOIN shops s ON si.shop_id = s.id
@@ -115,7 +117,7 @@ const findItemById = async (itemId) => {
 
 const findItemsByShopId = async (shopId) => {
     const query = `
-        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, si.is_available, si.quantity_available, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name, i.admin_note
+        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, si.is_available, si.quantity_available, si.delivery_available, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name, i.admin_note
         FROM items i
         JOIN shop_items si ON i.id = si.item_id
         LEFT JOIN categories c ON si.category_id = c.id
@@ -128,7 +130,7 @@ const findItemsByShopId = async (shopId) => {
 
 const findAllItems = async () => {
     const query = `
-        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, s.name as shop_name, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name, si.quantity_available
+        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, s.name as shop_name, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name, si.quantity_available, si.delivery_available
         FROM items i
         JOIN shop_items si ON i.id = si.item_id
         JOIN shops s ON si.shop_id = s.id
@@ -142,21 +144,36 @@ const findAllItems = async () => {
 
 const findAllItemsAdmin = async () => {
     const query = `
-        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, s.name as shop_name, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name, i.is_active as item_is_active, si.is_available as shop_item_is_available, s.id as shop_id, i.admin_note
+        SELECT i.*, i.id as item_id, i.name as item_name, si.price_per_day_inr as price_per_day, s.name as shop_name, si.category_id as shop_item_category_id, si.category_name as shop_item_category_name, c.name as category_name, i.is_active as item_is_active, si.is_available as shop_item_is_available, si.delivery_available, s.id as shop_id, i.admin_note, i.needs_review, i.blocked_at
         FROM items i
         JOIN shop_items si ON i.id = si.item_id
         JOIN shops s ON si.shop_id = s.id
         LEFT JOIN categories c ON i.category_id = c.id
-        ORDER BY i.created_at DESC
+        ORDER BY i.needs_review DESC, i.updated_at DESC
     `;
     const result = await db.query(query);
     return result.rows;
 };
 
 const updateItemStatus = async (itemId, isActive, adminNote = null) => {
-    const query = 'UPDATE items SET is_active = $1, admin_note = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *';
+    const query = `
+        UPDATE items 
+        SET is_active = $1, 
+            admin_note = $2, 
+            blocked_at = CASE WHEN $1 = false THEN CURRENT_TIMESTAMP ELSE blocked_at END,
+            needs_review = false,
+            updated_at = CURRENT_TIMESTAMP 
+        WHERE id = $3 
+        RETURNING *;
+    `;
     const result = await db.query(query, [isActive, adminNote, itemId]);
     return result.rows[0];
+};
+
+const updateDeliveryForShopItems = async (shopId, deliveryAvailable) => {
+    const query = 'UPDATE shop_items SET delivery_available = $1, updated_at = CURRENT_TIMESTAMP WHERE shop_id = $2 RETURNING *';
+    const result = await db.query(query, [deliveryAvailable, shopId]);
+    return result.rows;
 };
 
 module.exports = {
@@ -167,6 +184,7 @@ module.exports = {
     createItem,
     updateItem,
     updateItemStatus,
+    updateDeliveryForShopItems,
     deleteItem,
     // Aliases
     findById: findItemById,
