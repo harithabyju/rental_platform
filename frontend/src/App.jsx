@@ -25,7 +25,8 @@ import ItemShops from './pages/ItemShops';
 import MyPayments from './pages/MyPayments';
 import ActiveRentals from './pages/ActiveRentals';
 import BookingProcess from './pages/BookingProcess';
-// Trace Comment: App.jsx version 1.0.2 - Renamed to BookingProcess
+import DeliveryTrackerPage from './pages/DeliveryTrackerPage';
+import DeliveryManagement from './pages/shop-owner/DeliveryManagement';
 
 // fine-module imports
 import AdminFineDashboard from './pages/admin/AdminFineDashboard';
@@ -34,6 +35,7 @@ import ReportDamage from './pages/owner/ReportDamage';
 import MyFines from './pages/customer/MyFines';
 import RaiseDispute from './pages/customer/RaiseDispute';
 import ComplianceAdminDashboard from './pages/admin/ComplianceDashboard';
+import CustomerHome from './pages/customer/CustomerHome';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -149,122 +151,146 @@ function App() {
                                 }
                             />
 
-                        <Route
-                            path="admin/dashboard"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <AdminDashboard />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="admin/dashboard"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminDashboard />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="admin/users"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <AdminUserManagement />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="admin/users"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminUserManagement />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="admin/categories"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <CategoryManagement />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="admin/categories"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <CategoryManagement />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="admin/shops"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <AdminShops />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="admin/shops"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminShops />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="admin/approvals"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <ShopApprovals />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="admin/approvals"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <ShopApprovals />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="admin/items"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <AdminItems />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="admin/items"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminItems />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="owner/report-damage/:bookingId"
-                            element={
-                                <ProtectedRoute allowedRoles={['shop_owner']}>
-                                    <ReportDamage />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="owner/report-damage/:bookingId"
+                                element={
+                                    <ProtectedRoute allowedRoles={['shop_owner']}>
+                                        <ReportDamage />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="fines"
-                            element={
-                                <ProtectedRoute allowedRoles={['customer']}>
-                                    <MyFines />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="admin/compliance"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <ComplianceAdminDashboard />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="shop-owner/dashboard"
-                            element={
-                                <ProtectedRoute allowedRoles={['shop_owner']}>
-                                    <ShopOwnerDashboard />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="fines"
+                                element={
+                                    <ProtectedRoute allowedRoles={['customer']}>
+                                        <MyFines />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="admin/compliance"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <ComplianceAdminDashboard />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="shop-owner/dashboard"
+                                element={
+                                    <ProtectedRoute allowedRoles={['shop_owner']}>
+                                        <ShopOwnerDashboard />
+                                    </ProtectedRoute>
+                                }
+                            />
+                             <Route
+                                path="shop-owner/deliveries"
+                                element={
+                                    <ProtectedRoute allowedRoles={['shop_owner']}>
+                                        <DeliveryManagement />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="dispute/:fineId"
-                            element={
-                                <ProtectedRoute allowedRoles={['customer']}>
-                                    <RaiseDispute />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="dispute/:fineId"
+                                element={
+                                    <ProtectedRoute allowedRoles={['customer']}>
+                                        <RaiseDispute />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="admin/fines"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <AdminFineDashboard />
-                                </ProtectedRoute>
-                            }
-                        />
+                            <Route
+                                path="admin/fines"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminFineDashboard />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="admin/disputes"
-                            element={
-                                <ProtectedRoute allowedRoles={['admin']}>
-                                    <AdminDisputePanel />
-                                </ProtectedRoute>
-                            }
-                        />
-                    </Route>
-                </Routes>
+                            <Route
+                                path="admin/disputes"
+                                element={
+                                    <ProtectedRoute allowedRoles={['admin']}>
+                                        <AdminDisputePanel />
+                                    </ProtectedRoute>
+                                }
+                            />
+                             <Route
+                                path="customer/home"
+                                element={
+                                    <ProtectedRoute allowedRoles={['customer']}>
+                                        <CustomerHome />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="dashboard/delivery/:bookingId"
+                                element={
+                                    <ProtectedRoute>
+                                        <DeliveryTrackerPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                        </Route>
+                    </Routes>
                 </DashboardProvider>
                 <ToastContainer />
             </AuthProvider>

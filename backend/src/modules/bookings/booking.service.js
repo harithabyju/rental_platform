@@ -1,6 +1,7 @@
 const db = require('../../config/db');
 const bookingQueries = require('./booking.queries');
 const shopService = require('../shops/shop.service');
+const deliveryService = require('../delivery/delivery.service');
 
 const OVERLAP_ERROR = 'Dates overlap with an existing booking';
 
@@ -16,7 +17,8 @@ const checkOverlap = async (itemId, shopId, startDate, endDate, quantityLimit, e
 };
 
 exports.createBooking = async (userId, data) => {
-    const { itemId, shopId, startDate, endDate, totalAmount, deliveryMethod, deliveryFee, delivery_address } = data;
+    const { itemId, shopId, startDate, endDate, totalAmount, deliveryMethod, deliveryFee, delivery_address, address, deliveryCity, deliveryLat, deliveryLng } = data;
+    const finalAddress = delivery_address || address;
 
     // 1. Fetch item and associated shop info for Risk Checks
     const itemResult = await db.query('SELECT * FROM shop_items WHERE id = $1 AND shop_id = $2', [itemId, shopId]);
@@ -62,10 +64,10 @@ exports.createBooking = async (userId, data) => {
 
         // 1. Create Booking
         const result = await client.query(
-            `INSERT INTO bookings (item_id, shop_id, user_id, start_date, end_date, status, total_amount, delivery_method, delivery_fee, delivery_address)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            `INSERT INTO bookings (item_id, shop_id, user_id, start_date, end_date, status, total_amount, delivery_method, delivery_fee, delivery_address, delivery_city, delivery_lat, delivery_lng)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
              RETURNING *`,
-            [item.item_id, shopId, userId, startDate, endDate, 'pending_payment', totalAmount, deliveryMethod || 'pickup', deliveryFee || 0, delivery_address]
+            [item.item_id, shopId, userId, startDate, endDate, 'pending_payment', totalAmount, deliveryMethod || 'pickup', deliveryFee || 0, finalAddress || null, deliveryCity || null, deliveryLat || null, deliveryLng || null]
         );
         const booking = result.rows[0];
 
@@ -73,6 +75,24 @@ exports.createBooking = async (userId, data) => {
         // 3. Increment/Decrement happens at Activation/Return
 
         await client.query('COMMIT');
+
+        // Auto-create delivery order if delivery method is selected
+        if ((deliveryMethod === 'delivery') && address) {
+            try {
+                await deliveryService.createDeliveryOrder(
+                    booking.booking_id,
+                    address,
+                    deliveryCity || null,
+                    deliveryLat || null,
+                    deliveryLng || null,
+                    deliveryFee || 0,
+                    null
+                );
+            } catch (deliveryErr) {
+                console.error('[DELIVERY] Failed to create delivery order:', deliveryErr.message);
+                // Non-fatal: booking is still confirmed
+            }
+        }
 
         // Notify Shop Owner and Customer (Async - fire and forget)
         try {

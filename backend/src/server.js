@@ -54,6 +54,7 @@ const reviewRoutes = require('./modules/reviews/review.routes');
 const penaltiesRoutes = require('./modules/penalties/penalties.routes');
 const complianceRoutes = require('./modules/compliance/compliance.routes');
 const notificationRoutes = require('./modules/notifications/notifications.routes');
+const deliveryRoutes = require('./modules/delivery/delivery.routes');
 
 // Use Routes
 app.use('/api/dashboard', dashboardRoutes);
@@ -70,7 +71,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/fines', penaltiesRoutes);
 app.use('/api/notifications', notificationRoutes);
-
+app.use('/api/delivery', deliveryRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
