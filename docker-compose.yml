@@ -6,8 +6,8 @@ services:
       - "5000:5000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      # Add other necessary backend env vars here
+    env_file:
+      - .env
     restart: always
   frontend:
     build:
