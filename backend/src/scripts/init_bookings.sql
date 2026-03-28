@@ -13,6 +13,6 @@ CREATE TABLE IF NOT EXISTS bookings (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_bookings_item_id ON bookings(item_id);
-CREATE INDEX idx_bookings_user_id ON bookings(user_id);
-CREATE INDEX idx_bookings_dates ON bookings(item_id, start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_bookings_item_id ON bookings(item_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_user_id ON bookings(user_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_dates ON bookings(item_id, start_date, end_date);
