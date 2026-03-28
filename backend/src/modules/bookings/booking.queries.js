@@ -10,13 +10,19 @@ exports.getUserBookings = `
         i.name as item_name,
         i.image_url as item_image,
         s.name as shop_name,
-        s.city as shop_city
+        s.city as shop_city,
+        dord.status as delivery_status,
+        dord.estimated_delivery_at,
+        dord.agent_name,
+        dord.delivery_address as delivery_address_detail
     FROM bookings b
-    JOIN items i ON b.item_id = i.id
+    LEFT JOIN items i ON b.item_id = i.id
     LEFT JOIN shops s ON b.shop_id = s.id
+    LEFT JOIN delivery_orders dord ON dord.booking_id = b.booking_id
     WHERE b.user_id = $1 
     ORDER BY b.created_at DESC;
 `;
+
 
 exports.getBookingById = `
     SELECT * FROM bookings WHERE booking_id = $1;
@@ -30,17 +36,17 @@ exports.updateEndDate = `
     UPDATE bookings SET end_date = $1, updated_at = CURRENT_TIMESTAMP WHERE booking_id = $2 RETURNING *;
 `;
 
-// Check overlap
+// Check overlap count
 // Intervals A and B overlap if (StartA <= EndB) and (EndA >= StartB)
-exports.checkOverlap = (excludeId) => {
+exports.checkOverlapCount = (excludeId) => {
     let query = `
-        SELECT booking_id FROM bookings 
-        WHERE item_id = $1 
-        AND status IN ('confirmed')
-        AND (start_date <= $3 AND end_date >= $2)
+        SELECT COUNT(*) as count FROM bookings 
+        WHERE item_id = $1 AND shop_id = $2
+        AND status IN ('confirmed', 'active', 'pending', 'pending_payment')
+        AND (COALESCE(start_date, '1900-01-01'::date)::date, COALESCE(end_date, '2100-01-01'::date)::date) OVERLAPS ($3::date, $4::date)
     `;
     if (excludeId) {
-        query += ` AND booking_id != $4`;
+        query += ` AND booking_id != $5`;
     }
     return query;
 };

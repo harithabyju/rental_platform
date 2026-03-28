@@ -76,8 +76,8 @@ exports.getItemsByCategory = async (categoryId, page = 1, pageSize = 12) => {
     };
 };
 
-exports.getShopsForItem = async (itemId) => {
-    const rows = await query.getShopsForItem(itemId);
+exports.getShopsForItem = async (itemId, dates = {}) => {
+    const rows = await query.getShopsForItem(itemId, dates);
     return rows.map((row) => ({
         shopItemId: row.shop_item_id,
         shopId: row.shop_id,
@@ -90,6 +90,8 @@ exports.getShopsForItem = async (itemId) => {
             latitude: row.latitude,
             longitude: row.longitude,
         },
+        workingHours: row.working_hours,
+        locationRestrictions: row.location_restrictions,
         shopPhone: row.phone,
         shopRating: parseFloat(row.shop_rating || 0),
         shopReviews: parseInt(row.shop_reviews || 0, 10),
@@ -214,6 +216,52 @@ exports.getActiveRentalsByUser = async (userId) => {
     });
 };
 
+exports.getActiveRentalsForShopOwner = async (userId) => {
+    const rows = await query.getActiveRentalsForShopOwner(userId);
+    return rows.map((r) => {
+        const daysRemaining = parseFloat(r.days_remaining || 0);
+        const isOverdue = daysRemaining < 0;
+        const lateFine = isOverdue
+            ? calcLateFine(r.end_date, r.late_fine_per_day_inr)
+            : 0;
+
+        return {
+            rentalId: r.rental_id,
+            bookingId: r.booking_id,
+            startDate: r.start_date,
+            endDate: r.end_date,
+            rentalStatus: isOverdue ? 'overdue' : r.rental_status,
+            daysRemaining: Math.ceil(daysRemaining),
+            isOverdue,
+            daysOverdue: isOverdue ? Math.abs(Math.ceil(daysRemaining)) : 0,
+            lateFine,
+            lateFineFormatted: formatINR(lateFine),
+            totalAmount: parseFloat(r.total_amount || 0),
+            totalAmountFormatted: formatINR(r.total_amount || 0),
+            deliveryMethod: r.delivery_method,
+            renter: {
+                id: r.renter_id,
+                name: r.renter_name,
+                phone: r.renter_phone,
+                email: r.renter_email,
+            },
+            item: {
+                id: r.item_id,
+                name: r.item_name,
+                imageUrl: r.item_image,
+                priceUnit: r.price_unit,
+            },
+            shop: {
+                id: r.shop_id,
+                name: r.shop_name,
+                phone: r.shop_phone,
+                city: r.shop_city,
+                address: r.shop_address,
+            },
+        };
+    });
+};
+
 exports.getUserProfileStats = async (userId) => {
     const stats = await query.getUserProfileStats(userId);
     return {
@@ -246,10 +294,12 @@ function formatItem(i) {
         imageUrl: i.image_url,
         priceUnit: i.price_unit,
         minPriceInr: parseFloat(i.min_price_inr || 0),
+        price: parseFloat(i.min_price_inr || 0),
         minPriceFormatted: formatINR(i.min_price_inr || 0),
         avgRating: parseFloat(i.avg_rating || 0),
         totalReviews: parseInt(i.total_reviews || 0, 10),
         shopCount: parseInt(i.shop_count || 0, 10),
+        totalQuantity: parseInt(i.total_quantity || 0, 10),
         deliveryAvailable: i.delivery_available,
         pickupAvailable: i.pickup_available,
         isAvailable: i.is_available !== false,
@@ -261,8 +311,11 @@ function formatItem(i) {
     };
 }
 
-exports.getShopItemDetails = async (shopItemId) => {
-    return await query.getShopItemDetails(shopItemId);
+exports.getShopItemDetails = async (shopItemId, dates = {}) => {
+    const detail = await query.getShopItemDetails(shopItemId, dates);
+    if (!detail) return null;
+    const upcoming = await query.getUpcomingBookings(detail.item_id, detail.shop_id);
+    return { ...detail, upcomingBookings: upcoming };
 };
 
 exports.getNearbyShops = async (lat, lng, radius) => {

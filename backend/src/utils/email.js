@@ -17,22 +17,20 @@ const sendEmail = async (to, subject, text) => {
             text
         };
 
-        // Log OTP to console for development
-        console.log('--- EMAIL SENT (MOCK) ---');
-        console.log(`To: ${to}`);
-        console.log(`Subject: ${subject}`);
-        console.log(`Body: ${text}`);
-        console.log('-------------------------');
-
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             await transporter.sendMail(mailOptions);
-            console.log(`Email sent to ${to}`);
+            console.log(`[EMAIL] SENT to ${to}: ${subject}`);
+            console.log(`[EMAIL] CONTENT: ${text}`);
         } else {
-            console.log('Email credentials not found in .env, skipping actual email send.');
+            console.log('--- EMAIL MOCK (Credentials Missing) ---');
+            console.log(`To: ${to}`);
+            console.log(`Subject: ${subject}`);
+            console.log(`Body: ${text}`);
+            console.log('-----------------------------------------');
+            console.log('TIP: Add EMAIL_USER and EMAIL_PASS to your .env to send real emails.');
         }
     } catch (error) {
-        console.error('Error sending email:', error);
-        // Don't throw to avoid breaking the flow, just log
+        console.error('[EMAIL] ERROR:', error.message);
     }
 };
 

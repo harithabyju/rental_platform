@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Circle, StandaloneSearchBox } from '@react-google-maps/api';
 import { FaCrosshairs, FaSearch } from 'react-icons/fa';
 import { MapPin } from 'lucide-react';
@@ -90,7 +90,7 @@ const GoogleMapLocationSelector = ({ lat, lng, radius, onLocationChange }) => {
     if (loadError || isPlaceholderKey) {
         return (
             <div className="h-[400px] bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-8 text-center space-y-4 animate-fade-in">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm">
+                <div className="w-16 h-16 bg-white dark:bg-[#111827] rounded-full flex items-center justify-center text-emerald-500 shadow-sm">
                     <MapPin size={24} />
                 </div>
                 <div className="space-y-1">
@@ -103,7 +103,7 @@ const GoogleMapLocationSelector = ({ lat, lng, radius, onLocationChange }) => {
         );
     }
 
-    if (!isLoaded) return <div className="h-[400px] bg-gray-100 animate-pulse rounded-3xl flex items-center justify-center">Loading Map...</div>;
+    if (!isLoaded) return <div className="h-[400px] bg-gray-100 dark:bg-gray-800 animate-pulse rounded-3xl flex items-center justify-center">Loading Map...</div>;
 
     return (
         <div className="relative group overflow-hidden rounded-[2rem]">
@@ -131,11 +131,11 @@ const GoogleMapLocationSelector = ({ lat, lng, radius, onLocationChange }) => {
                 >
                     <div className="absolute top-4 left-4 right-16 z-20">
                         <div className="relative">
-                            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Search your area (city, sector, street)..."
-                                className="w-full bg-white/90 backdrop-blur-md px-12 py-4 rounded-2xl shadow-2xl border border-white/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 text-sm font-bold placeholder:text-gray-400 transition-all"
+                                className="w-full bg-white dark:bg-[#111827]/90 backdrop-blur-md px-12 py-4 rounded-2xl shadow-2xl border border-white/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 text-sm font-bold placeholder:text-gray-500 dark:text-gray-400 transition-all"
                             />
                         </div>
                     </div>
@@ -162,7 +162,7 @@ const GoogleMapLocationSelector = ({ lat, lng, radius, onLocationChange }) => {
 
             <button
                 onClick={handleGetCurrentLocation}
-                className="absolute top-4 right-4 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-2xl hover:bg-white transition-all z-20 text-emerald-600 border border-white/40 active:scale-90"
+                className="absolute top-4 right-4 bg-white dark:bg-[#111827]/90 backdrop-blur-md p-4 rounded-2xl shadow-2xl hover:bg-white dark:bg-[#111827] transition-all z-20 text-emerald-600 border border-white/40 active:scale-90"
                 title="Use Current Location"
             >
                 <FaCrosshairs size={20} />

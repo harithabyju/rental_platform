@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Filter, ChevronDown, ChevronUp, Truck, Package } from 'lucide-react';
+import AnimatedList from './AnimatedList';
 
 const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
     const [priceExpanded, setPriceExpanded] = useState(true);
@@ -14,7 +15,7 @@ const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
     };
 
     const handleReset = () => {
-        onFilterChange({ categoryId: null, minPrice: null, maxPrice: null, deliveryOnly: false });
+        onFilterChange({ categoryId: null, minPrice: null, maxPrice: null, deliveryOnly: false, startDate: null, endDate: null });
     };
 
     return (
@@ -23,7 +24,7 @@ const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                     <Filter className="w-4 h-4 text-emerald-600" />
-                    <h3 className="font-bold text-gray-900 uppercase tracking-widest text-xs">Filters</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-gray-100 uppercase tracking-widest text-xs">Filters</h3>
                 </div>
                 <button
                     onClick={handleReset}
@@ -39,8 +40,8 @@ const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
                     className="flex items-center justify-between w-full mb-4"
                     onClick={() => setCatExpanded(!catExpanded)}
                 >
-                    <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">Categories</span>
-                    {catExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Categories</span>
+                    {catExpanded ? <ChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />}
                 </button>
                 {catExpanded && (
                     <div className="space-y-1.5">
@@ -55,31 +56,34 @@ const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
                         </button>
                         {loading ? (
                             Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="h-10 bg-gray-50 rounded-xl animate-pulse" />
+                                <div key={i} className="h-10 bg-gray-50 dark:bg-gray-800/40 rounded-xl animate-pulse" />
                             ))
                         ) : (
-                            categories.map((cat, index) => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => handleCategoryClick(cat.id)}
-                                    className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3 animate-slide-up hover-tilt active-press active-pop ${filters.categoryId === cat.id
-                                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100 translate-x-1'
-                                        : 'text-gray-500 hover:bg-emerald-50 hover:text-emerald-700'
-                                        }`}
-                                    style={{ animationDelay: `${(index + 1) * 0.1}s` }}
-                                >
-                                    <span className={`w-2 h-2 rounded-full ${filters.categoryId === cat.id ? 'bg-white' : 'bg-gray-300 group-hover:bg-emerald-400'}`} />
-                                    {cat.name}
-                                </button>
-                            ))
-
+                            <AnimatedList
+                                items={categories}
+                                onItemSelect={(cat) => handleCategoryClick(cat.id)}
+                                showGradients={false}
+                                className="w-full"
+                                itemClassName="!p-0 !bg-transparent !mb-0"
+                                renderItem={(cat, { index }) => (
+                                    <div
+                                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3 hover-tilt active-press active-pop ${filters.categoryId === cat.id
+                                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100 translate-x-1'
+                                            : 'text-gray-500 hover:bg-emerald-50 hover:text-emerald-700'
+                                            }`}
+                                    >
+                                        <span className={`w-2 h-2 rounded-full ${filters.categoryId === cat.id ? 'bg-white dark:bg-[#111827]' : 'bg-gray-300 group-hover:bg-emerald-400'}`} />
+                                        {cat.name}
+                                    </div>
+                                )}
+                            />
                         )}
 
                     </div>
                 )}
             </div>
 
-            <hr className="border-gray-100 mb-6" />
+            <hr className="border-gray-100 dark:border-gray-800/60 mb-6" />
 
             {/* Price Range */}
             <div className="mb-6">
@@ -87,32 +91,32 @@ const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
                     className="flex items-center justify-between w-full mb-4"
                     onClick={() => setPriceExpanded(!priceExpanded)}
                 >
-                    <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">Price (₹/Day)</span>
-                    {priceExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Price (₹/Day)</span>
+                    {priceExpanded ? <ChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />}
                 </button>
                 {priceExpanded && (
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Min</label>
+                                <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Min</label>
                                 <input
                                     type="number"
                                     min="0"
                                     placeholder="0"
                                     value={filters.minPrice ?? ''}
                                     onChange={(e) => handlePriceChange('minPrice', e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800/40 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Max</label>
+                                <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Max</label>
                                 <input
                                     type="number"
                                     min="0"
                                     placeholder="Any"
                                     value={filters.maxPrice ?? ''}
                                     onChange={(e) => handlePriceChange('maxPrice', e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800/40 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                                 />
                             </div>
                         </div>
@@ -120,11 +124,40 @@ const CategorySidebar = ({ categories, filters, onFilterChange, loading }) => {
                 )}
             </div>
 
-            <hr className="border-gray-100 mb-6" />
+            <hr className="border-gray-100 dark:border-gray-800/60 mb-6" />
+
+            {/* Date Range Filter */}
+            <div className="mb-6">
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider block mb-4">Rental Dates</span>
+                <div className="space-y-3">
+                    <div>
+                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Pick-up</label>
+                        <input
+                            type="date"
+                            value={filters.startDate || ''}
+                            min={new Date().toISOString().split('T')[0]}
+                            onChange={(e) => onFilterChange({ startDate: e.target.value })}
+                            className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800/40 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block mb-1">Return</label>
+                        <input
+                            type="date"
+                            value={filters.endDate || ''}
+                            min={filters.startDate || new Date().toISOString().split('T')[0]}
+                            onChange={(e) => onFilterChange({ endDate: e.target.value })}
+                            className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800/40 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <hr className="border-gray-100 dark:border-gray-800/60 mb-6" />
 
             {/* Options */}
             <div>
-                <span className="text-sm font-bold text-gray-700 uppercase tracking-wider block mb-4">Availability</span>
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider block mb-4">Availability</span>
                 <label className="flex items-center gap-3 cursor-pointer group">
                     <div className="relative">
                         <input

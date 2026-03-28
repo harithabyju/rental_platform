@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { cancelBooking, extendBooking, returnBooking } from '../services/bookingService';
-import { Calendar, Clock, IndianRupee, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, Star, AlertCircle, MapPin, Truck } from 'lucide-react';
+import ReviewModal from './ReviewModal';
+import { useNavigate } from 'react-router-dom';
+
+const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 const BookingCard = ({ booking, onUpdate, animationDelay = '0s' }) => {
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const navigate = useNavigate();
+
     const handleCancel = async () => {
         if (window.confirm('Are you sure you want to cancel?')) {
             try {
@@ -37,124 +44,170 @@ const BookingCard = ({ booking, onUpdate, animationDelay = '0s' }) => {
         }
     };
 
-    // Helper to determine active step in timeline
     const getTimelineStatus = () => {
-        const status = booking.status.toLowerCase();
+        const status = (booking.status || '').toLowerCase();
         if (status === 'cancelled') return -1;
         if (status === 'completed' || status === 'returned') return 3;
-
         const now = new Date();
         const start = new Date(booking.start_date);
-
-        if (now >= start) return 2; // Active
-        return 1; // Confirmed
+        if (now >= start) return 2;
+        return 1;
     };
 
     const currentStep = getTimelineStatus();
 
     const getStatusColor = (status) => {
-        switch (status.toLowerCase()) {
-            case 'confirmed': return 'bg-emerald-100 text-emerald-800';
+        switch ((status || '').toLowerCase()) {
+            case 'confirmed': return 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/30';
             case 'active': return 'bg-emerald-600 text-white';
+            case 'pending_payment':
+            case 'pending': return 'bg-amber-900/50 text-amber-300 border border-amber-700/30';
             case 'completed':
-            case 'returned': return 'bg-gray-100 text-gray-800';
-            case 'cancelled': return 'bg-red-100 text-red-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'returned': return 'bg-blue-900/50 text-blue-300 border border-blue-700/30';
+            case 'cancelled': return 'bg-red-900/50 text-red-300 border border-red-700/30';
+            default: return 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400';
         }
     };
 
+    const itemImg = booking.item_image
+        ? (booking.item_image.startsWith('http') ? booking.item_image : `${BACKEND_URL}${booking.item_image}`)
+        : 'https://placehold.co/400x300/1E293B/64748B?text=No+Image';
+
     return (
         <div
-            className="card mb-6 transition-all hover:shadow-lg animate-slide-up group"
+            className="bg-white dark:bg-[#111827] rounded-[2.5rem] border border-gray-100 dark:border-gray-800/60 shadow-sm hover:shadow-xl hover:shadow-black/30 transition-all duration-500 animate-slide-up overflow-hidden group"
             style={{ animationDelay }}
         >
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                        <Calendar size={20} className="text-emerald-600" />
+            <div className="flex flex-col md:flex-row">
+                {/* Item Image */}
+                <div className="w-full md:w-48 h-48 md:h-auto relative overflow-hidden">
+                    <img
+                        src={itemImg}
+                        alt={booking.item_name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute top-4 left-4">
+                        <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider shadow-lg backdrop-blur-md ${getStatusColor(booking.status)}`}>
+                            {booking.status === 'pending_payment' ? 'Awaiting Payment' : 
+                             booking.status === 'pending' ? 'Processing Payment' : 
+                             booking.status}
+                        </span>
                     </div>
+                </div>
+
+                <div className="flex-1 p-6 flex flex-col justify-between">
                     <div>
-                        <h3 className="font-bold text-gray-900">Booking #{booking.booking_id}</h3>
-                        <p className="text-xs text-gray-500 font-medium">Item ID: {booking.item_id}</p>
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 leading-tight mb-1">{booking.item_name}</h3>
+                                <div className="flex items-center gap-2 text-gray-500">
+                                    <MapPin size={12} className="text-emerald-500" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{booking.shop_name} • {booking.shop_city}</span>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">Total Paid</p>
+                                <p className="text-2xl font-black text-emerald-400">₹{booking.total_amount}</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mt-6">
+                            <div className="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-2xl border border-gray-200 dark:border-gray-700/30 flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-gray-800 shadow-sm flex items-center justify-center text-emerald-400">
+                                    <Calendar size={14} />
+                                </div>
+                                <div>
+                                    <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Start Date</p>
+                                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{new Date(booking.start_date).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-2xl border border-gray-200 dark:border-gray-700/30 flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-gray-800 shadow-sm flex items-center justify-center text-blue-400">
+                                    <Clock size={14} />
+                                </div>
+                                <div>
+                                    <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">End Date</p>
+                                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{new Date(booking.end_date).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Delivery Badge */}
+                        {booking.delivery_method === 'delivery' && (
+                            <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
+                                <Truck size={12} className="text-emerald-600" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Doorstep Delivery</span>
+                                {booking.delivery_status && (
+                                    <span className="ml-auto text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-800/60 text-emerald-800 dark:text-emerald-300">
+                                        {booking.delivery_status.replace(/_/g, ' ')}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
-                </div>
-                <span className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm ${getStatusColor(booking.status)}`}>
-                    {booking.status}
-                </span>
-            </div>
 
-            {/* Content */}
-            <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div className="flex items-start gap-4">
-                        <div className="p-2 bg-gray-50 rounded-lg">
-                            <Clock size={18} className="text-gray-400" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Rental Period</p>
-                            <p className="font-semibold text-gray-900">
-                                {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-start gap-4">
-                        <div className="p-2 bg-emerald-50 rounded-lg">
-                            <IndianRupee size={18} className="text-emerald-500" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Amount</p>
-                            <p className="font-bold text-emerald-600 text-xl">₹{booking.total_amount}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Timeline */}
-                {booking.status !== 'cancelled' && (
-                    <div className="relative mb-10 px-2">
-                        <div className="absolute top-[15px] left-0 right-0 h-[2px] bg-gray-100 rounded-full"></div>
-                        <div
-                            className="absolute top-[15px] left-0 h-[2px] bg-emerald-500 rounded-full transition-all duration-1000 ease-in-out"
-                            style={{ width: currentStep === 3 ? '100%' : currentStep === 2 ? '50%' : '10%' }}
-                        ></div>
-
-
-                        <div className="relative flex justify-between">
-                            {['Confirmed', 'Active', 'Completed'].map((step, index) => {
-                                const stepNum = index + 1;
-                                const isCompleted = currentStep >= stepNum;
-                                const isCurrent = currentStep === stepNum;
-                                return (
-                                    <div key={step} className="flex flex-col items-center gap-2">
-                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center border-2 z-10 bg-white transition-all duration-300 ${isCompleted ? 'border-emerald-500 bg-emerald-600 text-white scale-110 shadow-lg shadow-emerald-100' : 'border-gray-200 text-gray-300'
-                                            }`}>
-                                            {isCompleted ? <CheckCircle size={16} /> : <div className="w-2 h-2 rounded-full bg-gray-200" />}
+                    {/* Timeline & Actions */}
+                    <div className="mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                        {booking.status !== 'cancelled' ? (
+                            <div className="flex gap-4">
+                                {['Confirmed', 'Active', 'Completed'].map((step, index) => {
+                                    const stepNum = index + 1;
+                                    const isReached = currentStep >= stepNum;
+                                    return (
+                                        <div key={step} className="flex flex-col items-center gap-1.5">
+                                            <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-500 ${isReached ? 'border-emerald-500 bg-emerald-900/50 text-emerald-400 scale-110' : 'border-gray-700 text-gray-600'}`}>
+                                                {isReached ? <CheckCircle size={10} /> : <div className="w-1.5 h-1.5 rounded-full bg-gray-700" />}
+                                            </div>
+                                            <span className={`text-[8px] font-black uppercase tracking-[0.1em] ${isReached ? 'text-emerald-400' : 'text-gray-600'}`}>{step}</span>
                                         </div>
-                                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isCompleted ? 'text-emerald-600' : 'text-gray-400'}`}>
-                                            {step}
-                                        </span>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 text-red-400">
+                                <AlertCircle size={16} />
+                                <span className="text-[10px] font-black uppercase tracking-widest">Booking Cancelled</span>
+                            </div>
+                        )}
+
+                        <div className="flex gap-2 flex-wrap">
+                            {/* Track Delivery button for delivery bookings */}
+                            {booking.delivery_method === 'delivery' && (booking.status === 'confirmed' || booking.status === 'active') && (
+                                <button
+                                    onClick={() => navigate(`/dashboard/delivery/${booking.booking_id}`)}
+                                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 hover:border-emerald-400 transition-all flex items-center gap-1.5">
+                                    <Truck size={11} /> Track Delivery
+                                </button>
+                            )}
+                            {booking.status === 'confirmed' && (
+                                <>
+                                    <button onClick={handleExtend} className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-700 text-gray-500 dark:text-gray-400 hover:border-emerald-500 hover:text-emerald-400 transition-all">Extend</button>
+                                    <button onClick={handleCancel} className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-all">Cancel</button>
+                                    <button onClick={handleReturn} className="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-600 text-white shadow-lg shadow-emerald-900/50 hover:bg-emerald-500 hover:-translate-y-1 transition-all">Confirm Return</button>
+                                </>
+                            )}
+                            {(booking.status === 'completed' || booking.status === 'returned') && (
+                                <button
+                                    onClick={() => {
+                                        console.log('Opening Review Modal for booking:', booking);
+                                        setIsReviewModalOpen(true);
+                                    }}
+                                    className="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-500 text-white shadow-lg shadow-amber-900/30 hover:bg-amber-400 hover:-translate-y-1 transition-all flex items-center gap-2"
+                                >
+                                    <Star size={12} className="fill-white" /> Rate & Review
+                                </button>
+                            )}
                         </div>
                     </div>
-                )}
-
-                {/* Actions */}
-                {booking.status === 'confirmed' && (
-                    <div className="flex flex-wrap gap-3 pt-6 border-t border-gray-100">
-                        <button onClick={handleExtend} className="btn-secondary text-xs py-2 px-4 border-gray-200 text-gray-600 hover:border-emerald-600 hover:text-emerald-600 hover-tilt active-press active-pop">
-                            Extend
-                        </button>
-                        <button onClick={handleCancel} className="bg-red-50 text-red-600 text-xs font-bold py-2 px-4 rounded-lg hover:bg-red-100 transition-colors hover-tilt active-press active-pop">
-                            Cancel
-                        </button>
-                        <button onClick={handleReturn} className="btn-primary text-xs py-2 px-4 ml-auto hover-tilt active-press active-pop">
-                            Confirm Return
-                        </button>
-                    </div>
-                )}
+                </div>
             </div>
+
+            <ReviewModal
+                isOpen={isReviewModalOpen}
+                onClose={() => setIsReviewModalOpen(false)}
+                booking={booking}
+                onSuccess={onUpdate}
+            />
         </div>
     );
 };

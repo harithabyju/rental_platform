@@ -46,7 +46,8 @@ exports.getItemsByCategory = async (req, res) => {
 exports.getShopsForItem = async (req, res) => {
     try {
         const { itemId } = req.params;
-        const shops = await service.getShopsForItem(itemId);
+        const { startDate, endDate } = req.query;
+        const shops = await service.getShopsForItem(itemId, { startDate, endDate });
         res.json({ success: true, data: shops });
     } catch (err) {
         handleError(res, err, 'getShopsForItem');
@@ -56,7 +57,7 @@ exports.getShopsForItem = async (req, res) => {
 // GET /items/search?q=&categoryId=&minPrice=&maxPrice=&deliveryOnly=&page=&pageSize=
 exports.searchItems = async (req, res) => {
     try {
-        const { q, categoryId, minPrice, maxPrice, deliveryOnly, startDate, endDate, page = 1, pageSize = 12 } = req.query;
+        const { q, categoryId, minPrice, maxPrice, deliveryOnly, startDate, endDate, lat, lng, radius, page = 1, pageSize = 12 } = req.query;
         const filters = {
             q,
             categoryId: categoryId ? parseInt(categoryId, 10) : null,
@@ -64,7 +65,10 @@ exports.searchItems = async (req, res) => {
             maxPrice: maxPrice !== undefined ? parseFloat(maxPrice) : null,
             deliveryOnly: deliveryOnly === 'true',
             startDate,
-            endDate
+            endDate,
+            lat: lat !== undefined ? parseFloat(lat) : null,
+            lng: lng !== undefined ? parseFloat(lng) : null,
+            radius: radius !== undefined ? parseFloat(radius) : null
         };
         const result = await service.searchItems(filters, page, pageSize);
         res.json({ success: true, ...result });
@@ -87,7 +91,12 @@ exports.getMyPayments = async (req, res) => {
 // GET /rentals/active
 exports.getActiveRentals = async (req, res) => {
     try {
-        const rentals = await service.getActiveRentalsByUser(req.user.id);
+        let rentals;
+        if (req.user.role === 'shop_owner') {
+            rentals = await service.getActiveRentalsForShopOwner(req.user.id);
+        } else {
+            rentals = await service.getActiveRentalsByUser(req.user.id);
+        }
         res.json({ success: true, data: rentals });
     } catch (err) {
         handleError(res, err, 'getActiveRentals');
@@ -108,8 +117,9 @@ exports.getProfileStats = async (req, res) => {
 // GET /shop-items/:itemId
 exports.getShopItemDetails = async (req, res) => {
     try {
-        const { itemId } = req.params;
-        const details = await service.getShopItemDetails(itemId);
+        const { itemId } = req.params; // In this route, itemId is actually shop_item_id
+        const { startDate, endDate } = req.query;
+        const details = await service.getShopItemDetails(itemId, { startDate, endDate });
         if (!details) {
             return res.status(404).json({ success: false, message: 'Shop item not found' });
         }

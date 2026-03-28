@@ -33,7 +33,7 @@ const ActiveRentals = () => {
         <div className="space-y-10 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Active Rentals</h1>
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Active Rentals</h1>
                     <p className="text-gray-500 font-medium mt-1">Track items you currently have and their return dates</p>
                 </div>
 
@@ -47,7 +47,7 @@ const ActiveRentals = () => {
             {/* Overdue Alert */}
             {overdueCount > 0 && (
                 <div className="bg-red-50 border border-red-100 p-8 rounded-[2rem] flex items-start gap-6 shadow-xl shadow-red-100 animate-scale-up">
-                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <div className="w-14 h-14 bg-white dark:bg-[#111827] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
                         <ShieldAlert className="w-8 h-8 text-red-600" />
                     </div>
                     <div>
@@ -59,35 +59,11 @@ const ActiveRentals = () => {
                 </div>
             )}
 
-            {/* Support Box */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-emerald-950 p-8 rounded-[2rem] text-white shadow-2xl animate-slide-up">
-                <div className="absolute -top-10 -right-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl" />
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
-
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-                    <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                            <PhoneCall className="w-8 h-8 text-emerald-400" />
-                        </div>
-                        <div>
-                            <h4 className="text-xl font-black mb-1">Facing issues with a rental?</h4>
-                            <p className="text-gray-400 font-medium">Our concierge support is available 24/7 to help you.</p>
-                        </div>
-                    </div>
-                    <a
-                        href="mailto:help@grabngo.in"
-                        className="w-full md:w-auto px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-95 text-center"
-                    >
-                        Get Priority Support
-                    </a>
-                </div>
-            </div>
-
             {/* Rentals List */}
             {loading ? (
                 <div className="grid grid-cols-1 gap-6">
                     {[101, 102].map(i => (
-                        <div key={i} className="h-40 bg-gray-100 rounded-3xl animate-pulse" />
+                        <div key={i} className="h-40 bg-gray-100 dark:bg-gray-800 rounded-3xl animate-pulse" />
                     ))}
                 </div>
             ) : error ? (
@@ -101,11 +77,11 @@ const ActiveRentals = () => {
                     </button>
                 </div>
             ) : rentals.length === 0 ? (
-                <div className="bg-white rounded-[2rem] border border-gray-100 p-24 text-center shadow-sm animate-scale-up">
-                    <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-                        <Package className="w-12 h-12 text-gray-200" />
+                <div className="bg-white dark:bg-[#111827] rounded-[2rem] border border-gray-100 dark:border-gray-800/60 p-24 text-center shadow-sm animate-scale-up">
+                    <div className="w-24 h-24 bg-gray-50 dark:bg-gray-800/40 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+                        <Package className="w-12 h-12 text-gray-800 dark:text-gray-200" />
                     </div>
-                    <h2 className="text-3xl font-black text-gray-900">Your rental shelf is empty!</h2>
+                    <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100">Your rental shelf is empty!</h2>
                     <p className="text-gray-500 mt-2 max-w-sm mx-auto font-medium">
                         You don't have any items on rent right now. Ready to find your next project or adventure?
                     </p>
@@ -119,7 +95,7 @@ const ActiveRentals = () => {
             ) : (
                 <div className="grid grid-cols-1 gap-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                     {rentals.map(rental => (
-                        <RentalStatusCard key={rental.rentalId} rental={rental} />
+                        <RentalStatusCard key={rental.bookingId} rental={rental} />
                     ))}
                 </div>
             )}

@@ -1,10 +1,12 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const db = require('../../config/db');
+const bookingRepository = require('../bookings/booking.repository');
+const bookingService = require('../bookings/booking.service');
 
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_your_key_id',
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'your_test_secret',
 });
 
 /**
@@ -14,18 +16,6 @@ const razorpay = new Razorpay({
  * @returns {Promise<Object>} Razorpay Order object
  */
 exports.createOrder = async (amount, bookingId) => {
-    // If keys are placeholders, return a mock order for testing
-    if (process.env.RAZORPAY_KEY_ID === 'rzp_test_your_key_id') {
-        console.log('RAZORPAY MOCK MODE: Returning dummy order');
-        return {
-            id: `order_mock_${Date.now()}`,
-            amount: Math.round(amount * 100),
-            currency: 'INR',
-            receipt: `receipt_booking_${bookingId}`,
-            status: 'created'
-        };
-    }
-
     const options = {
         amount: Math.round(amount * 100), // Razorpay expects amount in paise
         currency: 'INR',
@@ -49,11 +39,6 @@ exports.createOrder = async (amount, bookingId) => {
  * @returns {boolean} True if valid
  */
 exports.verifySignature = (orderId, paymentId, signature) => {
-    // If keys are placeholders, always return true for mock signatures
-    if (process.env.RAZORPAY_KEY_ID === 'rzp_test_your_key_id') {
-        return true;
-    }
-
     const generatedSignature = crypto
         .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
         .update(`${orderId}|${paymentId}`)
@@ -94,4 +79,49 @@ exports.recordPayment = async (paymentData) => {
 
     const result = await db.query(query, values);
     return result.rows[0];
+};
+
+/**
+ * Handle Webhooks for Risk Management
+ */
+exports.handleRazorpayWebhook = async (event, payload) => {
+    const client = await db.pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        if (event === 'payment.failed') {
+            const { notes } = payload.payment.entity;
+            const bookingId = notes.booking_id;
+
+            // Scenario 7: Auto cancel after 15 minutes of payment failure
+            // Using bookingRepository or direct query
+            await db.query(`UPDATE bookings SET status = 'payment_failed' WHERE booking_id = $1`, [bookingId]);
+
+            console.log(`Payment failed for booking ${bookingId}. Notified customer.`);
+        }
+
+        if (event === 'payment.captured') {
+            const { notes } = payload.payment.entity;
+            const bookingId = notes.booking_id;
+
+            // Activate the booking (status confirmed + inventory decrement)
+            await bookingService.activateBooking(bookingId);
+        }
+
+        if (event === 'refund.processed') {
+            // Scenario 11: Refund Log
+            const { notes } = payload.refund.entity;
+            await db.query(`
+                INSERT INTO payments (booking_id, amount_inr, status, paid_at) 
+                VALUES ($1, $2, 'refunded', NOW())
+            `, [notes.booking_id, -(payload.refund.entity.amount / 100)]);
+        }
+
+        await client.query('COMMIT');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
 };

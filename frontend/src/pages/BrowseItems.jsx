@@ -5,6 +5,7 @@ import * as dashboardService from '../services/dashboardService';
 import ItemCard from '../components/ItemCard';
 import CategorySidebar from '../components/CategorySidebar';
 import SearchBar from '../components/SearchBar';
+import LocationSearch from '../components/LocationSearch';
 import { SlidersHorizontal, PackageSearch } from 'lucide-react';
 
 const BrowseItems = () => {
@@ -23,6 +24,11 @@ const BrowseItems = () => {
         minPrice: searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')) : null,
         maxPrice: searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')) : null,
         deliveryOnly: searchParams.get('deliveryOnly') === 'true',
+        lat: searchParams.get('lat') ? parseFloat(searchParams.get('lat')) : null,
+        lng: searchParams.get('lng') ? parseFloat(searchParams.get('lng')) : null,
+        radius: searchParams.get('radius') ? parseInt(searchParams.get('radius')) : null,
+        startDate: searchParams.get('startDate') || null,
+        endDate: searchParams.get('endDate') || null,
         page: parseInt(searchParams.get('page')) || 1,
     };
 
@@ -60,7 +66,7 @@ const BrowseItems = () => {
             }
         });
 
-        // Reset to page 1 on filter change
+        // Reset to page 1 on filter change if page is not explicitly set
         if (!newFilters.page) {
             updatedParams.delete('page');
         }
@@ -71,7 +77,7 @@ const BrowseItems = () => {
     return (
         <div className="flex flex-col lg:flex-row gap-8">
             {/* Sidebar / Filters */}
-            <div className="w-full lg:w-64 flex-shrink-0">
+            <div className="w-full lg:w-64 flex-shrink-0 z-10">
                 <CategorySidebar
                     categories={categories}
                     filters={filters}
@@ -81,24 +87,31 @@ const BrowseItems = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1">
-                <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+                <div className="mb-6 flex flex-col xl:flex-row xl:items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                             {filters.categoryId
                                 ? categories.find(c => c.id === filters.categoryId)?.name || 'Browse Items'
                                 : filters.q ? `Search results for "${filters.q}"` : 'Browse All Items'}
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">
-                            {pagination.total || 0} items found
+                            {pagination.total || 0} items found {filters.lat ? `within ${filters.radius || 50}km` : ''}
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3 w-full xl:w-auto relative z-20">
                         <SearchBar
                             value={filters.q}
                             onChange={(q) => handleFilterChange({ q })}
-                            className="w-full md:w-64"
+                            className="w-full sm:w-64"
+                        />
+                        <LocationSearch 
+                            onLocationSelect={(locationData) => handleFilterChange(locationData)}
+                            initialLat={filters.lat}
+                            initialLng={filters.lng}
+                            initialRadius={filters.radius}
+                            className="w-full sm:w-80"
                         />
                     </div>
                 </div>
@@ -107,7 +120,7 @@ const BrowseItems = () => {
                 {loading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
                         {Array.from({ length: 6 }).map((_, i) => (
-                            <div key={i} className="bg-white rounded-3xl h-[28rem] animate-pulse border border-gray-100 shadow-sm" />
+                            <div key={i} className="bg-white dark:bg-[#111827] rounded-3xl h-[28rem] animate-pulse border border-gray-100 dark:border-gray-800/60 shadow-sm" />
                         ))}
                     </div>
                 ) : error ? (
@@ -121,11 +134,11 @@ const BrowseItems = () => {
                         </button>
                     </div>
                 ) : items.length === 0 ? (
-                    <div className="bg-white rounded-[2rem] border border-gray-100 p-24 text-center shadow-sm animate-scale-up">
-                        <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <PackageSearch className="w-12 h-12 text-gray-200" />
+                    <div className="bg-white dark:bg-[#111827] rounded-[2rem] border border-gray-100 dark:border-gray-800/60 p-24 text-center shadow-sm animate-scale-up">
+                        <div className="w-24 h-24 bg-gray-50 dark:bg-gray-800/40 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <PackageSearch className="w-12 h-12 text-gray-800 dark:text-gray-200" />
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900">No treasures found!</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">No treasures found!</h2>
                         <p className="text-gray-500 mt-2 max-w-sm mx-auto font-medium">
                             Try adjusting your filters or search keywords. Maybe search for "Camera" or "Bike"?
                         </p>
@@ -148,11 +161,11 @@ const BrowseItems = () => {
 
                         {/* Pagination */}
                         {pagination.totalPages > 1 && (
-                            <div className="mt-20 flex justify-center items-center gap-4 bg-white/30 backdrop-blur-md p-4 rounded-[2.5rem] w-fit mx-auto border border-white/50 shadow-xl">
+                            <div className="mt-20 flex justify-center items-center gap-4 bg-white dark:bg-[#111827]/30 backdrop-blur-md p-4 rounded-[2.5rem] w-fit mx-auto border border-white/50 shadow-xl">
                                 <button
                                     disabled={pagination.page === 1}
                                     onClick={() => handleFilterChange({ page: pagination.page - 1 })}
-                                    className="px-8 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-black text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all active:scale-95"
+                                    className="px-8 py-3 bg-white dark:bg-[#111827] border border-gray-100 dark:border-gray-800/60 rounded-2xl text-sm font-black text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all active:scale-95"
                                 >
                                     Prev
                                 </button>
@@ -163,7 +176,7 @@ const BrowseItems = () => {
                                             onClick={() => handleFilterChange({ page: p })}
                                             className={`w-14 h-14 rounded-2xl text-sm font-black transition-all active-pop ${pagination.page === p
                                                 ? 'bg-emerald-600 text-white shadow-2xl shadow-emerald-200 scale-110'
-                                                : 'bg-white border border-gray-100 text-gray-400 hover:bg-emerald-50 hover:text-emerald-700'
+                                                : 'bg-white dark:bg-[#111827] border border-gray-100 dark:border-gray-800/60 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 hover:text-emerald-700'
                                                 }`}
                                         >
                                             {p}
@@ -173,7 +186,7 @@ const BrowseItems = () => {
                                 <button
                                     disabled={pagination.page === pagination.totalPages}
                                     onClick={() => handleFilterChange({ page: pagination.page + 1 })}
-                                    className="px-8 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-black text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all active:scale-95"
+                                    className="px-8 py-3 bg-white dark:bg-[#111827] border border-gray-100 dark:border-gray-800/60 rounded-2xl text-sm font-black text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 disabled:opacity-50 transition-all active:scale-95"
                                 >
                                     Next
                                 </button>

@@ -2,14 +2,22 @@ const shopService = require('./shop.service');
 
 const registerShop = async (req, res) => {
     try {
-        const { shop_name, description, location } = req.body;
-        const shop = await shopService.registerShop(req.user.id, {
-            shop_name,
-            description,
-            location
-        });
+        const registrationData = { ...req.body };
+
+        // Handle file uploads during registration
+        if (req.files) {
+            if (req.files.govt_id) {
+                registrationData.govt_id_url = `/uploads/${req.files.govt_id[0].filename}`;
+            }
+            if (req.files.shop_license) {
+                registrationData.shop_license_url = `/uploads/${req.files.shop_license[0].filename}`;
+            }
+        }
+
+        const shop = await shopService.registerShop(req.user.id, registrationData);
         res.status(201).json({ message: 'Shop registered successfully', shop });
     } catch (error) {
+        console.error('ERROR in registerShop:', error);
         res.status(400).json({ message: error.message });
     }
 };
@@ -71,12 +79,44 @@ const getPermittedCategories = async (req, res) => {
     }
 };
 
+const updateMyShop = async (req, res) => {
+    try {
+        const updateData = { ...req.body };
+
+        // Handle file uploads if present
+        if (req.files) {
+            if (req.files.govt_id) {
+                updateData.govt_id_url = `/uploads/${req.files.govt_id[0].filename}`;
+            }
+            if (req.files.shop_license) {
+                updateData.shop_license_url = `/uploads/${req.files.shop_license[0].filename}`;
+            }
+        }
+
+        const shop = await shopService.updateMyShop(req.user.id, updateData);
+        res.status(200).json({ message: 'Shop updated successfully', shop });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const submitForApproval = async (req, res) => {
+    try {
+        const shop = await shopService.submitForApproval(req.user.id);
+        res.status(200).json({ message: 'Shop submitted for approval', shop });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     registerShop,
     getMyShop,
     getShopById,
+    updateMyShop,
     approveShop,
     rejectShop,
     getAllShops,
     getPermittedCategories,
+    submitForApproval,
 };

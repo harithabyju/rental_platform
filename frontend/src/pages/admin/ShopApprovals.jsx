@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import shopService from '../../services/shop.service';
 import categoryService from '../../services/category.service';
 import { toast } from 'react-toastify';
-import { Store, User, Mail, MapPin, CheckCircle, XCircle, Clock, Tag } from 'lucide-react';
+import { Store, User, Mail, MapPin, CheckCircle, XCircle, Clock, Tag, ExternalLink, CreditCard, FileText } from 'lucide-react';
 
-const STATUS_TABS = ['pending', 'approved', 'rejected'];
+const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+const STATUS_TABS = ['pending', 'incomplete', 'approved', 'rejected'];
 
 const statusConfig = {
-    pending:  { color: 'amber',   icon: Clock,        label: 'Pending' },
-    approved: { color: 'emerald', icon: CheckCircle,  label: 'Approved' },
-    rejected: { color: 'red',     icon: XCircle,      label: 'Rejected' },
+    pending: { color: 'amber', icon: Clock, label: 'Pending' },
+    incomplete: { color: 'gray', icon: FileText, label: 'Incomplete' },
+    approved: { color: 'emerald', icon: CheckCircle, label: 'Approved' },
+    rejected: { color: 'red', icon: XCircle, label: 'Rejected' },
 };
 
 const ShopApprovals = () => {
@@ -32,7 +35,7 @@ const ShopApprovals = () => {
     const fetchCategories = async () => {
         try {
             const data = await categoryService.getAllCategories();
-            setAllCategories(Array.isArray(data) ? data : []);
+            setAllCategories(data);
         } catch {
             // silent — categories are optional UI enhancement
         }
@@ -96,14 +99,12 @@ const ShopApprovals = () => {
         <div className="space-y-8 animate-fade-in">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">Shop Approvals</h1>
-                <p className="text-gray-500 font-medium mt-1">
-                    Review shop registrations, assign permitted categories, and approve or reject.
-                </p>
+                <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Approval Hub</h1>
+                <p className="text-gray-500 font-medium mt-1">Review registrations and verify documents for new shop owners</p>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-gray-100 rounded-2xl p-1 w-fit">
+            <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-2xl p-1 w-fit">
                 {STATUS_TABS.map(t => {
                     const cfg = statusConfig[t];
                     const Icon = cfg.icon;
@@ -112,11 +113,10 @@ const ShopApprovals = () => {
                         <button
                             key={t}
                             onClick={() => setTab(t)}
-                            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${
-                                active
-                                    ? `bg-white shadow-sm text-${cfg.color}-700`
-                                    : 'text-gray-500 hover:text-gray-700'
-                            }`}
+                            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${active
+                                ? `bg-white dark:bg-[#111827] shadow-sm text-${cfg.color}-700`
+                                : 'text-gray-500 hover:text-gray-700 dark:text-gray-300'
+                                }`}
                         >
                             <Icon className="w-4 h-4" />
                             {cfg.label}
@@ -131,12 +131,12 @@ const ShopApprovals = () => {
                     <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
                 </div>
             ) : shops.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-16 text-center">
-                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Store className="w-8 h-8 text-gray-200" />
+                <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-100 dark:border-gray-800/60 shadow-sm p-16 text-center">
+                    <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Store className="w-8 h-8 text-gray-800 dark:text-gray-200" />
                     </div>
-                    <h3 className="text-base font-bold text-gray-700">No {tab} shops</h3>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <h3 className="text-base font-bold text-gray-700 dark:text-gray-300">No {tab} shops</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                         {tab === 'pending' ? 'No shops are awaiting approval.' : `No ${tab} shops found.`}
                     </p>
                 </div>
@@ -146,7 +146,7 @@ const ShopApprovals = () => {
                         const shopCats = selectedCats[shop.shop_id] || new Set();
                         const proc = processing[shop.shop_id];
                         return (
-                            <div key={shop.shop_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div key={shop.shop_id} className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-100 dark:border-gray-800/60 shadow-sm overflow-hidden">
                                 {/* Shop Header */}
                                 <div className="p-6 border-b border-gray-50">
                                     <div className="flex items-start justify-between gap-4">
@@ -155,7 +155,7 @@ const ShopApprovals = () => {
                                                 {shop.shop_name?.charAt(0)?.toUpperCase() || 'S'}
                                             </div>
                                             <div>
-                                                <h2 className="text-lg font-black text-gray-900">{shop.shop_name}</h2>
+                                                <h2 className="text-lg font-black text-gray-900 dark:text-gray-100">{shop.shop_name}</h2>
                                                 {shop.description && (
                                                     <p className="text-sm text-gray-500 mt-0.5 max-w-lg">{shop.description}</p>
                                                 )}
@@ -168,34 +168,94 @@ const ShopApprovals = () => {
                                 </div>
 
                                 {/* Info Row */}
-                                <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50/50">
+                                <div className="px-6 py-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-gray-50 dark:bg-gray-800/40/50">
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <User className="w-4 h-4 text-gray-400 shrink-0" />
-                                        <span className="font-medium">{shop.owner_name || 'N/A'}</span>
+                                        <User className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+                                        <span className="font-medium truncate">{shop.owner_name || 'N/A'}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <Mail className="w-4 h-4 text-gray-400 shrink-0" />
-                                        <span>{shop.owner_email || 'N/A'}</span>
+                                        <Mail className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+                                        <span className="truncate">{shop.owner_email || 'N/A'}</span>
                                     </div>
-                                    {shop.location && (
-                                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                                            <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
-                                            <span>
-                                                {typeof shop.location === 'object'
-                                                    ? `${shop.location.city || ''}${shop.location.state ? ', ' + shop.location.state : ''}`
-                                                    : shop.location}
-                                            </span>
-                                        </div>
-                                    )}
+                                    <div className="flex items-center gap-2 text-sm text-gray-600 col-span-1 md:col-span-2">
+                                        <MapPin className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+                                        <span className="text-xs">
+                                            {shop.address}, {shop.city}, {shop.state} - {shop.pincode}
+                                        </span>
+                                    </div>
                                 </div>
 
-                                {/* Category Selector (only for pending shops) */}
-                                {tab === 'pending' && allCategories.length > 0 && (
+                                {/* Verification Details Section */}
+                                <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8 border-t border-gray-50">
+                                    {/* Documents */}
+                                    <div>
+                                        <h3 className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            <FileText className="w-3.5 h-3.5" /> Verification Documents
+                                        </h3>
+                                        <div className="space-y-2">
+                                            {shop.govt_id_url ? (
+                                                <a
+                                                    href={shop.govt_id_url.startsWith('http') ? shop.govt_id_url : `${BACKEND_URL}${shop.govt_id_url}`}
+                                                    target="_blank" rel="noopener noreferrer"
+                                                    className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition-colors group"
+                                                >
+                                                    <span className="text-xs font-bold text-blue-700">Government ID</span>
+                                                    <ExternalLink className="w-3.5 h-3.5 text-blue-400 group-hover:text-blue-600" />
+                                                </a>
+                                            ) : (
+                                                <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs font-bold text-red-600">Missing Govt ID</div>
+                                            )}
+                                            {shop.shop_license_url ? (
+                                                <a
+                                                    href={shop.shop_license_url.startsWith('http') ? shop.shop_license_url : `${BACKEND_URL}${shop.shop_license_url}`}
+                                                    target="_blank" rel="noopener noreferrer"
+                                                    className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition-colors group"
+                                                >
+                                                    <span className="text-xs font-bold text-blue-700">Shop License</span>
+                                                    <ExternalLink className="w-3.5 h-3.5 text-blue-400 group-hover:text-blue-600" />
+                                                </a>
+                                            ) : (
+                                                <div className="p-3 bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800/60 rounded-xl text-xs font-bold text-gray-500 dark:text-gray-400">Missing Shop License</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Bank Details */}
+                                    <div>
+                                        <h3 className="text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            <CreditCard className="w-3.5 h-3.5" /> Bank Information
+                                        </h3>
+                                        {shop.bank_account_number ? (
+                                            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 space-y-2">
+                                                <div className="flex justify-between items-center text-[10px] font-bold text-emerald-600">
+                                                    <span>ACCOUNT HOLDER</span>
+                                                    <span>IFSC CODE</span>
+                                                </div>
+                                                <div className="flex justify-between items-end">
+                                                    <span className="text-sm font-black text-emerald-900 uppercase tracking-tight">{shop.bank_account_name}</span>
+                                                    <span className="text-xs font-black text-emerald-700 font-mono tracking-widest">{shop.bank_ifsc}</span>
+                                                </div>
+                                                <div className="pt-2 border-t border-emerald-100/50">
+                                                    <p className="text-[10px] font-bold text-emerald-600 mb-0.5">ACCOUNT NUMBER</p>
+                                                    <p className="text-lg font-black text-emerald-900 tracking-[0.2em]">{shop.bank_account_number}</p>
+                                                    <p className="text-[10px] font-bold text-emerald-600 mt-1 uppercase tracking-wider">{shop.bank_name}</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6 flex items-center justify-center text-center">
+                                                <p className="text-xs font-bold text-amber-700">Bank details not provided</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Category Selector (only for pending or incomplete shops) */}
+                                {(tab === 'pending' || tab === 'incomplete') && allCategories.length > 0 && (
                                     <div className="px-6 py-4 border-t border-gray-50">
                                         <div className="flex items-center gap-2 mb-3">
                                             <Tag className="w-4 h-4 text-emerald-600" />
-                                            <span className="text-sm font-bold text-gray-700">Permitted Categories</span>
-                                            <span className="text-xs text-gray-400">(select at least one)</span>
+                                            <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Permitted Categories</span>
+                                            <span className="text-xs text-gray-500 dark:text-gray-400">(select at least one)</span>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             {allCategories.map(cat => {
@@ -205,11 +265,10 @@ const ShopApprovals = () => {
                                                         key={cat.id}
                                                         type="button"
                                                         onClick={() => toggleCategory(shop.shop_id, cat.id)}
-                                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                                                            checked
-                                                                ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-200'
-                                                                : 'border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-700'
-                                                        }`}
+                                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${checked
+                                                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-200'
+                                                            : 'border-gray-200 dark:border-gray-700/60 text-gray-600 hover:border-emerald-300 hover:text-emerald-700'
+                                                            }`}
                                                     >
                                                         {checked && '✓ '}{cat.name}
                                                     </button>
@@ -224,9 +283,9 @@ const ShopApprovals = () => {
                                     </div>
                                 )}
 
-                                {/* Action Buttons (only for pending) */}
-                                {tab === 'pending' && (
-                                    <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+                                {/* Action Buttons (only for pending or incomplete) */}
+                                {(tab === 'pending' || tab === 'incomplete') && (
+                                    <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800/60 flex justify-end gap-3">
                                         <button
                                             onClick={() => handleReject(shop.shop_id)}
                                             disabled={!!proc}
@@ -236,8 +295,11 @@ const ShopApprovals = () => {
                                         </button>
                                         <button
                                             onClick={() => handleApprove(shop.shop_id)}
-                                            disabled={!!proc || shopCats.size === 0}
-                                            className="px-5 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-all disabled:opacity-50 shadow-sm shadow-emerald-200"
+                                            disabled={!!proc}
+                                            className={`px-5 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${shopCats.size === 0
+                                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed hover:bg-gray-300'
+                                                : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200'
+                                                }`}
                                         >
                                             {proc === 'approving' ? 'Approving…' : '✓ Approve'}
                                         </button>

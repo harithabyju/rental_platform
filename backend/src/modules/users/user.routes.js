@@ -8,6 +8,8 @@ const { authorize } = require('../../middlewares/roleMiddleware');
 router.post('/auth/register', userController.register);
 router.post('/auth/verify-otp', userController.verifyOtp);
 router.post('/auth/login', userController.login);
+router.post('/auth/forgot-password', userController.forgotPassword);
+router.post('/auth/reset-password', userController.resetPassword);
 
 // User Routes
 router.get('/users/me', protect, userController.getMe);
@@ -17,6 +19,5 @@ router.put('/users/me', protect, userController.updateMe);
 router.get('/admin/users', protect, authorize('admin'), userController.getAllUsers);
 router.patch('/admin/block-user', protect, authorize('admin'), userController.blockUser);
 router.patch('/admin/unblock-user', protect, authorize('admin'), userController.unblockUser);
-router.get('/admin/shops', protect, authorize('admin'), userController.getShopsAnalytics);
-
+// module.exports = router;
 module.exports = router;

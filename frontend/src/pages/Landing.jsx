@@ -1,15 +1,24 @@
 import { Link } from 'react-router-dom';
+import ThemeToggle from '../components/ThemeToggle';
+import GhostCursor from '../components/GhostCursor';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Landing = () => {
+    const { theme } = useTheme();
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] text-center px-4">
-            <h1 className="text-5xl font-extrabold text-gray-900 mb-6">
+        <div className="relative flex flex-col items-center justify-center min-h-screen text-center px-4 overflow-hidden">
+            {theme === 'dark' && <GhostCursor zIndex={0} />}
+            <div className="absolute top-6 right-6 z-10">
+                <ThemeToggle />
+            </div>
+            <h1 className="text-5xl font-extrabold text-gray-900 dark:text-gray-100 mb-6 z-10 relative">
                 Rent Anything, <span className="text-primary">Anytime</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl">
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl z-10 relative">
                 The ultimate multi-vendor platform for renting electronics, furniture, fashion, and more.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 z-10 relative">
                 <Link
                     to="/register"
                     className="bg-primary text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-green-600 transition"
@@ -18,7 +27,7 @@ const Landing = () => {
                 </Link>
                 <Link
                     to="/login"
-                    className="bg-white text-gray-700 border border-gray-300 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-50 transition"
+                    className="bg-white dark:bg-[#111827] text-gray-700 dark:text-gray-300 border border-gray-300 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-50 dark:bg-gray-800/40 transition"
                 >
                     Login
                 </Link>

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { FaArrowsLeftRight } from 'react-icons/fa6';
 
 const RadiusSlider = ({ value, onChange }) => {
@@ -18,7 +18,7 @@ const RadiusSlider = ({ value, onChange }) => {
                     onChange={(e) => onChange(parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
-                <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium">
+                <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 mt-2 font-medium">
                     <span>1km</span>
                     <span>10km</span>
                     <span>25km</span>

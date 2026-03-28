@@ -3,8 +3,11 @@ const db = require('../../../config/db');
 const getDashboardStats = async () => {
     const stats = await db.query(`
         SELECT
+            (SELECT COUNT(*) FROM users) as total_users,
             (SELECT COUNT(*) FROM users WHERE role = 'customer') as total_customers,
-            (SELECT COUNT(*) FROM users WHERE role = 'shop_owner') as total_shops,
+            (SELECT COUNT(*) FROM shops WHERE status = 'approved') as total_shops,
+            (SELECT COUNT(*) FROM shops WHERE status = 'pending') as pending_approvals,
+            (SELECT COUNT(*) FROM shops WHERE status = 'incomplete' OR status = 'pending') as total_pending_shops,
             (SELECT SUM(amount_inr) FROM payments WHERE status = 'completed') as total_revenue,
             (SELECT COUNT(*) FROM rentals WHERE status = 'active') as active_rentals
     `);
@@ -66,10 +69,24 @@ const getTopPerformingShops = async () => {
     return result.rows;
 };
 
+const getRegistrationTrend = async () => {
+    const result = await db.query(`
+        SELECT 
+            TO_CHAR(created_at, 'Mon YYYY') as month,
+            COUNT(*) as count,
+            MIN(created_at) as month_start
+        FROM users
+        GROUP BY month
+        ORDER BY month_start
+    `);
+    return result.rows;
+};
+
 module.exports = {
     getDashboardStats,
     getBookingsByCategory,
     getRevenueTrend,
     getCategoryDistribution,
-    getTopPerformingShops
+    getTopPerformingShops,
+    getRegistrationTrend
 };

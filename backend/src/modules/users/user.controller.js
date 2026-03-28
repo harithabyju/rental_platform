@@ -89,6 +89,26 @@ const getShopsAnalytics = async (req, res) => {
     }
 }
 
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const result = await userService.forgotPassword(email);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        const result = await userService.resetPassword(email, otp, newPassword);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     register,
     verifyOtp,
@@ -98,5 +118,7 @@ module.exports = {
     getAllUsers,
     blockUser,
     unblockUser,
-    getShopsAnalytics
+    getShopsAnalytics,
+    forgotPassword,
+    resetPassword
 };

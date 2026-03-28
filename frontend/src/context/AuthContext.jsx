@@ -11,7 +11,20 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                // Basic validation for stored user object
+                if (parsedUser && parsedUser.id && (parsedUser.fullname || parsedUser.email)) {
+                    setUser(parsedUser);
+                } else {
+                    // Stored user object is corrupted or incomplete
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('token');
+                }
+            } catch (err) {
+                console.error('Failed to parse stored user:', err);
+                localStorage.removeItem('user');
+            }
         }
         setLoading(false);
     }, []);
@@ -32,6 +45,7 @@ export const AuthProvider = ({ children }) => {
 
     const updateUser = (updatedUser) => {
         setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
     };
 
     const logout = () => {

@@ -60,7 +60,7 @@ const authService = {
         return response.data;
     },
     getShopsAnalytics: async () => {
-        const response = await api.get('/admin/shops');
+        const response = await api.get('/shops/admin');
         return response.data;
     },
     updateUser

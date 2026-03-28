@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS items (
     image_url TEXT,
     base_price_inr DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     price_unit VARCHAR(20) DEFAULT 'day', -- day, hour, week
-    is_active BOOLEAN DEFAULT TRUE,
+    is_active BOOLEAN DEFAULT FALSE,
     avg_rating DECIMAL(3, 2) DEFAULT 0.00,
     total_reviews INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

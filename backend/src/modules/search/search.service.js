@@ -23,18 +23,24 @@ const searchItems = async (filters) => {
     const query = `
         ${queries.SEARCH_ITEMS}
         ORDER BY ${orderBy}
-        LIMIT $7 OFFSET $8
+        LIMIT $9 OFFSET $10
     `;
 
+    const latVal = (lat !== undefined && lat !== null && lat !== '') ? parseFloat(lat) : null;
+    const lngVal = (lng !== undefined && lng !== null && lng !== '') ? parseFloat(lng) : null;
+    const radiusVal = (radius !== undefined && radius !== null && radius !== '') ? parseFloat(radius) : 50;
+
     const values = [
-        parseFloat(lat),
-        parseFloat(lng),
+        latVal,
+        lngVal,
         category || null,
-        parseFloat(radius),
-        start_date,
-        end_date,
-        parseInt(limit, 10),
-        parseInt(offset, 10)
+        radiusVal,
+        start_date || null,
+        end_date || null,
+        filters.q || null,
+        filters.q ? `%${filters.q}%` : null,
+        parseInt(limit || 10, 10),
+        parseInt(offset || 0, 10)
     ];
 
     try {
@@ -49,29 +55,39 @@ const searchItems = async (filters) => {
             JOIN categories c ON i.category_id = c.id
             WHERE i.is_active = true 
             AND s.is_active = true
+            AND s.status = 'approved'
             AND si.is_available = true
-            AND ($1::text IS NULL OR $1 = '' OR c.slug = $1 OR c.name = $1)
+            AND ($1::text IS NULL OR $1 = '' OR c.slug = $1 OR c.name = $1 OR c.id::text = $1)
+            AND ($7::text IS NULL OR $7 = '' OR i.name ILIKE $8 OR i.description ILIKE $8)
             AND (
-                6371 * acos(LEAST(GREATEST(
-                    cos(radians($2)) * cos(radians(s.latitude::float)) * 
-                    cos(radians(s.longitude::float) - radians($3)) + 
-                    sin(radians($2)) * sin(radians(s.latitude::float))
-                , -1), 1))
-            ) <= $4
-            AND NOT EXISTS (
-                SELECT 1 FROM bookings b
-                WHERE b.item_id = i.id
-                AND b.status IN ('confirmed', 'active')
-                AND (b.start_date, b.end_date) OVERLAPS ($5, $6)
+                ($2::float IS NULL OR $3::float IS NULL) OR
+                (
+                    6371 * acos(LEAST(GREATEST(
+                        cos(radians($2)) * cos(radians(s.latitude::float)) * 
+                        cos(radians(s.longitude::float) - radians($3)) + 
+                        sin(radians($2)) * sin(radians(s.latitude::float))
+                    , -1), 1))
+                ) <= $4
             )
+            AND (
+                si.quantity_available - (
+                    SELECT COALESCE(COUNT(*), 0)
+                    FROM bookings b
+                    WHERE b.item_id = i.id
+                    AND b.status IN ('confirmed', 'active')
+                    AND (b.start_date, b.end_date) OVERLAPS ($5, $6)
+                )
+            ) > 0
         `;
         const countValues = [
             category || null,
-            parseFloat(lat),
-            parseFloat(lng),
-            parseFloat(radius),
-            start_date,
-            end_date
+            latVal,
+            lngVal,
+            radiusVal,
+            start_date || null,
+            end_date || null,
+            filters.q || null,
+            filters.q ? `%${filters.q}%` : null
         ];
         const totalCount = await db.query(countQuery, countValues);
 
