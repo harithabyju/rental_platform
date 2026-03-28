@@ -1,19 +1,19 @@
-const { Pool } = require('pg');
-const pool = new Pool({
-    connectionString: 'postgres://postgres:postgres@localhost:5432/rental_platform'
-});
+const db = require('./src/config/db');
 
-async function run() {
+async function check() {
     try {
-        const resItems = await pool.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'items'");
-        console.log('Items columns:', JSON.stringify(resItems.rows, null, 2));
-        const resShopItems = await pool.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'shop_items'");
-        console.log('Shop Items columns:', JSON.stringify(resShopItems.rows, null, 2));
+        const res = await db.query(`
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'categories'
+        `);
+        console.log('Categories Columns:');
+        res.rows.forEach(row => console.log(` - ${row.column_name} (${row.data_type})`));
     } catch (err) {
         console.error(err);
     } finally {
-        await pool.end();
+        process.exit();
     }
 }
 
-run();
+check();

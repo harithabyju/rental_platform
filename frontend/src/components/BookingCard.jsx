@@ -148,7 +148,19 @@ const BookingCard = ({ booking, onUpdate, animationDelay = '0s' }) => {
 
                     {/* Timeline & Actions */}
                     <div className="mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                        {booking.status !== 'cancelled' ? (
+                        {booking.status === 'cancelled' ? (
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2 text-red-400">
+                                    <AlertCircle size={16} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Booking Cancelled</span>
+                                </div>
+                                {parseFloat(booking.refund_amount) > 0 && (
+                                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-tight bg-emerald-900/20 px-2 py-0.5 rounded-lg w-fit">
+                                        Got Return Payment: ₹{booking.refund_amount}
+                                    </span>
+                                )}
+                            </div>
+                        ) : (
                             <div className="flex gap-4">
                                 {['Confirmed', 'Active', 'Completed'].map((step, index) => {
                                     const stepNum = index + 1;
@@ -162,11 +174,6 @@ const BookingCard = ({ booking, onUpdate, animationDelay = '0s' }) => {
                                         </div>
                                     );
                                 })}
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2 text-red-400">
-                                <AlertCircle size={16} />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Booking Cancelled</span>
                             </div>
                         )}
 

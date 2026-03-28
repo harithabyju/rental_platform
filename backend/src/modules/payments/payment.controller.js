@@ -78,7 +78,12 @@ exports.getMyPayments = async (req, res, next) => {
     try {
         const userId = req.user.id;
         const result = await db.query(
-            'SELECT p.*, b.item_id, b.start_date, b.end_date FROM payments p JOIN bookings b ON p.booking_id = b.booking_id WHERE p.user_id = $1 ORDER BY p.created_at DESC',
+            `SELECT p.*, b.item_id, i.name as item_name, b.start_date, b.end_date 
+             FROM payments p 
+             JOIN bookings b ON p.booking_id = b.booking_id 
+             JOIN items i ON b.item_id = i.id
+             WHERE p.user_id = $1 
+             ORDER BY p.created_at DESC`,
             [userId]
         );
         res.json({ payments: result.rows });
@@ -94,9 +99,10 @@ exports.downloadInvoice = async (req, res, next) => {
 
         // Fetch payment and booking details
         const result = await db.query(
-            `SELECT p.*, b.item_id, b.start_date, b.end_date, u.fullname, u.email 
+            `SELECT p.*, b.item_id, i.name as item_name, b.start_date, b.end_date, u.fullname, u.email 
              FROM payments p 
              JOIN bookings b ON p.booking_id = b.booking_id 
+             JOIN items i ON b.item_id = i.id
              JOIN users u ON p.user_id = u.id 
              WHERE p.id = $1 AND p.user_id = $2`,
             [paymentId, userId]
@@ -144,7 +150,7 @@ exports.downloadInvoice = async (req, res, next) => {
         doc.moveDown(0.5);
 
         // Line Items
-        doc.fontSize(10).text(`Rental Booking for Item #${paymentInfo.item_id}`, 50, doc.y, { continued: true });
+        doc.fontSize(10).text(`Rental Booking for: ${paymentInfo.item_name || 'Item #' + paymentInfo.item_id}`, 50, doc.y, { continued: true });
         doc.text(`${paymentInfo.amount_inr}`, 400, doc.y);
         doc.moveDown();
         

@@ -4,6 +4,9 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  max: 50, // Increase max connections
+  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+  connectionTimeoutMillis: 2000, // Return an error if a connection cannot be established within 2 seconds
 });
 
 pool.on('connect', () => {

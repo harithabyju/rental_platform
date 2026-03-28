@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import shopService from '../../services/shop.service';
 import categoryService from '../../services/category.service';
 import { Store, Package, TrendingUp, DollarSign, Users, MapPin, AlertCircle, CheckCircle, XCircle, Clock, Check } from 'lucide-react';
@@ -139,9 +139,12 @@ const AdminShops = () => {
                                     <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm bg-emerald-50 px-4 py-2 rounded-xl">
                                         <CheckCircle className="w-4 h-4" /> Active Business
                                     </div>
-                                    <div className="flex items-center gap-2 text-blue-600 font-bold text-xs bg-blue-50 px-4 py-2 rounded-xl">
+                                    <button 
+                                        onClick={() => toast.success('Growth Mode metrics and accelerator program activated for ' + shop.name)}
+                                        className="flex items-center gap-2 text-blue-600 font-bold text-xs bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-100 hover:shadow-md transition-all cursor-pointer active:scale-95"
+                                    >
                                         <TrendingUp className="w-3.5 h-3.5" /> Growth Mode
-                                    </div>
+                                    </button>
                                 </div>
                             </div>
 

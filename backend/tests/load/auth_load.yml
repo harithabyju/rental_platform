@@ -1,0 +1,31 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: Warm up phase
+    - duration: 60
+      arrivalRate: 20
+      name: Sustained login load
+  payload:
+    path: "auth_users.csv"
+    fields:
+      - "email"
+      - "password"
+
+scenarios:
+  - name: "Login and check profile"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.token"
+              as: "token"
+      - think: 1
+      - get:
+          url: "/api/users/me"
+          headers:
+            Authorization: "Bearer {{ token }}"

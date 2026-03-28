@@ -6,13 +6,13 @@ const { authorize } = require('../../middlewares/roleMiddleware');
 const { validateBooking } = require('./booking.validations');
 const { checkCompliance } = require('../../middlewares/compliance.middleware');
 
-// Customer Routes
-router.post('/', protect, authorize('customer'), checkCompliance, validateBooking, bookingController.createBooking);
-router.get('/my', protect, authorize('customer'), bookingController.getMyBookings);
-router.patch('/cancel/:id', protect, authorize('customer'), bookingController.cancelBooking);
-router.patch('/extend/:id', protect, authorize('customer'), bookingController.extendBooking);
-router.patch('/return/:id', protect, authorize('customer'), bookingController.returnBooking);
-router.delete('/:id', protect, authorize('customer'), bookingController.deletePendingBooking);
+// Customer & Admin Routes
+router.post('/', protect, authorize('customer', 'admin'), checkCompliance, validateBooking, bookingController.createBooking);
+router.get('/my', protect, authorize('customer', 'admin'), bookingController.getMyBookings);
+router.patch('/cancel/:id', protect, authorize('customer', 'admin'), bookingController.cancelBooking);
+router.patch('/extend/:id', protect, authorize('customer', 'admin'), bookingController.extendBooking);
+router.patch('/return/:id', protect, authorize('customer', 'admin'), bookingController.returnBooking);
+router.delete('/:id', protect, authorize('customer', 'admin'), bookingController.deletePendingBooking);
 
 // Shop owner Routes
 router.get('/shop', protect, authorize('shop_owner'), bookingController.getShopBookings);

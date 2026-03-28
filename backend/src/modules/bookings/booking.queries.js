@@ -14,7 +14,8 @@ exports.getUserBookings = `
         dord.status as delivery_status,
         dord.estimated_delivery_at,
         dord.agent_name,
-        dord.delivery_address as delivery_address_detail
+        dord.delivery_address as delivery_address_detail,
+        (SELECT ABS(SUM(amount_inr)) FROM payments WHERE booking_id = b.booking_id AND status = 'refunded') as refund_amount
     FROM bookings b
     LEFT JOIN items i ON b.item_id = i.id
     LEFT JOIN shops s ON b.shop_id = s.id

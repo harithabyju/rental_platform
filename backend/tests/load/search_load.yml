@@ -1,0 +1,26 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: Warm up phase
+    - duration: 120
+      arrivalRate: 20
+      name: Sustained search load
+  payload:
+    path: "search_terms.csv"
+    fields:
+      - "term"
+      - "category"
+
+scenarios:
+  - name: "Search by keyword and category"
+    flow:
+      - get:
+          url: "/api/search?q={{ term }}"
+      - think: 1
+      - get:
+          url: "/api/search?category={{ category }}"
+      - think: 1
+      - get:
+          url: "/api/search?q={{ term }}&category={{ category }}"

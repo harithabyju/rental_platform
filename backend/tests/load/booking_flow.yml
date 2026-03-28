@@ -1,0 +1,44 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 2
+      name: Booking flow load
+  payload:
+    - path: "auth_users.csv"
+      fields:
+        - "email"
+        - "password"
+    - path: "item_ids.csv"
+      fields:
+        - "itemId"
+
+scenarios:
+  - name: "Complete booking flow"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.token"
+              as: "token"
+      - think: 1
+      - post:
+          url: "/api/bookings"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            itemId: "{{ itemId }}"
+            startDate: "2026-04-01T10:00:00Z"
+            endDate: "2026-04-02T10:00:00Z"
+            totalPrice: 100
+          capture:
+            - json: "$.id"
+              as: "bookingId"
+      - think: 1
+      - get:
+          url: "/api/bookings"
+          headers:
+            Authorization: "Bearer {{ token }}"

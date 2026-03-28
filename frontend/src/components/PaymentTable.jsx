@@ -80,7 +80,7 @@ const PaymentTable = ({ payments, loading }) => {
                                         </div>
                                         <div>
                                             <span className="text-sm font-black text-gray-900 line-clamp-1 group-hover:text-emerald-600 transition-colors">
-                                                Rental Booking
+                                                {payment.item_name || 'Rental Booking'}
                                             </span>
                                             <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">{payment.payment_method || payment.paymentMethod}</p>
                                         </div>
@@ -99,7 +99,7 @@ const PaymentTable = ({ payments, loading }) => {
                                 <td className="bg-white dark:bg-[#111827] py-5 px-4 border-y border-gray-100 dark:border-gray-800/60 group-hover:bg-gray-50 dark:bg-gray-800/40 transition-colors">
                                     <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${config.bg} ${config.text} ${config.border} shadow-sm`}>
                                         <StatusIcon className="w-3 h-3" />
-                                        {config.label}
+                                        {(payment.status === 'refunded' || (payment.amount_inr < 0)) ? 'Refunded' : config.label}
                                     </span>
                                 </td>
                                 <td className="bg-white py-5 px-6 rounded-r-[1.5rem] border-y border-r border-gray-100 text-right group-hover:bg-gray-50 transition-colors">

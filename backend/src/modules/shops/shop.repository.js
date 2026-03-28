@@ -8,7 +8,8 @@ const getAllShops = async (status) => {
             s.id AS shop_id,
             s.name AS shop_name,
             u.fullname AS owner_name,
-            u.email AS owner_email
+            u.email AS owner_email,
+            COALESCE((SELECT SUM(total_amount) FROM bookings WHERE shop_id = s.id AND status != 'cancelled'), 0) AS total_revenue
         FROM shops s
         JOIN users u ON s.owner_id = u.id
     `;

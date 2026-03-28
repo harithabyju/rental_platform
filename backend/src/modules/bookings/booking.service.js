@@ -157,8 +157,8 @@ exports.getShopBookings = async (ownerId) => {
 exports.confirmBooking = async (ownerId, bookingId) => {
     const result = await db.query(
         `UPDATE bookings SET status = 'confirmed', updated_at = CURRENT_TIMESTAMP 
-         FROM items, shops 
-         WHERE bookings.item_id = items.id AND items.shop_id = shops.id AND shops.owner_id = $1 AND bookings.booking_id = $2
+         FROM shops 
+         WHERE bookings.shop_id = shops.id AND shops.owner_id = $1 AND bookings.booking_id = $2
          RETURNING bookings.*`,
         [ownerId, bookingId]
     );
@@ -191,7 +191,10 @@ exports.cancelBooking = async (userId, bookingId) => {
     if (bookingResult.rows.length === 0) throw new Error('Booking not found');
     const booking = bookingResult.rows[0];
 
-    if (booking.user_id !== userId) throw new Error('Unauthorized');
+    const userResult = await db.query('SELECT role FROM users WHERE id = $1', [userId]);
+    const userRole = userResult.rows[0]?.role;
+
+    if (booking.user_id !== userId && userRole !== 'admin') throw new Error('Unauthorized');
     if (booking.status === 'cancelled' || booking.status === 'completed') {
         throw new Error('Cannot cancel completed or already cancelled booking');
     }
@@ -216,9 +219,32 @@ exports.cancelBooking = async (userId, bookingId) => {
         // 1. Update booking status to cancelled
         const result = await client.query(bookingQueries.updateStatus, ['cancelled', bookingId]);
 
-        // 2. Cancellation completed
+        // 2. Record Refund in Payments table if amount > 0
+        if (parseFloat(refundAmount) > 0) {
+            await client.query(
+                `INSERT INTO payments (booking_id, user_id, amount_inr, status, paid_at)
+                 VALUES ($1, $2, $3, $4, NOW())`,
+                [bookingId, userId, -refundAmount, 'refunded']
+            );
+        }
 
         await client.query('COMMIT');
+
+        // 3. Send Email Notification (Async)
+        try {
+            const { sendEmail } = require('../../utils/email');
+            const userDetails = await db.query('SELECT email, fullname FROM users WHERE id = $1', [userId]);
+            if (userDetails.rows.length > 0) {
+                const { email, fullname } = userDetails.rows[0];
+                const refundMsg = parseFloat(refundAmount) > 0 
+                    ? `A refund of ₹${refundAmount} has been initiated and will be credited back to your account.`
+                    : `As per our policy, no refund is applicable for this cancellation.`;
+                
+                sendEmail(email, 'Booking Cancellation Confirmation',
+                    `Hello ${fullname},\n\nYour booking (ID: ${bookingId}) has been successfully cancelled.\n\n${refundMsg}\n\nThank you for using our platform.`
+                );
+            }
+        } catch (e) { console.error('Email failed:', e); }
 
         return {
             ...result.rows[0],
@@ -238,31 +264,41 @@ exports.extendBooking = async (userId, bookingId, newEndDate) => {
     if (bookingResult.rows.length === 0) throw new Error('Booking not found');
     const booking = bookingResult.rows[0];
 
-    if (booking.user_id !== userId) throw new Error('Unauthorized');
+    const userResult = await db.query('SELECT role FROM users WHERE id = $1', [userId]);
+    const userRole = userResult.rows[0]?.role;
+
+    if (booking.user_id !== userId && userRole !== 'admin') throw new Error('Unauthorized');
     if (booking.status !== 'confirmed' && booking.status !== 'active') throw new Error('Cannot extend this booking');
 
-    // Get item price for the CORRECT shop
+    // Get item price and quantity for the CORRECT shop
     const shopItemResult = await db.query(
-        'SELECT price_per_day_inr FROM shop_items WHERE item_id = $1 AND shop_id = $2',
+        'SELECT price_per_day_inr, quantity_available FROM shop_items WHERE item_id = $1 AND shop_id = $2',
         [booking.item_id, booking.shop_id]
     );
-    const pricePerDay = shopItemResult.rows[0]?.price_per_day_inr;
+    const shopItem = shopItemResult.rows[0];
+    const pricePerDay = shopItem?.price_per_day_inr;
+    const quantityLimit = shopItem?.quantity_available;
 
     if (!pricePerDay) throw new Error('Could not determine item price at the shop');
 
     // Overlap Check
-    const isOverlapping = await checkOverlap(booking.item_id, booking.start_date, newEndDate, bookingId);
+    const isOverlapping = await checkOverlap(booking.item_id, booking.shop_id, booking.start_date, newEndDate, quantityLimit, bookingId);
     if (isOverlapping) {
         throw new Error(OVERLAP_ERROR);
     }
 
     const oldEndDate = new Date(booking.end_date);
     const addedDate = new Date(newEndDate);
-    const diffDays = Math.ceil((addedDate - oldEndDate) / (1000 * 60 * 60 * 24));
+    if (isNaN(addedDate.getTime())) {
+        throw new Error('Invalid new end date format');
+    }
 
+    const diffDays = Math.ceil((addedDate - oldEndDate) / (1000 * 60 * 60 * 24));
     if (diffDays <= 0) throw new Error('New end date must be after current end date');
 
-    const additionalAmount = diffDays * pricePerDay;
+    const additionalAmount = diffDays * parseFloat(pricePerDay);
+    if (isNaN(additionalAmount)) throw new Error('Calculation error for additional amount');
+
     const newTotalAmount = parseFloat(booking.total_amount) + additionalAmount;
 
     // Start Transaction

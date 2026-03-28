@@ -449,12 +449,12 @@ exports.getUserProfileStats = async (userId) => {
         [userId]
     );
 
-    // Favorite Shop
+    // Favorite Shop (Partner of Choice)
     const favoriteShop = await db.query(
         `SELECT s.id, s.name, COUNT(*) as count
-         FROM rentals r
-         JOIN shops s ON r.shop_id = s.id
-         WHERE r.user_id = $1 AND r.status != 'cancelled'
+         FROM bookings b
+         JOIN shops s ON b.shop_id = s.id
+         WHERE b.user_id = $1 AND b.status != 'cancelled'
          GROUP BY s.id, s.name
          ORDER BY count DESC
          LIMIT 1`,

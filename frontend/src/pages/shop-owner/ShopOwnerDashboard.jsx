@@ -147,7 +147,10 @@ const VerificationForm = ({ shop, onSaved, onCancel }) => {
         setSubmitting(true);
         try {
             const fd = new FormData();
-            Object.keys(form).forEach(key => fd.append(key, form[key]));
+            Object.keys(form).forEach(key => {
+                const value = (form[key] && typeof form[key] === 'object') ? JSON.stringify(form[key]) : form[key];
+                fd.append(key, value);
+            });
             if (govtId) fd.append('govt_id', govtId);
             if (shopLicense) fd.append('shop_license', shopLicense);
 
@@ -378,7 +381,10 @@ const UnifiedShopRegisterForm = ({ onRegistered }) => {
         setSubmitting(true);
         try {
             const fd = new FormData();
-            Object.keys(form).forEach(key => fd.append(key, form[key]));
+            Object.keys(form).forEach(key => {
+                const value = (form[key] && typeof form[key] === 'object') ? JSON.stringify(form[key]) : form[key];
+                fd.append(key, value);
+            });
             if (govtId) fd.append('govt_id', govtId);
             if (shopLicense) fd.append('shop_license', shopLicense);
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDashboard } from '../context/DashboardContext';
-import { Search, Grid, Package, CheckCircle, Wallet, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Grid, Package, CheckCircle, Wallet, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 
 // Swiper Imports
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -19,20 +19,12 @@ const CustomerDashboard = () => {
     const scrollRef = useRef(null);
     const [swiperInstance, setSwiperInstance] = useState(null);
 
-    const scroll = (direction) => {
-        if (scrollRef.current) {
-            const { current } = scrollRef;
-            const scrollAmount = direction === 'left' ? -300 : 300;
-            current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        }
-    };
-
     // Default search params
-    const searchParams = {
-        lat: user?.latitude || 28.6139,
-        lng: user?.longitude || 77.2090,
+    const [localSearchParams, setLocalSearchParams] = useState({
+        lat: user?.latitude ? parseFloat(user.latitude) : 28.6139,
+        lng: user?.longitude ? parseFloat(user.longitude) : 77.2090,
         q: ''
-    };
+    });
 
     useEffect(() => {
         fetchCategories();
@@ -61,54 +53,50 @@ const CustomerDashboard = () => {
     return (
         <div className="max-w-7xl mx-auto space-y-12 pb-12 animate-fade-in px-4 sm:px-6">
             <style>{`
+                /* Modern Gradients & Glassmorphism */
+                .glass-morphic {
+                    background: rgba(255, 255, 255, 0.03);
+                    backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+                }
+                .dark .glass-morphic {
+                    background: rgba(17, 24, 39, 0.4);
+                    border-color: rgba(255, 255, 255, 0.05);
+                }
+                
                 /* Swiper Customizations */
                 .category-swiper {
-                    padding: 2rem 1rem 4rem 1rem !important;
+                    padding: 3rem 1rem 5rem 1rem !important;
                 }
                 .category-swiper .swiper-slide {
-                    width: 200px;
-                    transition: all 0.4s ease;
-                    pointer-events: auto; /* Ensure hover events trigger on all slides */
+                    width: 240px;
+                    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                    pointer-events: auto;
                 }
                 .category-swiper .swiper-slide:not(.swiper-slide-active) {
-                    filter: blur(4px);
-                    opacity: 0.6;
-                    transform: scale(0.85); /* Slightly scale down non-active */
-                    cursor: pointer; /* Show pointer when hovering blurred slides */
+                    filter: blur(8px) grayscale(0.5);
+                    opacity: 0.4;
+                    transform: scale(0.8);
                 }
                 .category-swiper .swiper-slide-active {
                     filter: blur(0px);
                     opacity: 1;
                     z-index: 10;
-                    transform: scale(1.15) translateY(-15px); /* Increased jump effect */
+                    transform: scale(1.2) translateY(-20px);
                 }
-                /* Navigation Buttons Customization */
-                .swiper-button-next, .swiper-button-prev {
-                    color: #059669 !important; /* emerald-600 */
-                    background: white;
-                    width: 32px !important;
-                    height: 32px !important;
-                    border-radius: 50%;
-                    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-                    border: 1px solid #f3f4f6; /* gray-100 */
-                    opacity: 0;
-                    transition: opacity 0.3s ease, transform 0.3s ease;
+                
+                /* Animations */
+                @keyframes float {
+                    0%, 100% { transform: translateY(0) rotate(0deg); }
+                    50% { transform: translateY(-20px) rotate(2deg); }
                 }
-                .category-swiper:hover .swiper-button-next,
-                .category-swiper:hover .swiper-button-prev {
-                    opacity: 1;
+                .animate-float {
+                    animation: float 6s ease-in-out infinite;
                 }
-                .dark .swiper-button-next, .dark .swiper-button-prev {
-                    background: #1f2937; /* gray-800 */
-                    border-color: #374151; /* gray-700 */
-                }
-                .swiper-button-next:after, .swiper-button-prev:after {
-                    font-size: 0.9rem !important;
-                    font-weight: 900;
-                }
-                .swiper-button-next:hover, .swiper-button-prev:hover {
-                    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-                    transform: scale(1.1);
+                
+                .hover-tilt:hover {
+                    transform: perspective(1000px) rotateX(2deg) rotateY(2deg) scale(1.02);
                 }
             `}</style>
             {/* Hero Section */}
@@ -119,12 +107,6 @@ const CustomerDashboard = () => {
                             <h1 className="text-4xl sm:text-6xl font-black flex items-center gap-4">
                                 Namaste, {user?.fullname?.split(' ')[0] || 'User'}! <span className="animate-wave inline-block">👋</span>
                             </h1>
-                            <div className="bg-emerald-400/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-emerald-400/30 flex items-center gap-2 animate-bounce-subtle">
-                                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-100">
-                                    {searchParams.lat.toFixed(2)}, {searchParams.lng.toFixed(2)} detected
-                                </span>
-                            </div>
                         </div>
                         <p className="text-emerald-50 text-xl sm:text-2xl font-medium opacity-90 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                             Premium rentals for your next adventure. <span className="text-emerald-300">Discover Local. Rent Smart.</span>
@@ -134,23 +116,37 @@ const CustomerDashboard = () => {
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
-                            if (searchParams.q.trim()) {
-                                navigate(`/dashboard/browse?q=${encodeURIComponent(searchParams.q)}`);
-                            }
+                            const params = new URLSearchParams();
+                            if (localSearchParams.q.trim()) params.append('q', localSearchParams.q);
+                            if (localSearchParams.lat) params.append('lat', localSearchParams.lat);
+                            if (localSearchParams.lng) params.append('lng', localSearchParams.lng);
+                            navigate(`/dashboard/browse?${params.toString()}`);
                         }}
-                        className="flex flex-col sm:flex-row gap-4 max-w-4xl animate-slide-up"
+                        className="flex flex-col sm:flex-row gap-4 max-w-5xl animate-slide-up bg-white/10 backdrop-blur-xl p-3 rounded-[2rem] border border-white/20 shadow-2xl"
                         style={{ animationDelay: '0.2s' }}
                     >
                         <div className="relative flex-grow group">
-                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-600 transition-colors group-focus-within:text-emerald-500" size={24} />
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-400 opacity-70 transition-colors group-focus-within:text-white" size={24} />
                             <input
                                 type="text"
-                                placeholder="Search cameras, bikes, camping gear..."
-                                value={searchParams.q}
-                                onChange={(e) => setSearchParams(prev => ({ ...prev, q: e.target.value }))}
-                                className="w-full h-16 pl-16 pr-6 rounded-2xl bg-white dark:bg-[#111827] text-gray-900 dark:text-gray-100 text-lg font-medium focus:outline-none focus:ring-4 focus:ring-emerald-400/30 transition-all placeholder:text-gray-500 dark:text-gray-400 shadow-xl"
+                                placeholder="What are you looking for?"
+                                value={localSearchParams.q}
+                                onChange={(e) => setLocalSearchParams(prev => ({ ...prev, q: e.target.value }))}
+                                className="w-full h-14 pl-16 pr-6 rounded-2xl bg-white/5 text-white text-lg font-medium focus:outline-none focus:bg-white/10 transition-all placeholder:text-white/40"
                             />
                         </div>
+                        <div className="flex items-center gap-2 bg-white/5 rounded-2xl px-4 border border-white/10">
+                            <MapPin className="text-emerald-400 w-5 h-5" />
+                            <span className="text-sm font-bold text-white/80 whitespace-nowrap">
+                                Nearby You
+                            </span>
+                        </div>
+                        <button
+                            type="submit"
+                            className="bg-emerald-500 hover:bg-emerald-400 text-white px-10 rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl shadow-emerald-900/50 hover:scale-[1.02] active:scale-95 h-14"
+                        >
+                            Find Now
+                        </button>
                     </form>
                 </div>
 

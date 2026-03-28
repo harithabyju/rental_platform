@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Users,
     Store,
@@ -262,15 +262,15 @@ const StatCard = ({ title, value, icon, color, onClick }) => (
         className={`bg-white dark:bg-[#111827] p-6 rounded-2xl border border-gray-100 dark:border-gray-800/60 relative overflow-hidden group hover:border-emerald-700/40 transition-all ${onClick ? 'cursor-pointer hover:shadow-lg hover:shadow-black/20' : ''}`}
     >
         <div className="flex items-center gap-4 relative z-10">
-            <div className={`p-3 rounded-xl ${color} text-white shadow-lg`}>
+            <div className={`p-3 rounded-xl ${color} text-white shadow-lg flex-shrink-0`}>
                 {icon}
             </div>
-            <div>
-                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{title}</p>
-                <h4 className="text-2xl font-black text-gray-900 dark:text-gray-100 mt-1">{value}</h4>
+            <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest truncate">{title}</p>
+                <h4 className="text-xl xl:text-2xl font-black text-gray-900 dark:text-gray-100 mt-1 truncate">{value}</h4>
             </div>
         </div>
-        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform pointer-events-none">
             {React.cloneElement(icon, { size: 80 })}
         </div>
     </div>

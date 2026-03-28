@@ -5,11 +5,17 @@ const { sendEmail } = require('../../utils/email');
 
 const registerShop = async (ownerId, shopData) => {
     const existing = await shopRepository.findShopByOwnerId(ownerId);
-    if (existing) throw new Error('You already have a registered shop');
+    if (existing && existing.status !== 'incomplete') {
+        throw new Error('You already have a registered shop');
+    }
+    // If incomplete shop exists, treat this as an update
+    if (existing && existing.status === 'incomplete') {
+        return await shopRepository.updateShop(existing.id || existing.shop_id, shopData);
+    }
 
     // Flatten data (handle both nested 'location' and flat fields)
     const { shop_name, name, description, location } = shopData;
-    const finalName = name || shopData.name;
+    const finalName = shop_name || name || '';
 
     if (!finalName || finalName.trim() === '') {
         throw new Error('Shop name is required');
@@ -35,8 +41,14 @@ const registerShop = async (ownerId, shopData) => {
         bank_account_number: shopData.bank_account_number || null,
         bank_ifsc: shopData.bank_ifsc || null,
         bank_name: shopData.bank_name || null,
-        working_hours: typeof shopData.working_hours === 'string' ? JSON.parse(shopData.working_hours) : (shopData.working_hours || null),
-        location_restrictions: typeof shopData.location_restrictions === 'string' ? JSON.parse(shopData.location_restrictions) : (shopData.location_restrictions || null)
+        working_hours: (() => {
+            if (typeof shopData.working_hours !== 'string') return shopData.working_hours || null;
+            try { return JSON.parse(shopData.working_hours); } catch (e) { return null; }
+        })(),
+        location_restrictions: (() => {
+            if (typeof shopData.location_restrictions !== 'string') return shopData.location_restrictions || null;
+            try { return JSON.parse(shopData.location_restrictions); } catch (e) { return null; }
+        })(),
     };
 
     // Auto-set status to 'pending' if all verification fields are present

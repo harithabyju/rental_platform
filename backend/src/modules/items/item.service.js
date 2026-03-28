@@ -10,6 +10,10 @@ const getItemsByShop = async (shopId) => {
     return itemRepository.findItemsByShopId(shopId);
 };
 
+const getItemById = async (id) => {
+    return itemRepository.findItemById(id);
+};
+
 const validateCategoryPermission = async (shopId, categoryId) => {
     if (!categoryId) return;
 
@@ -97,6 +101,7 @@ module.exports = {
     getAllItems,
     getAllItemsAdmin,
     getItemsByShop,
+    getItemById,
     addItem,
     updateItem,
     toggleItemStatus,
